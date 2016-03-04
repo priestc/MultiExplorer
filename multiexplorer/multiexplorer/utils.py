@@ -9,10 +9,14 @@ service_modes = [
 
 def make_service_info_json():
     return json.dumps({
-        s.service_id: [s.name, s.api_homepage] for s in ALL_SERVICES
+        s.service_id: {'name': s.name, 'url': s.api_homepage} for s in ALL_SERVICES
     })
 
 def make_crypto_data_json():
+    """
+    Go through all cupported cryptocurrencies in moneywagon, and make a
+    json encoded object containing all the supported services and magic bytes.
+    """
     ret = {}
     for currency, data in crypto_data.items():
         ret[currency] = {}

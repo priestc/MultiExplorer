@@ -1,6 +1,6 @@
 from django.conf.urls import include, url
 from django.contrib import admin
-from views import home
+from views import home, perform_lookup
 
 urlpatterns = [
     # Examples:
@@ -9,6 +9,5 @@ urlpatterns = [
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', home, name="home"),
-    #url(r'address_lookup', name="address_lookup"),
-    #url(r'block_lookup', name="block_lookup"),
+    url(r'api/(?P<currency>\w+)/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
 ]

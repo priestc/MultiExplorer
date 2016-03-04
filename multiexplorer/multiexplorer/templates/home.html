@@ -1,13 +1,15 @@
 {% extends "base.html" %}
-
+{% load staticfiles %}
 
 {% block content %}
 
 <h1>MultiExplorer</h1>
 <form method="post" action="#">
     <h2>Address Balance</h2>
-    <input type="text" name="balance_input_box">
-    <input type="submit" id="balance_button" value="Get Balance">
+    <input type="text" name="address_balance_input_box" class="address" value="1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai">
+    <input type="submit" id="address_balance_button" value="Get Balance">
+
+    <div id="address_balance_results"></div>
 
     <h2>Block Information</h2>
     <select name="block_info">
@@ -16,25 +18,103 @@
         {% endfor %}
     </select>
 
-    <input type="text" name="block_input_box">
-    <input type="submit" value="Get Block Info">
+    <br><br>
+
+    <input type="text" class="height" name="block_input_box">
+    <input type="submit" value="Get Block By Height">
+
+    <br><br>
+
+    <input type="text" class="block_hash" name="block_input_box">
+    <input type="submit" value="Get Block By Hash">
 
     <h2>Get UTXOs for address</h2>
-    <input type="text" name="utxo_input_box">
+    <input type="text" class="address" name="utxo_input_box">
     <input type="submit" value="Get UTXOs">
 </form>
 
-<script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+<div style="display: none">
+    <img src='{% static 'spin.gif' %}'>
+</div>
+
+<style>
+    .service_call {
+        border: 1px solid black;
+        background: #dfdfdf;
+        margin: 5px;
+        padding: 3px;
+        width: 200px;
+        min-height: 40px;
+        overflow: hidden;
+    }
+    .service_title {
+        width: 40px;
+    }
+
+    input.address {
+        width: 22em;
+    }
+
+    input.height {
+        width: 6em;
+    }
+
+    input.block_hash {
+        width: 30em;
+    }
+
+    .error {
+        color: red;
+    }
+
+    .result {
+        float: right;
+    }
+
+    .balance {
+        font-weight: bold;
+    }
+
+</style>
+<script src="{% static 'jquery-2.2.1.min.js' %}"></script
+<script src="{% static 'bitcore.browser.min.js' %}"></script>
+
 <script>
     var service_info = JSON.parse('{{ service_info_json|safe }}');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
+    var spinner = "<img src='{% static 'spin.gif' %}'>"
 
-    $("#balance_button").click(function(event) {
+    $("#address_balance_button").click(function(event) {
         event.preventDefault();
         var currency = 'btc';
+        var address = $("input[name=address_balance_input_box]").val();
+        var container = $("#address_balance_results");
 
         $.each(crypto_data[currency]['address_balance'], function(i, service_id) {
-            var info = service_info[service_id]
+            var info = service_info[service_id];
+            var url = info['url'];
+            var service_name = info['name'];
+            var a = "<a class='service_title' target='_blank' href='" + url + "'> (" + service_id + ') ' + service_name + "</a>";
+
+            container.append(
+                $("<div class='service_call'>" + a + "<div class='result service-" + service_id + "'>" + spinner + "</div></div>")
+            );
+
+            var url = "/api/" + currency + "/address_balance/" + service_id + "?address=" + address;
+
+            $.ajax({
+                url: url,
+            }).done(function(response) {
+                var raw_link = "<a target='_blank' href='" + response['url'] + "'>Raw</a>";
+                var api_link = "<a target='_blank' href='" + url + "&include_raw=true'>API</a>";
+                $(".service-" + service_id).html(
+                    "<span class='balance'>" + response['balance'] + ' ' + currency.toUpperCase() + "</span><br> " + raw_link + ' ' + api_link
+                );
+
+            }).fail(function(xhr, status, error) {
+                var error_msg = xhr.responseJSON['error'];
+                $(".service-" + service_id).html("<span class='error'>Error:" + error_msg + "</span>");
+            });
         });
     });
 
