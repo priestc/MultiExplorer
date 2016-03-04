@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<h1>MultiExplorer</h1>
+<form method="post" action="#">
+    <h2>Address Balance</h2>
+    <input type="text" name="balance_input_box">
+    <input type="submit" id="balance_button" value="Get Balance">
+
+    <h2>Block Information</h2>
+    <select name="block_info">
+        {% for currency in block_info_supported_currencies %}
+        <option value="{{ currency.code }}">{{ currency.code }} - {{ currency.name }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="block_input_box">
+    <input type="submit" value="Get Block Info">
+
+    <h2>Get UTXOs for address</h2>
+    <input type="text" name="utxo_input_box">
+    <input type="submit" value="Get UTXOs">
+</form>
+
+<script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+<script>
+    var service_info = JSON.parse('{{ service_info_json|safe }}');
+    var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
+
+    $("#balance_button").click(function(event) {
+        event.preventDefault();
+        var currency = 'btc';
+
+        $.each(crypto_data[currency]['address_balance'], function(i, service_id) {
+            var info = service_info[service_id]
+        });
+    });
+
+
+</script>
+
+{% endblock %}
