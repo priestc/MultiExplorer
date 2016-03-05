@@ -25,42 +25,62 @@ def perform_lookup(request, currency, service_mode, service_id):
     include_raw = request.GET.get('include_raw', False)
     Service = services_by_id[int(service_id)]
 
-    if service_mode in ['address_balance', 'unspent_outputs']:
-        address = request.GET['address']
-        cache_key = '%s:%s:%s' % (service_mode, service_id, address)
-        hit = cache.get(cache_key)
+    address = request.GET.get('address', None)
+    latest = request.GET.get('latest', False)
+    block_hash = request.GET.get("block_hash", None)
+    block_number = request.GET.get("block_number", None)
 
-        if hit:
-            time.sleep(random.random() * 2) # simulate external call
-            response_dict = hit
-            response_dict['cache_hit'] = True
-        else:
-            try:
-                s = Service()
-                if service_mode == 'address_balance':
-                    response_dict = {
-                        'balance': s.get_balance(currency, address)
-                    }
-                elif service_mode == 'unspent_outputs':
-                    utxos = sorted(s.get_unspent_outputs(currency, address), key=lambda x: x['output'])
-                    response_dict = {
-                        'utxos': utxos
-                    }
+    key_ending = address or latest or block_hash or block_number
 
-                response_dict.update({
-                    'url': s.last_url,
-                    'raw_response': s.last_raw_response.json(),
-                    'timestamp': int(time.time()),
-                    'service_name': Service.name
-                })
+    cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
+    hit = cache.get(cache_key)
 
-            except Exception as exc:
-                return http.JsonResponse(
-                    {'error': "%s: %s" % (exc.__class__.__name__, str(exc))
-                }, status=500)
+    if hit:
+        time.sleep(random.random() * 2) # simulate external call
+        response_dict = hit
+        response_dict['cache_hit'] = True
+    else:
+        try:
+            s = Service()
+            if service_mode == 'address_balance':
+                response_dict = {
+                    'balance': s.get_balance(currency, address)
+                }
+            elif service_mode == 'unspent_outputs':
+                utxos = s.get_unspent_outputs(currency, address)
+                response_dict = {
+                    'utxos': sorted(utxos, key=lambda x: x['output'])
+                }
+            elif service_mode == 'historical_transactions':
+                txs = s.get_histrical_transactions(currency, address)
+                response_dict = {
+                    'transactions': sorted(txs, key=lambda x: -x['confirmations'])
+                }
+            elif service_mode == 'get_block':
+                response_dict = {
+                    'block': s.get_block(
+                        currency, latest=latest, block_height=block_height, block_number=block_number
+                    )
+                }
+            elif service_mode == 'get_optimal_fee':
+                response_dict = {
+                    'optimal_fee_per_KiB': s.get_optimal_fee(currency, 1024)
+                }
 
-            cache.set(cache_key, response_dict)
-            response_dict['cache_hit'] = False
+            response_dict.update({
+                'url': s.last_url,
+                'raw_response': s.last_raw_response.json(),
+                'timestamp': int(time.time()),
+                'service_name': Service.name
+            })
+
+        except Exception as exc:
+            return http.JsonResponse(
+                {'error': "%s: %s" % (exc.__class__.__name__, str(exc))
+            }, status=500)
+
+        cache.set(cache_key, response_dict)
+        response_dict['cache_hit'] = False
 
     if not include_raw:
         del response_dict['raw_response']
