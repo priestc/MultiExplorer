@@ -1,0 +1,34 @@
+
+upstream wsgicluster_multiexplorer {
+    server unix://tmp/multiexplorer.sock;
+}
+
+server {
+    listen 80;
+    server_name multiexplorer.com;
+    error_log /var/log/nginx/multiexplorer-error.log;
+    access_log /var/log/nginx/multiexplorer-access.log;
+    sendfile        on;
+    client_max_body_size 25M;
+    location / {
+        include uwsgi_params;
+        uwsgi_pass wsgicluster_multiexplorer;
+        uwsgi_read_timeout 700;
+    }
+
+    location /static/ {
+        root /home/chris/MultiExplorer/;
+        expires modified 2d;
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+    }
+
+    location /nginx_status {
+        stub_status on;
+        access_log   off;
+        allow 127.0.0.1;
+        deny all;
+    }
+}

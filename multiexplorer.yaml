@@ -1,0 +1,14 @@
+uwsgi:
+    master: true
+    processes: 5
+    vaccum: true
+    gid: chris
+    uid: chris
+    chmod-socket: 666
+    plugins: python
+    socket: /tmp/multiexplorer.sock
+    chdir: /home/chris/MultiExplorer
+    pythonpath: /home/chris/MultiExplorer/multiexplorer/
+    module: wsgi:application
+    touch-reload: /home/chris/MultiExplorer/multiexplorer/wsgi.py
+
