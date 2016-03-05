@@ -39,7 +39,7 @@ def perform_lookup(request, currency, service_mode, service_id):
                 s = Service()
                 if service_mode == 'address_balance':
                     response_dict = {
-                        'balance': s.address_balance(currency, address)
+                        'balance': s.get_balance(currency, address)
                     }
                 elif service_mode == 'unspent_outputs':
                     utxos = sorted(s.get_unspent_outputs(currency, address), key=lambda x: x['output'])
