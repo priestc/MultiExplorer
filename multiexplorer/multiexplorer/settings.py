@@ -105,7 +105,8 @@ STATIC_URL = '/static/'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache', #'django.core.cache.backends.dummy.DummyCache',
         'LOCATION': 'my_cache_table',
+        'TIMEOUT': 500000,
     }
 }

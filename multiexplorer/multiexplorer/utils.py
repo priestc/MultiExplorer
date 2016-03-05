@@ -37,3 +37,14 @@ def make_crypto_data_json():
             del ret[currency]
 
     return json.dumps(ret)
+
+def get_block_currencies():
+    """
+    Returns currencies that have block info services defined.
+    """
+    ret = []
+    for currency, data in crypto_data.items():
+        if hasattr(data, 'get') and data.get('services', {}).get("get_block", []):
+            ret.append({'code': currency, 'name': data['name']})
+
+    return ret

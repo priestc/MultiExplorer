@@ -7,11 +7,12 @@ from django.template.response import TemplateResponse
 from django.core.cache import cache
 from moneywagon import get_address_balance, guess_currency_from_address, ALL_SERVICES
 
-from .utils import make_crypto_data_json, make_service_info_json, service_modes
+from .utils import make_crypto_data_json, make_service_info_json, service_modes, get_block_currencies
 
 services_by_id = {s.service_id: s for s in ALL_SERVICES}
 crypto_data_json = make_crypto_data_json()
 service_info_json = make_service_info_json()
+block_info_currencies = get_block_currencies()
 
 def perform_lookup(request, currency, service_mode, service_id):
     """
@@ -24,7 +25,7 @@ def perform_lookup(request, currency, service_mode, service_id):
     include_raw = request.GET.get('include_raw', False)
     Service = services_by_id[int(service_id)]
 
-    if service_mode == "address_balance":
+    if service_mode in ['address_balance', 'unspent_outputs']:
         address = request.GET['address']
         cache_key = '%s:%s:%s' % (service_mode, service_id, address)
         hit = cache.get(cache_key)
@@ -36,13 +37,23 @@ def perform_lookup(request, currency, service_mode, service_id):
         else:
             try:
                 s = Service()
-                response_dict = {
-                    'balance': s.get_balance(currency, address),
+                if service_mode == 'address_balance':
+                    response_dict = {
+                        'balance': s.address_balance(currency, address)
+                    }
+                elif service_mode == 'unspent_outputs':
+                    utxos = sorted(s.get_unspent_outputs(currency, address), key=lambda x: x['output'])
+                    response_dict = {
+                        'utxos': utxos
+                    }
+
+                response_dict.update({
                     'url': s.last_url,
                     'raw_response': s.last_raw_response.json(),
-                    'timestamp': time.time(),
+                    'timestamp': int(time.time()),
                     'service_name': Service.name
-                }
+                })
+
             except Exception as exc:
                 return http.JsonResponse(
                     {'error': "%s: %s" % (exc.__class__.__name__, str(exc))
@@ -60,6 +71,7 @@ def home(request):
     return TemplateResponse(request, "home.html", {
         'crypto_data_json': crypto_data_json,
         'service_info_json': service_info_json,
+        'block_info_currencies': block_info_currencies
     })
 
 
