@@ -14,7 +14,7 @@ def make_service_info_json():
 
 def make_crypto_data_json():
     """
-    Go through all cupported cryptocurrencies in moneywagon, and make a
+    Go through all supported cryptocurrencies in moneywagon, and make a
     json encoded object containing all the supported services and magic bytes.
     """
     ret = {}
