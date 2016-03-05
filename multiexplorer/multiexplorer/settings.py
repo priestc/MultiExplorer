@@ -110,3 +110,5 @@ CACHES = {
         'TIMEOUT': 500000,
     }
 }
+
+STATIC_ROOT = "static/"
