@@ -5,6 +5,8 @@ import random
 from django import http
 from django.template.response import TemplateResponse
 from django.core.cache import cache
+from django.conf import settings
+
 from moneywagon import get_address_balance, guess_currency_from_address, ALL_SERVICES
 
 from .utils import make_crypto_data_json, make_service_info_json, service_modes, get_block_currencies
@@ -91,7 +93,8 @@ def home(request):
     return TemplateResponse(request, "home.html", {
         'crypto_data_json': crypto_data_json,
         'service_info_json': service_info_json,
-        'block_info_currencies': block_info_currencies
+        'block_info_currencies': block_info_currencies,
+        'TEST_ADDRESS': settings.TEST_ADDRESS
     })
 
 

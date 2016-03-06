@@ -8,10 +8,10 @@
 
     <section id="address_balance">
         <h2>Address Balance</h2>
-        <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address">
+        <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
         <input type="submit" id="address_balance_button" value="Get Balance">
 
-        <div id="address_balance_results"></div>
+        <div id="address_balance_results" class="results_container"></div>
     </section>
 
     <section  id="get_block">
@@ -36,18 +36,18 @@
 
         <input type="submit" value="Get Block By Latest">
 
-        <div id="aggregated_get_block"></div>
-        <div id="get_block_results"></div>
+        <div id="aggregated_get_block" class="aggregated_container"></div>
+        <div id="get_block_results" class="results_container"></div>
     </section>
 
 
     <section block="unspent_outputs">
         <h2>Get UTXOs for address</h2>
-        <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address">
+        <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
         <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
 
-        <div id="aggregated_unspent_outputs"></div>
-        <div id="unspent_outputs_results"></div>
+        <div id="aggregated_unspent_outputs" class="aggregated_container"></div>
+        <div id="unspent_outputs_results" class="results_container"></div>
     </section>
 
 </form>
@@ -113,6 +113,8 @@
         border: 1px solid brown;
         margin: 10px;
         padding: 15px;
+        text-align: center;
+        border-radius: 7px;
     }
 
     #address_balance {
@@ -128,6 +130,30 @@
         margin: 5px;
     }
 
+    .results_container {
+        overflow: hidden;
+    }
+
+    .service_call {
+        float: left;
+    }
+
+    .aggregated_container {
+        margin: 0 auto 0 auto;
+        padding: 20px;
+    }
+
+    .utxo_table {
+        margin: 5px auto 5px auto;
+        border: 1px solid gray;
+        padding: 5px;
+        width: 100%;
+    }
+
+    .utxo_table td {
+        text-align: left;
+    }
+
 </style>
 <script src="{% static 'jquery-2.2.1.min.js' %}"></script
 <script src="{% static 'bitcore.browser.min.js' %}"></script>
@@ -140,7 +166,7 @@
     $("#address_balance_button").click(function(event) {
         event.preventDefault();
         var address = $("input[name=address_balance_input_box]").val();
-        $(".service_call").remove();
+        $("#addres_balance .service_call").remove();
         currency = 'btc';
 
         present_results(
@@ -177,7 +203,7 @@
         event.preventDefault();
         var address = $("input[name=unspent_outputs_input_box]").val();
         var aggregate_container = $("#aggregated_unspent_outputs").empty();
-        $(".service_call").remove();
+        $("#unspent_outputs .service_call").remove();
 
         var currency = "btc";
 
