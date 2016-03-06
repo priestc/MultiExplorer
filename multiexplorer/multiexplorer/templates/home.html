@@ -4,53 +4,129 @@
 {% block content %}
 
 <h1>MultiExplorer</h1>
-<form method="post" action="#">
 
-    <section id="address_balance">
-        <h2>Address Balance</h2>
-        <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
-        <input type="submit" id="address_balance_button" value="Get Balance">
+<section id="address_balance">
+    <h2>Address Balance</h2>
+    <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
+    <input type="submit" id="address_balance_button" value="Get Balance">
 
-        <div id="address_balance_results" class="results_container"></div>
-    </section>
+    <div id="address_balance_results" class="results_container"></div>
+</section>
 
-    <section  id="get_block">
-        <h2>Block Information</h2>
-        <select name="block_info">
-            {% for currency in block_info_currencies %}
-            <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
-            {% endfor %}
-        </select>
+<section  id="get_block">
+    <h2>Block Information</h2>
+    <select name="block_info">
+        {% for currency in block_info_currencies %}
+        <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
+        {% endfor %}
+    </select>
 
-        <br><br>
+    <br><br>
 
-        <input type="text" class="block_number" name="block_number_input_box" placeholder="Enter Block Height">
-        <input type="submit" value="Get Block By Height">
+    <input type="text" class="block_number" name="block_number_input_box" placeholder="Enter Block Height">
+    <input type="submit" value="Get Block By Height">
 
-        <br><br>
+    <br><br>
 
-        <input type="text" class="block_hash" name="block_hash_input_box" placeholder="Enter Block Hash">
-        <input type="submit" value="Get Block By Hash">
+    <input type="text" class="block_hash" name="block_hash_input_box" placeholder="Enter Block Hash">
+    <input type="submit" value="Get Block By Hash">
 
-        <br><br>
+    <br><br>
 
-        <input type="submit" value="Get Block By Latest">
+    <input type="submit" value="Get Block By Latest">
 
-        <div id="aggregated_get_block" class="aggregated_container"></div>
-        <div id="get_block_results" class="results_container"></div>
-    </section>
+    <div id="aggregated_get_block" class="aggregated_container"></div>
+    <div id="get_block_results" class="results_container"></div>
+</section>
 
 
-    <section block="unspent_outputs">
-        <h2>Get UTXOs for address</h2>
-        <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
-        <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
+<section block="unspent_outputs">
+    <h2>Get UTXOs for address</h2>
+    <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
+    <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
 
-        <div id="aggregated_unspent_outputs" class="aggregated_container"></div>
-        <div id="unspent_outputs_results" class="results_container"></div>
-    </section>
+    <div id="aggregated_unspent_outputs" class="aggregated_container"></div>
+    <div id="unspent_outputs_results" class="results_container"></div>
+</section>
 
-</form>
+<section id="api">
+    <h2>API</h2>
+
+
+    <h3>Pass through JSON API</h3>
+
+    Use a single blockexplorer API via multiexplorer as a pass-thtough.
+    Service_id is a number cooresponding to the serivice in the table below.
+
+    {{ service_table|safe }}
+
+    <h3>Address Balance</h3>
+    http://{{ domain }}/api/<i>[currency]</i>/address_balance/<i>[service_id]</i>?address=<i>[address]</i>
+
+    <br><br>
+
+
+    <br>
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        http://{{ domain }}/api/BTC/address_balance/5?address=1M9XB8No8MnNjJvzPrtKyAnRfWwgMYr2Jp<br>
+        http://{{ domain }}/api/LTC/address_balance/5?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n
+    </div>
+
+    <br><br>
+    Service number 5 corresponds to Blockr.io. This API call will return data from
+    the Blockr.io service. The response will look like this:
+
+    <br>
+    <br>
+
+    <div class="code_wrapper">
+        <code>
+        <pre>
+        {
+            "balance": 20,
+            "cache_hit": true,
+            "raw_response": {
+                "code": 200,
+                "data": {
+                    "address": "1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai",
+                    "balance": 20,
+                    "balance_multisig": 0,
+                    "first_tx": {
+                        "block_nb": "306478",
+                        "confirmations": 94860,
+                        "time_utc": "2014-06-18T11:10:58Z",
+                        "tx": "be39fcb60f7ca0b9976f86e46ffb1acb87f3ec28d09171515da8470e8dd45e51",
+                        "value": 0.001
+                    },
+                    "is_unknown": false,
+                    "is_valid": true,
+                    "last_tx": {
+                        "block_nb": "306479",
+                        "confirmations": 94859,
+                        "time_utc": "2014-06-18T11:17:31Z",
+                        "tx": "f466e441f7fa7a6b9608fe4887721f01c0cfc3472c02f29fd69d64eb96a47434",
+                        "value": 19.999
+                    },
+                    "nb_txs": 2,
+                    "totalreceived": 20
+                },
+                "message": "",
+                "status": "success"
+            },
+            "service_name": "Blockr.io",
+            "timestamp": 1457221865,
+            "url": "http://btc.blockr.io/api/v1/address/info/1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai"
+        }
+        </pre>
+        </code>
+    </div>
+
+</section>
+
+<section id="footer">
+    Built Using <a href="https://github.com/priestc/moneywagon">Moneywagon</a>. <a href="https://github.com/priestc/MultiExplorer">Github</a>
+</section>
 
 <div style="display: none">
     <img src='{% static 'spin.gif' %}'>
@@ -117,6 +193,25 @@
         border-radius: 7px;
     }
 
+    #api {
+        background: #E1D6FF;
+    }
+
+    #api table {
+        width: 50%;
+        margin: 10px auto 10px auto;
+    }
+
+    #api table td {
+        border: 1px solid white;
+        padding: 3px;
+    }
+
+    #footer {
+        background: transparent;
+        border: 0px;
+    }
+
     #address_balance {
         background: #FFF2D6;
     }
@@ -152,6 +247,30 @@
 
     .utxo_table td {
         text-align: left;
+    }
+
+    .code_wrapper {
+        text-align: left;
+        margin: 0 auto 0 auto;
+        border: 1px solid gray;
+        width: 50%;
+        border-radius: 7px;
+        background: #D9D9D9;
+    }
+
+    .examples {
+        font-size: large;
+        margin: 30px auto 30px auto;
+        padding: 30px;
+        background: #FFCECE;
+        width: 75%;
+    }
+
+    .examples .title {
+        font-family: helvetica;
+        font-size: xx-large;
+        text-align: left;
+        font-weight: bold;
     }
 
 </style>
