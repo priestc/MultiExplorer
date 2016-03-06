@@ -17,7 +17,7 @@ server {
     }
 
     location /static/ {
-        root /home/chris/MultiExplorer/;
+        root /home/chris/MultiExplorer/multiexplorer/;
         expires modified 2d;
     }
 
