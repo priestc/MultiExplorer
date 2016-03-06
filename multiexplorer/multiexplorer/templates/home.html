@@ -5,39 +5,50 @@
 
 <h1>MultiExplorer</h1>
 <form method="post" action="#">
-    <h2>Address Balance</h2>
-    <input type="text" name="address_balance_input_box" class="address" value="1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai">
-    <input type="submit" id="address_balance_button" value="Get Balance">
 
-    <div id="address_balance_results"></div>
+    <section id="address_balance">
+        <h2>Address Balance</h2>
+        <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address">
+        <input type="submit" id="address_balance_button" value="Get Balance">
 
-    <h2>Block Information</h2>
-    <select name="block_info">
-        {% for currency in block_info_currencies %}
-        <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
-        {% endfor %}
-    </select>
+        <div id="address_balance_results"></div>
+    </section>
 
-    <br><br>
+    <section  id="get_block">
+        <h2>Block Information</h2>
+        <select name="block_info">
+            {% for currency in block_info_currencies %}
+            <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
+            {% endfor %}
+        </select>
 
-    <input type="text" class="height" name="block_input_box">
-    <input type="submit" value="Get Block By Height">
+        <br><br>
 
-    <br><br>
+        <input type="text" class="block_number" name="block_number_input_box" placeholder="Enter Block Height">
+        <input type="submit" value="Get Block By Height">
 
-    <input type="text" class="block_hash" name="block_input_box">
-    <input type="submit" value="Get Block By Hash">
+        <br><br>
 
-    <br><br>
+        <input type="text" class="block_hash" name="block_hash_input_box" placeholder="Enter Block Hash">
+        <input type="submit" value="Get Block By Hash">
 
-    <input type="submit" value="Get Block By Latest">
+        <br><br>
 
-    <h2>Get UTXOs for address</h2>
-    <input type="text" class="address" name="unspent_outputs_input_box" value="1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai">
-    <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
+        <input type="submit" value="Get Block By Latest">
 
-    <div id="aggregated_unspent_outputs"></div>
-    <div id="unspent_outputs_results"></div>
+        <div id="aggregated_get_block"></div>
+        <div id="get_block_results"></div>
+    </section>
+
+
+    <section block="unspent_outputs">
+        <h2>Get UTXOs for address</h2>
+        <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address">
+        <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
+
+        <div id="aggregated_unspent_outputs"></div>
+        <div id="unspent_outputs_results"></div>
+    </section>
 
 </form>
 
@@ -95,6 +106,26 @@
         margin: 10px;
         width: 25em;
         background: #FFD19E;
+    }
+
+    section {
+        background: #D6FFED;
+        border: 1px solid brown;
+        margin: 10px;
+        padding: 15px;
+    }
+
+    #address_balance {
+        background: #FFF2D6;
+    }
+
+    #get_block {
+        background: #FFD6FC;
+    }
+
+    h2 {
+        padding-bottom: 15px;
+        margin: 5px;
     }
 
 </style>
