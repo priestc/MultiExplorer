@@ -274,19 +274,35 @@
     }
 
 </style>
-<script src="{% static 'jquery-2.2.1.min.js' %}"></script
-<script src="{% static 'bitcore.browser.min.js' %}"></script>
+<script src="{% static 'jquery-2.2.1.min.js' %}"></script>
+<script src="{% static 'bitcore-lib.min.js' %}"></script>
 
 <script>
+    var bitcore = require('bitcore-lib');
     var service_info = JSON.parse('{{ service_info_json|safe }}');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var spinner = "<img src='{% static 'spin.gif' %}'>"
+
+    function guess_currency_from_address(address) {
+        // Given an address, guess what currency it is by lookign at the magic byte.
+        // returns undefined if it can't find a match.
+        var magic_byte = bitcore.encoding.Base58Check(address).buf[0];
+
+        var ret;
+        $.each(crypto_data, function(currency, data) {
+            if(data['address_version_byte'] == magic_byte) {
+                ret = currency;
+                return false;
+            }
+        });
+        return ret
+    }
 
     $("#address_balance_button").click(function(event) {
         event.preventDefault();
         var address = $("input[name=address_balance_input_box]").val();
         $("#addres_balance .service_call").remove();
-        currency = 'btc';
+        var currency = guess_currency_from_address(address);
 
         present_results(
             currency, "address_balance", "?address=" + address,
@@ -324,7 +340,7 @@
         var aggregate_container = $("#aggregated_unspent_outputs").empty();
         $("#unspent_outputs .service_call").remove();
 
-        var currency = "btc";
+        var currency = guess_currency_from_address(address);
 
         present_results(
             currency, "unspent_outputs", "?address=" + address,
