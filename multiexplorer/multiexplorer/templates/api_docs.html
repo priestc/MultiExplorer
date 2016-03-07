@@ -227,6 +227,127 @@
         </div>
     </div>
 
+    <h3>Transaction History for Address</h3>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/transaction_history/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "currency": [
+            "btc",
+            "Bitcoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "service_name": "SmartBit",
+        "transactions": [
+            {
+                "amount": 1.91316531,
+                "confirmations": 26,
+                "date": "2016-03-07T02:39:19Z",
+                "fee": 0.0001,
+                "txid": "020c174b24dd3b75497219d01b8a2b09496e7b7bba8a7471c1310f769ca9c8a6"
+            },
+            {
+                "amount": -1.91316531,
+                "confirmations": 25,
+                "date": "2016-03-07T02:48:24Z",
+                "fee": 0.00968986,
+                "txid": "b5a61d2bd2f74de89fae908095ec8e34c21f4771d600c0a38423def280e3c5b5"
+            }
+        ],
+        "url": "https://api.smartbit.com.au/v1/blockchain/address/16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9"
+    }
+
+            </pre>
+            </code>
+        </div>
+    </div>
+
+    <h3>Block Information</h3>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/get_block/6?block_hash=00000000b6ee1bc8ef48268ca7fbd243cf2d4c4792620ebfc5933cf08c487bdb&amp;currency=btc
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "block": {
+            "block_number": 231,
+            "confirmations": 401306,
+            "hash": "00000000b6ee1bc8ef48268ca7fbd243cf2d4c4792620ebfc5933cf08c487bdb",
+            "merkle_root": "6229511483becd964893b5994aa7a2876d7435bc0c70cab7bfdb1c6eb3703d8c",
+            "mining_difficulty": 1.0,
+            "next_hash": "0000000098e453043107b29a58db813021640b3def7c1e659742ddf56420d6ca",
+            "previous_hash": "00000000a7494fded2b0cc826dd1c58f1c383714f2de0449a3a3643ead5452c2",
+            "sent_value": 50.0,
+            "size": 216,
+            "time": "2009-01-12T16:23:23Z",
+            "total_fees": 0.0,
+            "tx_count": 1,
+            "txids": [
+                "6229511483becd964893b5994aa7a2876d7435bc0c70cab7bfdb1c6eb3703d8c"
+            ]
+        },
+        "currency": [
+            "btc",
+            "Bitcoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "service_name": "Toshi",
+        "url": "https://bitcoin.toshi.io/api/v0/blocks/00000000b6ee1bc8ef48268ca7fbd243cf2d4c4792620ebfc5933cf08c487bdb"
+    }
+            </pre>
+            </code>
+        </div>
+
+        <div class="url">
+            http://{{ domain }}/api/get_block/32?block_number=653&amp;currency=vtc<br>
+        </div>
+        
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "block": {
+            "block_number": 653,
+            "confirmations": 467163,
+            "hash": "97959ad8dea703320b57028d0e7b5f9567ae5e8c80fc01a50764f3e3f27f61cf",
+            "merkle_root": "379acf765df947097f605c68bf26dbf560183b501d8d1b6e883c21ac7270a084",
+            "mining_difficulty": 0.00024414,
+            "next_hash": "795b5c2a07be3252c4f61d446d8d75a6205af84e668929df05a9370a375d6b1f",
+            "previous_hash": "2f878ebd803971e323f2d1c441ce19008ec823a0f6c2af607fd2b5997975f307",
+            "size": 188,
+            "time": "2014-01-11T09:34:31Z",
+            "tx_count": 1,
+            "txids": [
+                "379acf765df947097f605c68bf26dbf560183b501d8d1b6e883c21ac7270a084"
+            ],
+            "version": 2
+        },
+        "currency": [
+            "vtc",
+            "Vertcoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "service_name": "This is VTC",
+        "url": "http://explorer.thisisvtc.com/api/block/97959ad8dea703320b57028d0e7b5f9567ae5e8c80fc01a50764f3e3f27f61cf"
+    }
+            </pre>
+            </code>
+        </div>
+
+    </div>
+
+    <h3>Recommended Transaction Fee</h3>
+
 </section>
 
 {% endblock %}

@@ -41,6 +41,7 @@ def perform_lookup(request, service_mode, service_id):
         currency, currency_name = guess_currency_from_address(address)
     else:
         currency_name = crypto_data[currency]['name']
+        currency = currency.lower()
 
     if not currency:
         return http.JsonResponse({
@@ -58,35 +59,43 @@ def perform_lookup(request, service_mode, service_id):
         response_dict = hit
     else:
         try:
-            s = Service()
+            serv = Service()
+
+            if currency not in Service.supported_cryptos:
+                raise Exception("%s not supported for %s with %s" % (
+                    currency_name, service_mode, serv.name
+                ))
+
             if service_mode == 'address_balance':
                 response_dict = {
-                    'balance': s.get_balance(currency, address)
+                    'balance': serv.get_balance(currency, address)
                 }
             elif service_mode == 'unspent_outputs':
-                utxos = s.get_unspent_outputs(currency, address)
+                utxos = serv.get_unspent_outputs(currency, address)
                 response_dict = {
                     'utxos': sorted(utxos, key=lambda x: x['output'])
                 }
             elif service_mode == 'historical_transactions':
-                txs = s.get_histrical_transactions(currency, address)
+                txs = serv.get_transactions(currency, address)
                 response_dict = {
                     'transactions': sorted(txs, key=lambda x: -x['confirmations'])
                 }
             elif service_mode == 'get_block':
                 response_dict = {
-                    'block': s.get_block(
-                        currency, latest=latest, block_height=block_height, block_number=block_number
+                    'block': serv.get_block(
+                        currency, latest=latest,
+                        block_number=block_number if block_number else '',
+                        block_hash=block_hash if block_hash else ''
                     )
                 }
             elif service_mode == 'get_optimal_fee':
                 response_dict = {
-                    'optimal_fee_per_KiB': s.get_optimal_fee(currency, 1024)
+                    'optimal_fee_per_KiB': serv.get_optimal_fee(currency, 1024)
                 }
 
             response_dict.update({
-                'url': s.last_url,
-                'raw_response': s.last_raw_response.json(),
+                'url': serv.last_url,
+                'raw_response': serv.last_raw_response.json(),
                 'timestamp': int(time.time()),
                 'service_name': Service.name,
                 'currency': [currency, currency_name]
