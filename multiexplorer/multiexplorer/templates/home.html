@@ -3,98 +3,15 @@
 
 {% block content %}
 
-<section id="address_balance">
-    <h2>Address Balance</h2>
-    <input type="text" name="address_balance_input_box" class="address" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
-    <input type="submit" id="address_balance_button" value="Get Balance">
-
-    <div id="address_balance_results" class="results_container"></div>
-</section>
-
 <section  id="get_block">
-    <h2>Block Information</h2>
-    <select name="block_info">
-        {% for currency in block_info_currencies %}
-        <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
-        {% endfor %}
-    </select>
+    <h2>The Block Explorer that uses other block explorers.</h2>
 
-    <br><br>
-
-    <input type="text" class="block_number" name="block_number_input_box" placeholder="Enter Block Height">
-    <input type="submit" value="Get Block By Height">
-
-    <br><br>
-
-    <input type="text" class="block_hash" name="block_hash_input_box" placeholder="Enter Block Hash">
-    <input type="submit" value="Get Block By Hash">
-
-    <br><br>
-
-    <input type="submit" value="Get Block By Latest">
-
-    <div id="aggregated_get_block" class="aggregated_container"></div>
-    <div id="get_block_results" class="results_container"></div>
 </section>
-
-
-<section block="unspent_outputs">
-    <h2>Get UTXOs for address</h2>
-    <input type="text" class="address" name="unspent_outputs_input_box" placeholder="Enter Address" value="{{ TEST_ADDRESS }}">
-    <input type="submit" id="unspent_outputs_button" value="Get UTXOs">
-
-    <div id="aggregated_unspent_outputs" class="aggregated_container"></div>
-    <div id="unspent_outputs_results" class="results_container"></div>
-</section>
-
-<div style="display: none">
-    <img src='{% static 'spin.gif' %}'>
-</div>
 
 <style>
-    .service_call {
-        border: 1px solid black;
-        background: #dfdfdf;
-        margin: 5px;
-        padding: 3px;
-        width: 300px;
-        min-height: 40px;
-        overflow: hidden;
-    }
-    .service_title {
-        width: 40px;
-    }
 
     input.address {
         width: 22em;
-    }
-
-    input.height {
-        width: 6em;
-    }
-
-    input.block_hash {
-        width: 30em;
-    }
-
-    .error {
-        color: red;
-    }
-
-    .result {
-        float: right;
-    }
-
-    .final_result {
-        font-weight: bold;
-    }
-
-    .matches {
-        color: green
-    }
-
-    .not-matches {
-        color: red;
     }
 
     .utxo_table {
@@ -107,21 +24,9 @@
         background: #FFF2D6;
     }
 
-    #get_block {
-        background: #FFD6FC;
-    }
-
     h2 {
         padding-bottom: 15px;
         margin: 5px;
-    }
-
-    .results_container {
-        overflow: hidden;
-    }
-
-    .service_call {
-        float: left;
     }
 
     .aggregated_container {
@@ -141,160 +46,11 @@
     }
 
 </style>
-<script src="{% static 'jquery-2.2.1.min.js' %}"></script>
-<script src="{% static 'bitcore-lib.min.js' %}"></script>
 
 <script>
     var bitcore = require('bitcore-lib');
     var service_info = JSON.parse('{{ service_info_json|safe }}');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
-    var spinner = "<img src='{% static 'spin.gif' %}'>"
-
-    function guess_currency_from_address(address) {
-        // Given an address, guess what currency it is by lookign at the magic byte.
-        // returns undefined if it can't find a match.
-        var magic_byte = bitcore.encoding.Base58Check(address).buf[0];
-
-        var ret;
-        $.each(crypto_data, function(currency, data) {
-            if(data['address_version_byte'] == magic_byte) {
-                ret = currency;
-                return false;
-            }
-        });
-        return ret
-    }
-
-    $("#address_balance_button").click(function(event) {
-        event.preventDefault();
-        var address = $("input[name=address_balance_input_box]").val();
-        $("#addres_balance .service_call").remove();
-        var currency = guess_currency_from_address(address);
-
-        present_results(
-            currency, "address_balance", "?address=" + address,
-            function(response, matches) {
-                var mch_cls = matches ? "matches" : "not-matches";
-                return "<span class='final_result " + mch_cls + "'><span class='balance'>" + response['balance'] + '</span> ' + currency.toUpperCase() + "</span>"
-            },
-            function(response, container) {
-                var matched = 0;
-                var new_value = response['balance'];
-                var previous = container.find('.balance');
-
-                if(previous.length == 0) {
-                    return true;
-                }
-
-                $.each(previous, function(i, result) {
-                    // each previous result
-                    var numerical = parseInt($(result).text())
-                    if(numerical == new_value) {
-                        matched += 1;
-                    }
-                });
-
-                return matched > (previous.length / 2);
-                //console.log("Result", ret, matched, new_value, previous.length, response['service_name']);
-                //return ret;
-            }
-        );
-    });
-
-    $("#unspent_outputs_button").click(function(event) {
-        event.preventDefault();
-        var address = $("input[name=unspent_outputs_input_box]").val();
-        var aggregate_container = $("#aggregated_unspent_outputs").empty();
-        $("#unspent_outputs .service_call").remove();
-
-        var currency = guess_currency_from_address(address);
-
-        present_results(
-            currency, "unspent_outputs", "?address=" + address,
-            function(response, matches) {
-                if(aggregate_container.children().length == 0) {
-                    // first response, place it on the aggregate container
-                    //console.log("first result", response.service_name);
-                    $.each(response['utxos'], function(i, utxo) {
-                        var rows = "";
-                        var table = $("<table class='utxo_table'></table>");
-                        rows += "<tr><td>Confirmations</td><td class='confirmations'>" + utxo['confirmations'] + "</td></tr>";
-                        rows += "<tr><td>Output</td><td class='output'>" + utxo['output'] + "</td></tr>";
-                        rows += "<tr><td>Amount</td><td class='amount'>" + utxo['amount'] + "</td></tr>";
-                        table.append(rows);
-                        aggregate_container.append(table);
-                    });
-                }
-
-                var match_class = matches ? "matches" : "not-matches";
-                var match_text = matches ? "Matches" : "No Match";
-                return "<span class='final_result " + match_class + "'>" + match_text + "</span>";
-            },
-            function(response, container) {
-                // matches_func, compare existing, returns whether this is in consensus or not.
-                var aggregated_utxos = aggregate_container.find(".utxo_table");
-                var matches = true;
-
-                //console.log("matches func");
-
-                $.each(response['utxos'], function(i, utxo) {
-                    var corresponding = $(aggregated_utxos[i]);
-                    if(corresponding.length == 0) {
-                        // first result! nothing to compare to yet. Consider Matched!
-                        return false;
-                    }
-
-                    var matched_amount = parseInt(corresponding.find(".amount").text()) == parseInt(utxo['amount']);
-                    var matched_output = corresponding.find(".output").text() == utxo['output'];
-
-                    if(!matched_amount || !matched_output) {
-                        matches = false;
-                        return false; // stop iterating
-                    }
-                });
-
-                return matches;
-            }
-        );
-    });
-
-    function present_results(currency, mode, api_args, format_result_func, matches_func) {
-        var container = $("#" + mode + "_results");
-
-        $.each(crypto_data[currency][mode], function(i, service_id) {
-            // each service for the supported cyurrency
-            var info = service_info[service_id];
-            var url = info['url'];
-            var service_name = info['name'];
-            var a = "<a class='service_title' target='_blank' href='" + url + "'> (" + service_id + ') ' + service_name + "</a>";
-
-            var result_selector = "service-" + mode + '-' + service_id;
-
-            container.append(
-                $("<div class='service_call'>" + a + "<div class='result " + result_selector + "'>" + spinner + "</div></div>")
-            );
-
-            var url = "/api/" + currency + "/" + mode + "/" + service_id + api_args;
-
-            $.ajax({
-                url: url,
-            }).done(function(response) {
-
-                matches = matches_func(response, container);
-
-                var raw_link = "<a target='_blank' href='" + response['url'] + "'>Raw</a>";
-                var api_link = "<a target='_blank' href='" + url + "&include_raw=true'>API</a>";
-                $("." + result_selector).html(
-                    format_result_func(response, matches) + '<br>' + raw_link + ' ' + api_link
-                );
-
-            }).fail(function(xhr, status, error) {
-                var error_msg = xhr.responseJSON['error'];
-                $("." + result_selector).html("<span class='error'>Error:" + error_msg + "</span>");
-            });
-        });
-    };
-
 
 </script>
 

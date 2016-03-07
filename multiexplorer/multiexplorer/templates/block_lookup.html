@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<style>
+    input.height {
+        width: 6em;
+    }
+
+    input.block_hash {
+        width: 30em;
+    }
+
+    #get_block {
+        background: #FFD6FC;
+    }
+</style>
+
+<h2>Get Block</h2>
+<section id="get_block">
+    <select name="block_info">
+        {% for currency in block_info_currencies %}
+        <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    <input type="text" class="block_number" name="block_number_input_box" placeholder="Enter Block Height">
+    <input type="submit" value="Get Block By Height">
+
+    <br><br>
+
+    <input type="text" class="block_hash" name="block_hash_input_box" placeholder="Enter Block Hash">
+    <input type="submit" value="Get Block By Hash">
+
+    <br><br>
+
+    <input type="submit" value="Get Block By Latest">
+</section>
+<script>
+    var currency = "{{ currency }}";
+    var height = "{{ block_height }}";
+    var block_number = "{{ block_number }}";
+
+</script>
+{% endblock %}

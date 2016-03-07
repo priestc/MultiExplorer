@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<section style="background: #DBF5FF">
+    <h2>{{ currency|upper }} ({{ currency_name }}) - {{ address }}</h2>
+
+    <div id="address_balance_results" class="results_container"></div>
+</section>
+
+<script src="{% static 'consensus_from_services.js' %}"></script>
+<script>
+    var service_info = JSON.parse('{{ service_info_json|safe }}');
+    var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
+    var address = "{{ address }}";
+
+    $("#addres_balance .service_call").remove();
+    var currency = "{{ currency }}";
+
+    present_results(
+        currency, "address_balance", "?address=" + address,
+        function(response, matches) {
+            var mch_cls = matches ? "matches" : "not-matches";
+            return "<span class='final_result " + mch_cls + "'><span class='balance'>" + response['balance'] + '</span> ' + currency.toUpperCase() + "</span>"
+        },
+        function(response, container) {
+            var matched = 0;
+            var new_value = response['balance'];
+            var previous = container.find('.balance');
+
+            if(previous.length == 0) {
+                return true;
+            }
+
+            $.each(previous, function(i, result) {
+                // each previous result
+                var numerical = parseInt($(result).text())
+                if(numerical == new_value) {
+                    matched += 1;
+                }
+            });
+
+            return matched > (previous.length / 2);
+            //console.log("Result", ret, matched, new_value, previous.length, response['service_name']);
+            //return ret;
+        }
+    );
+</script>
+
+{% endblock %}

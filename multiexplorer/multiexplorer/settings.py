@@ -113,4 +113,6 @@ CACHES = {
 
 STATIC_ROOT = "static/"
 
-from local_settings import *
+TEST_ADDRESS = ''
+
+from .local_settings import *

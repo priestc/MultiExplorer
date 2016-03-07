@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load staticfiles %}
 <html>
     <head>
         <title>MiltiExplorer</title>
@@ -15,25 +16,81 @@
                 background: transparent;
                 border: 0px;
             }
+            .service_call {
+                border: 1px solid black;
+                background: #dfdfdf;
+                margin: 5px;
+                padding: 3px;
+                width: 300px;
+                min-height: 40px;
+                overflow: hidden;
+            }
+            .service_title {
+                width: 40px;
+            }
+            .error {
+                color: red;
+            }
+
+            .result {
+                float: right;
+            }
+
+            .final_result {
+                font-weight: bold;
+            }
+
+            .results_container {
+                overflow: hidden;
+            }
+
+            .service_call {
+                float: left;
+            }
+
+            .matches {
+                color: green
+            }
+
+            .not-matches {
+                color: red;
+            }
         </style>
+        <script src="{% static 'jquery-2.2.1.min.js' %}"></script>
     </head>
     <body>
+        <div style="display: none">
+            <img src='{% static 'spin.gif' %}'>
+        </div>
         <h1>MultiExplorer</h1>
+        <input id="address_lookup" name="address" type="text" value="{{ address }}">
+        <input id="address_lookup_button" type="submit" value="go">
+        <a href="{% url 'block_lookup' %}">Block Data</a>
+        <a href="{% url 'api_docs' %}">API Docs</a>
+
+        <script>
+            var spinner = "<img src='{% static 'spin.gif' %}'>";
+            $("#address_lookup_button").click(function() {
+                window.location = "/address/" + $("#address_lookup").val();
+            });
+        </script>
+
         {% block content %}
         {% endblock %}
+
         <section id="footer">
             Built Using <a href="https://github.com/priestc/moneywagon">Moneywagon</a>. <a href="https://github.com/priestc/MultiExplorer">Github</a>
         </section>
         <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+          (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-501381-21', 'auto');
-  ga('send', 'pageview');
+          ga('create', 'UA-501381-21', 'auto');
+          ga('send', 'pageview');
 
-</script>
+        </script>
     </body>
 
 </html>

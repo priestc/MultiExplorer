@@ -17,11 +17,22 @@
         border: 1px solid white;
         padding: 3px;
     }
+
+    h2 {
+        font-size: xx-large;
+        padding: 40px;
+    }
+
+    h3 {
+        background: #FFDFDB;
+        padding: 40px;
+        border-radius: 7px;
+    }
+
     .code_wrapper {
         text-align: left;
         margin: 0 auto 0 auto;
         border: 1px solid gray;
-        width: 50%;
         border-radius: 7px;
         background: #D9D9D9;
     }
@@ -40,10 +51,34 @@
         text-align: left;
         font-weight: bold;
     }
+
+    .info {
+        background: white;
+        max-width: 50%;
+        text-align: left;
+        padding: 20px;
+        background: 1px solid #dfdfdf;
+        border-radius: 7px;
+        margin: 0 auto 0 auto;
+    }
+
+    .url {
+        text-aize: large;
+        font-weight: bold;
+        padding: 20px;
+    }
+
+    .general_url {
+        font-size: x-large;
+    }
+
+    code {
+        font-size: small;
+    }
 </style>
 
 <section id="api">
-    <h2>API</h2>
+    <h2>API Documentation</h2>
 
 
     <h3>Pass through JSON API</h3>
@@ -54,65 +89,142 @@
     {{ service_table|safe }}
 
     <h3>Address Balance</h3>
-    http://{{ domain }}/api/<i>[currency]</i>/address_balance/<i>[service_id]</i>?address=<i>[address]</i>
 
-    <br><br>
-
-
-    <br>
-    <div class="examples">
-        <div class='title'>Examples:</div>
-        http://{{ domain }}/api/BTC/address_balance/5?address=1M9XB8No8MnNjJvzPrtKyAnRfWwgMYr2Jp<br>
-        http://{{ domain }}/api/LTC/address_balance/5?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">http://{{ domain }}/api/address_balance/<i>[service_id]</i>?address=<i>[address]</i></li></span>
+        <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
+            <li>The <i>currency</i> argument is optional. If you leave it off,
+                the currency will be guessed from decoding the address version byte.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the raw_response field in the response.</li>
+        </ul>
     </div>
 
-    <br><br>
-    Service number 5 corresponds to Blockr.io. This API call will return data from
-    the Blockr.io service. The response will look like this:
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/address_balance/5?address=PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5&amp;include_raw=true
+        </div>
 
-    <br>
-    <br>
-
-    <div class="code_wrapper">
-        <code>
-        <pre>
-        {
-            "balance": 20,
-            "cache_hit": true,
-            "raw_response": {
-                "code": 200,
-                "data": {
-                    "address": "1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai",
-                    "balance": 20,
-                    "balance_multisig": 0,
-                    "first_tx": {
-                        "block_nb": "306478",
-                        "confirmations": 94860,
-                        "time_utc": "2014-06-18T11:10:58Z",
-                        "tx": "be39fcb60f7ca0b9976f86e46ffb1acb87f3ec28d09171515da8470e8dd45e51",
-                        "value": 0.001
-                    },
-                    "is_unknown": false,
-                    "is_valid": true,
-                    "last_tx": {
-                        "block_nb": "306479",
-                        "confirmations": 94859,
-                        "time_utc": "2014-06-18T11:17:31Z",
-                        "tx": "f466e441f7fa7a6b9608fe4887721f01c0cfc3472c02f29fd69d64eb96a47434",
-                        "value": 19.999
-                    },
-                    "nb_txs": 2,
-                    "totalreceived": 20
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "balance": 676.070116,
+        "currency": [
+            "ppc",
+            "Peercoin"
+        ],
+        "fetched_seconds_ago": 228,
+        "raw_response": {
+            "code": 200,
+            "data": {
+                "address": "PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5",
+                "balance": 676.070116,
+                "balance_multisig": 0,
+                "first_tx": {
+                    "block_nb": "180692",
+                    "confirmations": 44472,
+                    "time_utc": "2015-06-20T23:20:18Z",
+                    "tx": "92e41bba294e9e563bf9e41ee31cb461faf56e676a397950c6f8d983ba9c322e",
+                    "value": 289.742907
                 },
-                "message": "",
-                "status": "success"
+                "is_unknown": false,
+                "is_valid": true,
+                "last_tx": {
+                    "block_nb": "203654",
+                    "confirmations": 21510,
+                    "time_utc": "2015-11-03T19:33:18Z",
+                    "tx": "50c4d427ea350ccb068820667098366ad86684652d7f44f738de50a64b8c6179",
+                    "value": 386.327209
+                },
+                "nb_txs": 2,
+                "totalreceived": 676.070116
             },
-            "service_name": "Blockr.io",
-            "timestamp": 1457221865,
-            "url": "http://btc.blockr.io/api/v1/address/info/1PZ3Ps9RvCmUW1s1rHE25FeR8vtKUrhEai"
-        }
-        </pre>
-        </code>
+            "message": "",
+            "status": "success"
+        },
+        "service_name": "Blockr.io",
+        "url": "http://ppc.blockr.io/api/v1/address/info/PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5"
+    }
+            </pre>
+            </code>
+        </div>
+
+        <div class="url">
+            http://{{ domain }}/api/address_balance/5?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n&amp;currency=ltc
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "balance": 345339.0,
+        "currency": [
+            "ltc",
+            "Litecoin"
+        ],
+        "fetched_seconds_ago": 31,
+        "service_name": "Chain.So",
+        "url": "https://chain.so/api/v2/get_address_balance/ltc/LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n/1"
+    }
+            </pre>
+            </code>
+            </div>
+
+    </div>
+
+    <h3>Unspent Outputs for Address</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">http://{{ domain }}/api/unspent_outputs/<i>[service_id]</i>?address=<i>[address]</i></li></span>
+        <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
+            <li>The <i>currency</i> argument is optional. If you leave it off,
+                the currency will be guessed from decoding the address version byte.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the raw_response field in the response.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/unspent_outputs/11?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "cache_hit": false,
+        "currency": [
+            "ltc",
+            "Litecoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "service_name": "Chain.So",
+        "url": "https://chain.so/api/v2/get_tx_unspent/ltc/LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n",
+        "utxos": [
+            {
+                "address": "LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n",
+                "amount": 1125000000000,
+                "confirmations": 2621,
+                "output": "03673409f75a36a385e1e12e51222f22c5500bc4e851ba61ddb2c5d2f78d3d5b:0"
+            },
+            {
+                "address": "LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n",
+                "amount": 1000000000,
+                "confirmations": 15,
+                "output": "f83ca6959e11742889dd36e9e4d3654c10aee306c174271610bb6270b2226efe:0"
+            }
+        ]
+    }
+            </pre>
+            </code>
+        </div>
     </div>
 
 </section>
