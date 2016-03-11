@@ -68,22 +68,16 @@ def perform_lookup(request, service_mode, service_id):
         response_dict = hit
     else:
         try:
-            if Service:
-                response_dict = _fetch_from_single_service(**locals())
-            elif service_id == 'fallback':
-                response_dict = _fetch_by_fallback(**locals())
-            elif service_id.startswith("paranoid"):
-                response_dict = _fetch_by_paranoid(**locals())
-
-            response_dict.update({
-                'timestamp': int(time.time()),
-                'currency': [currency, currency_name]
-            })
-
+            response_dict = _fetch(**locals())
         except Exception as exc:
             return http.JsonResponse(
                 {'error': "%s: %s" % (exc.__class__.__name__, str(exc))
             }, status=500)
+
+        response_dict.update({
+            'timestamp': int(time.time()),
+            'currency': [currency, currency_name]
+        })
 
         cache.set(cache_key, response_dict)
 
@@ -96,67 +90,43 @@ def perform_lookup(request, service_mode, service_id):
     return http.JsonResponse(response_dict)
 
 
-def _fetch_from_single_service(Service, service_mode, address, currency, currency_name, block_args, **k):
-    serv = Service()
-
-    if currency not in Service.supported_cryptos:
-        raise Exception("%s not supported for %s with %s" % (
-            currency_name, service_mode, serv.name
-        ))
-
-    if service_mode == 'address_balance':
-        ret = {'balance': serv.get_balance(currency, address)}
-    elif service_mode == 'unspent_outputs':
-        utxos = serv.get_unspent_outputs(currency, address)
-        ret = {'utxos': sorted(utxos, key=lambda x: x['output'])}
-    elif service_mode == 'historical_transactions':
-        txs = serv.get_transactions(currency, address)
-        ret = {'transactions': sorted(txs, key=lambda x: -x['confirmations'])}
-    elif service_mode == 'get_block':
-        ret = {'block': serv.get_block(currency, **block_args)}
-    elif service_mode == 'get_optimal_fee':
-        ret = {'optimal_fee_per_KiB': serv.get_optimal_fee(currency, 1024)}
+def _fetch(Service, service_mode, address, currency, currency_name, block_args, **k):
+    if Service:
+        if currency not in Service.supported_cryptos:
+            raise Exception("%s not supported for %s with %s" % (
+                currency_name, service_mode, serv.name
+            ))
+        services = [Service]
     else:
-        raise Exception("Unsupported Service mode")
+        services = []
 
-    ret['url'] = serv.last_url,
-    ret['raw_response'] = serv.last_raw_response.json()
-    ret['service_name'] = Service.name
-    ret['service_id'] = Service.service_id
-    return ret
-
-
-def _fetch_by_fallback(Service, service_mode, address, currency, currency_name, block_args, **k):
     if service_mode == 'address_balance':
-        fetcher = AddressBalance()
+        fetcher = AddressBalance(services=services)
         ret = {'balance': fetcher.action(currency, address)}
     elif service_mode == 'unspent_outputs':
-        fetcher = UnspentOutputs()
+        fetcher = UnspentOutputs(services=services)
         utxos = fetcher.action(currency, address)
         ret = {'utxos': sorted(utxos, key=lambda x: x['output'])}
     elif service_mode == 'historical_transactions':
-        fetcher = HistoricalTransactions()
+        fetcher = HistoricalTransactions(services=services)
         txs = fetcher.action(currency, address)
         ret = {'transactions': sorted(txs, key=lambda x: -x['confirmations'])}
     elif service_mode == 'get_block':
-        fetcher = GetBlock()
+        fetcher = GetBlock(services=services)
         ret = {'block': fetcher.action(currency, **block_args)}
     elif service_mode == 'get_optimal_fee':
-        fetcher = OptimalFee()
+        fetcher = OptimalFee(services=services)
         ret = {'optimal_fee_per_KiB': fetcher.action(currency, 1024)}
     else:
         raise Exception("Unsupported Service mode")
 
     s = fetcher._successful_service
+    ret['url'] = s.last_url
     ret['raw_response'] = s.last_raw_response.json()
     ret['service_name'] = s.name
     ret['service_id'] = s.service_id
 
     return ret
-
-
-def _fetch_by_paranoid(Service, currency, currency_name, block_args, service_mode, **k):
-    pass
 
 
 def home(request):
