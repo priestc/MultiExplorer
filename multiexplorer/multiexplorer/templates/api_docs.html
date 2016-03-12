@@ -88,13 +88,38 @@
 
     {{ service_table|safe }}
 
+    <h3>Service ID / Fetching Modes</h3>
+
+    <div class="info">
+        All API calls take a service_id parameter. This parameter can be used to call a single survice,
+        or it can be used to enable various "fetching modes".
+
+        <ul>
+            <li>
+                <strong>fallback</strong> to denote you want to use the first working service. Each currency
+                has an ordered list of defined services. Using this mode guarantees a result
+                (from somewhere) will always be returned.
+                This service can be thought as being "high availability".
+            </li>
+            <li>
+                <strong>paranoidN</strong> to enable paranoid mode. This will call N services, and verify that they all
+                return the same data. If any service returns a different value, the call will indicate this.
+                In the case of a paranoid mode failure, the underlying cryptocurrency network may be forked.
+            </li>
+            <li>
+                <strong>averageN</strong> can be used to calculate the average of N service calls.
+                This mode is helpful for determining the optimal transaction fee and current price.
+                This mode does not apply to many blockchain operations since all services return the exact same data.
+            </li>
+        </ul>
+    </div>
+
     <h3>Address Balance</h3>
 
     <div class="info">
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/address_balance/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
-            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
@@ -105,7 +130,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/address_balance/5?address=PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5&amp;include_raw=true
+            http://{{ domain }}/api/address_balance/fallback?address=PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5&amp;include_raw=true
         </div>
 
         <div class="code_wrapper">
@@ -147,6 +172,7 @@
             "status": "success"
         },
         "service_name": "Blockr.io",
+        "service_id": 5,
         "url": "http://ppc.blockr.io/api/v1/address/info/PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5"
     }
             </pre>
@@ -290,7 +316,7 @@
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
             <li>The <i>currency</i> argument is <strong>required</strong>. There is no way to infer the currency
-                frm the block hash or block height, unlike from address version byte.</li>
+                from the block hash or block height, unlike from address version byte.</li>
             <li>You can use either <i>block_number</i>, <i>latest</i> or <i>block_hash</i>, but only one at the same time.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
