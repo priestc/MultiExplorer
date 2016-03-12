@@ -323,7 +323,6 @@
         </ul>
     </div>
 
-
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
@@ -401,6 +400,77 @@
     </div>
 
     <h3>Recommended Transaction Fee</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">http://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?</span>
+        <ul>
+            <li>The <i>currency</i> argument is <strong>required</strong>.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the response as it was returned directly from the service.</li>
+            <li>Returned is the amount of satoshi's that should be added as a transaction fee per KiB (1024 bytes).</li>
+            <li>For all currencies except Bitcoin, a fee of $0.02 USD is returned.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/get_optimal_fee/average4?currency=btc
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "currency": [
+            "btc",
+            "Bitcoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "optimal_fee_per_KiB": 42461,
+        "services": [
+            {
+                "id": 35,
+                "name": "CoinTape"
+            },
+            {
+                "id": 40,
+                "name": "bitcoinfees.21.co"
+            },
+            {
+                "id": 36,
+                "name": "BitGo"
+            },
+            {
+                "id": 2,
+                "name": "BlockCypher"
+            }
+        ]
+    }
+            </pre>
+            </code>
+        </div>
+
+        <div class="url">
+            http://{{ domain }}/api/get_optimal_fee/fallback?currency=ltc<br>
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "currency": [
+            "ltc",
+            "Litecoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "optimal_fee_per_KiB": 602391
+    }
+            </pre>
+            </code>
+        </div>
+
+    </div>
 
 </section>
 

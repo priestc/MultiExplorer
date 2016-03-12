@@ -137,10 +137,11 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency,
 
     if len(used_services) == 1:
         s = used_services[0]
-        ret['url'] = s.last_url
-        ret['raw_response'] = s.last_raw_response.json()
-        ret['service_name'] = s.name
-        ret['service_id'] = s.service_id
+        if s:
+            ret['url'] = s.last_url
+            ret['raw_response'] = s.last_raw_response.json()
+            ret['service_name'] = s.name
+            ret['service_id'] = s.service_id
     else:
         ret['services'] = [
             {'name': s.name, 'id': s.service_id, 'raw_response': s.last_raw_response.json()}
