@@ -103,14 +103,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache', #'django.core.cache.backends.db.DatabaseCache', #
-        'LOCATION': 'my_cache_table',
-        'TIMEOUT': 500000,
-    }
-}
-
 STATIC_ROOT = "static/"
 
 TEST_ADDRESS = ''
