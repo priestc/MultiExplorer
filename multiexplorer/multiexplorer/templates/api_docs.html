@@ -403,9 +403,9 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?</span>
+        <span class="general_url">http://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
-            <li>The <i>currency</i> argument is <strong>required</strong>.</li>
+            <li>The <i>currency</i> argument is <strong>required</strong>. Must be 3 or 4 letter code.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
             <li>Returned is the amount of satoshi's that should be added as a transaction fee per KiB (1024 bytes).</li>
