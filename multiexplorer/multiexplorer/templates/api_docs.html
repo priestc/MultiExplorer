@@ -9,12 +9,12 @@
     }
 
     #api table {
-        width: 50%;
-        margin: 10px auto 10px auto;
+        width: 100%;
+        margin: 50px auto 50px auto;
     }
 
     #api table td {
-        border: 1px solid white;
+        border: 1px solid gray;
         padding: 3px;
     }
 
@@ -80,17 +80,43 @@
 <section id="api">
     <h2>API Documentation</h2>
 
+    <h3>Introduction</h3>
+
+    <div class="info">
+
+        <h4>What can I do with the multiexplorer API?</h4>
+
+        The Multiexplorer API can be used to create a cryptocurrency wallet that is
+        both lightweight (meaning it doesn not use large amounts of bandwidth, memory and hard drive space)
+        and decentralized.
+
+        <h4>Doesn't building a wallet that depends on an expernal service make it centralized?</h4>
+
+        Only if that wallet was dependent on that one service. If that wallet cross-checked
+        all API calls through other APIs, then decentralization is maintained.
+
+        <h4>Can I run my own multiexplorer API?</h4>
+
+        Yes, all the software that runs the multiexplorer API is open source and
+        available on Github.
+
+        <h4>Who decides which services get used here?</h4>
+
+        The operators of multiexplorer.com decide which services get used here.
+        If you run your own instance of multiexplorer, you can disable certain services
+        and define your own set.
+
+    </div>
 
     <h3>Pass through JSON API</h3>
 
-    Use a single blockexplorer API via multiexplorer as a pass-thtough.
-    Service_id is a number cooresponding to the serivice in the table below.
-
-    {{ service_table|safe }}
-
-    <h3>Service ID / Fetching Modes</h3>
-
     <div class="info">
+        Use a single blockexplorer API via multiexplorer as a pass-thtough.
+        Service_id is a number cooresponding to the serivice in the table below.
+
+        {{ service_table|safe }}
+
+
         All API calls take a service_id parameter. This parameter can be used to call a single survice,
         or it can be used to enable various "fetching modes".
 
@@ -120,6 +146,8 @@
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/address_balance/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of address balance.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
@@ -208,7 +236,8 @@
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/unspent_outputs/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
-            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of unspent outputs.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
@@ -259,7 +288,8 @@
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
-            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The data that comes out of this endpoint is meant for use in wallet UIs
@@ -314,7 +344,8 @@
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/get_block/<i>[service_id]</i>?block_number=<i>[block_number]</i>&amp;block_hash=<i>[block_hash]</i>&amp;latest=<i>[true|false]</i></span>
         <ul>
-            <li><i>service_id</i> is a number corresponding to the number in the table above.</li>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of block information.</li>
             <li>The <i>currency</i> argument is <strong>required</strong>. There is no way to infer the currency
                 from the block hash or block height, unlike from address version byte.</li>
             <li>You can use either <i>block_number</i>, <i>latest</i> or <i>block_hash</i>, but only one at the same time.</li>
@@ -405,6 +436,10 @@
         URL general form:<br>
         <span class="general_url">http://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, <i>only</li> "average mode" applies for the optimal fee endpoint.
+                Each service returns a different value, so it makes sense to use the value of each service averaged together.
+                Paranoid mode will always fail, because rarely do each service return the exact same recommended fee.</li>
             <li>The <i>currency</i> argument is <strong>required</strong>. Must be 3 or 4 letter code.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
