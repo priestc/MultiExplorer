@@ -19,12 +19,22 @@
             .service_call {
                 border: 1px solid black;
                 background: #dfdfdf;
-                margin: 5px;
                 padding: 3px;
                 width: 300px;
                 min-height: 40px;
                 overflow: hidden;
+                margin: 5px;
             }
+
+            .service_call_container {
+                margin: 0 auto 0 auto;
+                border: 0px solid black;
+                display: flex;
+                flex-wrap: wrap;
+                flex-direction: row;
+                justify-content: center;
+            }
+
             .service_title {
                 width: 40px;
             }
@@ -44,16 +54,15 @@
                 overflow: hidden;
             }
 
-            .service_call {
-                float: left;
-            }
-
             .matches {
                 color: green
             }
 
             .not-matches {
                 color: red;
+            }
+            input.address {
+                width: 22em;
             }
         </style>
         <script src="{% static 'jquery-2.2.1.min.js' %}"></script>
@@ -63,9 +72,9 @@
             <img src='{% static 'spin.gif' %}'>
         </div>
         <h1>MultiExplorer</h1>
-        <input id="address_lookup" name="address" type="text" value="{{ address }}">
-        <input id="address_lookup_button" type="submit" value="go">
-        <a href="{% url 'block_lookup' %}">Block Data</a>
+        <input id="address_lookup" class="address" name="address" type="text" value="{{ address }}" placeholder="Enter any cryptocurrency address">
+        <input id="address_lookup_button" type="submit" value="Go">
+        <a href="{% url 'block_lookup' %}">Block Data</a> -
         <a href="{% url 'api_docs' %}">API Docs</a>
 
         <script>

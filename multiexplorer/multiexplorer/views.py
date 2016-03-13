@@ -58,6 +58,11 @@ def perform_lookup(request, service_mode, service_id):
             'error': "Currency Not Recognized: %s" % currency_name
         }, status=400)
 
+    response_dict = _cached_fetch(**locals())
+
+    return http.JsonResponse(response_dict)
+
+def _cached_fetch(service_mode, service_id, address, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
     key_ending = address or ":".join(block_args.values())
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
@@ -92,8 +97,7 @@ def perform_lookup(request, service_mode, service_id):
 
     response_dict['fetched_seconds_ago'] = int(time.time()) - response_dict['timestamp']
     del response_dict['timestamp']
-
-    return http.JsonResponse(response_dict)
+    return response_dict
 
 
 def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency, currency_name, block_args, **k):
@@ -162,13 +166,19 @@ def home(request):
 
 def single_address(request, address):
     currency, currency_name = guess_currency_from_address(address)
+    txs = _cached_fetch(
+        currency=currency, currency_name=currency_name, service_id="fallback",
+        address=address, Service=None, service_mode="historical_transactions"
+    )['transactions']
 
     return TemplateResponse(request, "single_address.html", {
         'crypto_data_json': crypto_data_json,
         'service_info_json': service_info_json,
         'address': address,
         'currency': currency,
+        'transactions': txs,
         'currency_name': currency_name,
+        'currency_icon': "logos/" + currency.lower() + "-logo.png",
     })
 
 def block_lookup(request):

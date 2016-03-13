@@ -2,10 +2,45 @@
 {% load staticfiles %}
 
 {% block content %}
+<style>
+    .tx_amount {
+        font-weight: bold;
+    }
+    .positive {
+        color: green;
+    }
+    .negative {
+        color: red;
+    }
+    .historical_tx {
+        margin: 0 auto 0 auto;
+        background: #DBFFE1;
+    }
+    .historical_tx td {
+        padding: 10px;
+    }
+</style>
+
 <section style="background: #DBF5FF">
     <h2>{{ currency|upper }} ({{ currency_name }}) - {{ address }}</h2>
+    <img src="{% static currency_icon %}" style="height: 200px">
 
-    <div id="address_balance_results" class="results_container"></div>
+    <h3>Network Consensus <span class="consensus_count"></span></h3>
+    <div class="service_call_container"></div>
+
+    <h3>Historical Transactions</h3>
+    <table class="historical_tx">
+    {% for tx in transactions %}
+        <tr>
+            <td>{{ tx.date|date:"D F d, Y" }}</a></td>
+            <td><span class="tx_amount {% if tx.amount > 0 %}positive{% else %}negative{% endif %}">
+                {% if tx.amount > 0 %}+{% else %}-{% endif %}{{ tx.amount }} {{ currency|upper }}</span></td>
+            <td><a href="/tx/{{ currency }}/{{ tx.txid }}">{{ tx.txid|truncatechars:19 }}</a></td>
+            <td>{{ tx.confirmations }} confirmations</td>
+        </tr>
+    {% endfor %}
+    </table>
+
 </section>
 
 <script src="{% static 'consensus_from_services.js' %}"></script>
@@ -34,15 +69,19 @@
 
             $.each(previous, function(i, result) {
                 // each previous result
-                var numerical = parseInt($(result).text())
+                var numerical = parseFloat($(result).text())
                 if(numerical == new_value) {
                     matched += 1;
                 }
             });
 
-            return matched > (previous.length / 2);
-            //console.log("Result", ret, matched, new_value, previous.length, response['service_name']);
-            //return ret;
+            var in_consensus = matched > (previous.length / 2);
+            if(in_consensus) {
+                $(".consensus_count").text("(" + (matched + 1) + " services agree)")
+            }
+
+            //console.log("Result", in_consensus, matched, new_value, previous.length, response['service_name']);
+            return in_consensus;
         }
     );
 </script>

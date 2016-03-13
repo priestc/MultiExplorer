@@ -71,7 +71,7 @@ $("#unspent_outputs_button").click(function(event) {
 });
 
 function present_results(currency, mode, api_args, format_result_func, matches_func) {
-    var container = $("#" + mode + "_results");
+    var container = $(".service_call_container");
 
     $.each(crypto_data[currency][mode], function(i, service_id) {
         // each service for the supported cyurrency
