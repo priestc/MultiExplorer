@@ -71,12 +71,13 @@
         <div style="display: none">
             <img src='{% static 'spin.gif' %}'>
         </div>
-        <h1>MultiExplorer</h1>
-        <input id="address_lookup" class="address" name="address" type="text" value="{{ address }}" placeholder="Enter any cryptocurrency address">
-        <input id="address_lookup_button" type="submit" value="Go">
-        <a href="{% url 'block_lookup' %}">Block Data</a> -
-        <a href="{% url 'api_docs' %}">API Docs</a>
-
+        <a href="/"><img src="{% static 'multiexplorer-logo.png' %}"></a><br>
+        <div style="margin: 20px 0px 20px 10px;">
+            <input id="address_lookup" class="address" name="address" type="text" value="{{ address }}" placeholder="Enter any cryptocurrency address">
+            <input id="address_lookup_button" type="submit" value="Go">
+            <a href="{% url 'block_lookup' %}">Block Data</a> -
+            <a href="{% url 'api_docs' %}">API Docs</a>
+        </div>
         <script>
             var spinner = "<img src='{% static 'spin.gif' %}'>";
             $("#address_lookup_button").click(function() {
