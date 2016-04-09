@@ -38,6 +38,8 @@
             <td><a href="/tx/{{ currency }}/{{ tx.txid }}">{{ tx.txid|truncatechars:19 }}</a></td>
             <td>{{ tx.confirmations }} confirmations</td>
         </tr>
+    {% empty %}
+        <tr><td>No Transactions to show.</td></tr>
     {% endfor %}
     </table>
 

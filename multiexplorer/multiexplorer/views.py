@@ -106,7 +106,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency,
     if Service:
         if currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
-                currency_name, service_mode, serv.name
+                currency_name, service_mode, Service.name
             ))
         services = [Service]
     else:
@@ -168,10 +168,15 @@ def home(request):
 
 def single_address(request, address):
     currency, currency_name = guess_currency_from_address(address)
-    txs = _cached_fetch(
+    error, response = _cached_fetch(
         currency=currency, currency_name=currency_name, service_id="fallback",
         address=address, Service=None, service_mode="historical_transactions"
-    )[1]['transactions']
+    )
+
+    if not error:
+        txs = response['transactions']
+    else:
+        txs = []
 
     return TemplateResponse(request, "single_address.html", {
         'crypto_data_json': crypto_data_json,
