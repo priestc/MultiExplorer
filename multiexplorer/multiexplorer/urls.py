@@ -2,7 +2,9 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-from views import home, perform_lookup, single_address, block_lookup, api_docs
+from views import (
+    home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation
+)
 
 urlpatterns = [
     # Examples:
@@ -17,4 +19,6 @@ urlpatterns = [
 
     url(r'^api$', api_docs, name="api_docs"),
     url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
+
+    url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
 ]

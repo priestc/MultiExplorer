@@ -5,6 +5,7 @@ import random
 from django import http
 from django.template.response import TemplateResponse
 from django.core.cache import cache
+from django.core.urlresolvers import reverse
 from django.conf import settings
 
 from moneywagon import (
@@ -49,7 +50,18 @@ def perform_lookup(request, service_mode, service_id):
 
     currency = request.GET.get("currency", None)
     if not currency:
-        currency, currency_name = guess_currency_from_address(address)
+        try:
+            guess_currency_result = guess_currency_from_address(address)
+        except ValueError as exc:
+            return http.JsonResponse({'error': str(exc)}, status=400)
+
+        if len(guess_currency_result) == 1:
+            currency, currency_name = guess_currency_result[0]
+        else:
+            msg = "Address may be one of %s, please specify which one by using the crypto parameter" % (
+                ', '.join([x[0] for x in guess_currency_result])
+            )
+            return http.JsonResponse({'error': msg}, status=400)
     else:
         currency_name = crypto_data[currency]['name']
         currency = currency.lower()
@@ -167,7 +179,32 @@ def home(request):
 
 
 def single_address(request, address):
-    currency, currency_name = guess_currency_from_address(address)
+    currency = request.GET.get('currency', None)
+
+    if not currency:
+        try:
+            guess_currency_result = guess_currency_from_address(address)
+        except ValueError as exc:
+            return TemplateResponse(request, "single_address.html", {
+                'crypto_data_json': crypto_data_json,
+                'service_info_json': service_info_json,
+                'address': address,
+                'currency': None,
+                'transactions': [],
+                'currency_name': None,
+                'currency_icon': None,
+            })
+
+        if len(guess_currency_result) == 1:
+            currency, currency_name = guess_currency_result[0]
+        else:
+            return http.HttpResponseRedirect(
+                reverse("address_disambiguation", kwargs={'address': address})
+            )
+    else:
+        currency = currency.lower()
+        crypto_name = currency_name = crypto_data[currency]['name']
+
     error, response = _cached_fetch(
         currency=currency, currency_name=currency_name, service_id="fallback",
         address=address, Service=None, service_mode="historical_transactions"
@@ -204,4 +241,24 @@ def api_docs(request):
     return TemplateResponse(request, 'api_docs.html', {
         'service_table': service_table_html,
         'domain': "multiexplorer.com",
+    })
+
+def address_disambiguation(request, address):
+    """
+    When the user tried to lookup a currency that has a duplicate address byte
+    take them to this page where they can choose which currency they meant.
+    """
+    guess_currency_result = guess_currency_from_address(address)
+    balances = {}
+    for crypto, name in guess_currency_result:
+        try:
+            balance = get_address_balance(crypto, address)
+        except Exception as exc:
+            balance = str(exc)
+
+        balances[crypto.upper()] = {'balance': balance, 'name': name}
+
+    return TemplateResponse(request, "address_disambiguation.html", {
+        'balances': balances,
+        'address': address,
     })

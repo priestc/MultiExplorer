@@ -86,7 +86,7 @@ function present_results(currency, mode, api_args, format_result_func, matches_f
             $("<div class='service_call'>" + a + "<div class='result " + result_selector + "'>" + spinner + "</div></div>")
         );
 
-        var url = "/api/" + mode + "/" + service_id + api_args;
+        var url = "/api/" + mode + "/" + service_id + api_args + "&currency=" + currency;
 
         $.ajax({
             url: url,
