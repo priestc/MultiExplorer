@@ -2,20 +2,23 @@
 {% load staticfiles %}
 
 {% block content %}
+<style>
+    li {margin-bottom: 20px}
+</style>
 
 <section>
-<h2>Ambigious currency, please choose which currency you want</h2>
+    <h2>Ambigious currency, please choose which currency you want</h2>
 
-<div style="text-align: left">
-    <ol>
-    {% for crypto, data in balances.items %}
-        <li>
-            <a href="{% url 'single_address' address %}?currency={{ crypto }}">{{ address }} {{ crypto }} {{ data.name }}</a><br>
-            <i>Balance: {{ data.balance }}</i><br>
-        </li>
-    {% endfor %}
-    </ol>
-</div>
+    <div style="text-align: left">
+        <ol>
+        {% for crypto, data in balances.items %}
+            <li>
+                <a href="{% url 'single_address' address %}?currency={{ crypto }}">{{ address }} ({{ crypto }} - {{ data.name }})</a><br>
+                <i>Balance: {{ data.balance }}</i>
+            </li>
+        {% endfor %}
+        </ol>
+    </div>
 
 </section>
 
