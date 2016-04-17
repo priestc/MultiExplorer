@@ -80,7 +80,9 @@
             <input id="address_lookup" class="address" name="address" type="text" value="{{ address }}" placeholder="Enter any cryptocurrency address">
             <input id="address_lookup_button" type="submit" value="Go">
             <a href="{% url 'block_lookup' %}">Block Data</a> -
-            <a href="{% url 'api_docs' %}">API Docs</a>
+            <a href="{% url 'api_docs' %}">API Docs</a> -
+            <a href="{% url 'wallet' %}">Wallet</a> -
+            <a href="{% url 'exchange' %}">Exchange</a>
         </div>
         <script>
             var spinner = "<img src='{% static 'spin.gif' %}'>";

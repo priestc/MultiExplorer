@@ -21,4 +21,7 @@ urlpatterns = [
     url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
+
+    url(r'^wallet', include('wallet.urls')),
+    url(r'^exchange', include('exchange.urls')),
 ]
