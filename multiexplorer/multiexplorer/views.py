@@ -185,7 +185,7 @@ def single_address(request, address):
     if not currency:
         try:
             guess_currency_result = guess_currency_from_address(address)
-        except ValueError as exc:
+        except Exception as exc:
             return TemplateResponse(request, "single_address.html", {
                 'crypto_data_json': crypto_data_json,
                 'service_info_json': service_info_json,
