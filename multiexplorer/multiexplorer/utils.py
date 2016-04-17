@@ -48,3 +48,18 @@ def get_block_currencies():
             ret.append({'code': currency, 'name': data['name']})
 
     return ret
+
+def get_balance_currencies():
+    """
+    Returns currencies that have address balance services defined.
+    """
+    ret = []
+    for currency, data in crypto_data.items():
+        if hasattr(data, 'get') and data.get('services', {}).get("address_balance", []):
+            ret.append({
+                'code': currency,
+                'name': data['name'],
+                'logo': "logos/%s-logo.png" % currency,
+            })
+
+    return ret

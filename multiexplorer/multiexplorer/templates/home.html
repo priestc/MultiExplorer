@@ -2,10 +2,37 @@
 {% load staticfiles %}
 
 {% block content %}
+<style>
+    #supported_currencies {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 3px;
+        width: calc(100% - 3px);
+        border: 0px solid black
+    }
 
+    .supported_currency {
+        width: 120px;
+        height: 120px;
+        margin: 10px 10px 10px 10px;
+    }
+</style>
 <section  id="get_block">
     <h2>The Block Explorer that uses other block explorers.</h2>
+    There are zero full nodes running behind this block explorer.
 
+    <h3>Currencies supported:</h3>
+
+    <div id="supported_currencies">
+    {% for supported in supported_currencies %}
+        <div class="supported_currency">
+            <strong>{{ supported.name }}</strong><br>
+            <img src="{% static supported.logo %}" style="width: 100px; height: 100px">
+        </div>
+    {% endfor %}
+    </div>
 </section>
 
 <style>
@@ -45,8 +72,8 @@
 
 <script>
     //var bitcore = require('bitcore-lib');
-    var service_info = JSON.parse('{{ service_info_json|safe }}');
-    var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
+    //var service_info = JSON.parse('{{ service_info_json|safe }}');
+    //var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
 
 </script>
 

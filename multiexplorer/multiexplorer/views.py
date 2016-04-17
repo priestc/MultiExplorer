@@ -15,8 +15,10 @@ from moneywagon import (
 
 from moneywagon.crypto_data import crypto_data
 
-from .utils import make_crypto_data_json, make_service_info_json, service_modes, get_block_currencies
-
+from .utils import (
+    make_crypto_data_json, make_service_info_json, service_modes,
+    get_block_currencies, get_balance_currencies
+)
 services_by_id = {s.service_id: s for s in ALL_SERVICES}
 crypto_data_json = make_crypto_data_json()
 service_info_json = make_service_info_json()
@@ -171,8 +173,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency,
 
 def home(request):
     return TemplateResponse(request, "home.html", {
-        'crypto_data_json': crypto_data_json,
-        'service_info_json': service_info_json,
+        'supported_currencies': get_balance_currencies,
         'block_info_currencies': block_info_currencies,
         'TEST_ADDRESS': settings.TEST_ADDRESS,
     })
