@@ -1,0 +1,50 @@
+<form id="register_form" method="post">
+    <h3>Register a New Account</h3>
+    Username: <input type="text" name="username"><br>
+    Password: <input type="password" name="password"><br>
+    Password Again: <input type="password" name="password2"><br>
+    <input type="hidden" name="encrypted_wallet_seed" id="seed">
+    {% csrf_token %}
+
+    <input type="submit" value="Register">
+
+</form>
+<script>
+$("#register_form").submit(function() {
+    // when the user clicks the register button, generate a wallet seed,
+    // encrypt it with the user's password, then inject it into the registration
+    // form where it will be saved on the back end.
+    event.preventDefault();
+    hd_master_seed = bitcore.HDPrivateKey();
+
+    var t = $(this);
+    var username = t.find("input[name=username]").val();
+    var email = t.find("input[name=email]").val();
+    var password = t.find("input[name=password]").val();
+    var password2 = t.find("input[name=password2]").val();
+
+    if(password == password2) {
+        var encrypted_seed = CryptoJS.AES.encrypt(hd_master_seed.toString(), password);
+    } else {
+        return
+    }
+
+    $.ajax({
+        url: "{% url 'register_new_wallet_user' %}",
+        type: 'post',
+        data: {
+            username: username,
+            password: password,
+            email: email,
+            csrfmiddlewaretoken: "{{ csrf_token }}",
+            encrypted_wallet_seed: encrypted_seed.toString()
+        }
+    }).success(function(response) {
+        // if this ajax returns successfully, then the password is correct.
+        open_wallet();
+        $("#register_error").text("");
+    }).fail(function(jqXHR) {
+        $("#register_error").text(jqXHR.responseText);
+    });
+});
+</script>

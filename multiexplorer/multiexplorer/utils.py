@@ -63,3 +63,32 @@ def get_balance_currencies():
             })
 
     return ret
+
+def get_wallet_currencies():
+    """
+    Returns currencies that have full wallet functionalities.
+    This includes push_tx, a service for getting unspent outputs, and
+    a registered BIP44 coin type.
+    """
+    ret = []
+    for currency, data in crypto_data.items():
+        if not hasattr(data, 'get'):
+            continue
+
+        bip44 = data['bip44_coin_type']
+        address_byte = data['address_version_byte']
+
+        services = data.get('services', {})
+        if services.get("push_tx", []) and services.get("unspent_outputs", []) and bip44:
+            ret.append({
+                'code': currency,
+                'name': data['name'],
+                'bip44': bip44,
+                'address_byte': address_byte,
+                'logo': "logos/%s-logo.png" % currency,
+            })
+
+        bip44 = None
+        address_byte = None
+
+    return ret
