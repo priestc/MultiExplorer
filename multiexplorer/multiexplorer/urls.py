@@ -22,6 +22,6 @@ urlpatterns = [
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
 
-    url(r'^wallet', include('wallet.urls')),
-    url(r'^exchange', include('exchange.urls')),
+    url(r'^wallet/', include('wallet.urls')),
+    url(r'^exchange/', include('exchange.urls')),
 ]

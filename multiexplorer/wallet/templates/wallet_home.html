@@ -1,5 +1,114 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 
 {% block content %}
-coming soon
+<script src="{% static 'aes.js' %}"></script>
+<script src="{% static 'bitcore-lib.min.js' %}"></script>
+<script>
+    var bitcore = require('bitcore-lib');
+    var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
+    var hd_master_seed = null;
+
+    function open_wallet() {
+        console.log("wallet opened!!", hd_master_seed);
+    }
+</script>
+
+<form id="login_form" method="post">
+    <h3>Login {% if user.is_authenticated %} as {{ user.username }}{% endif%}</h3>
+    <span id="login_error" style="color: red"></span><br>
+    <span {% if user.is_authenticated %}style="display: none"{% endif %}>
+    Username: <input type="text" name="username" value="{{ username }}"></span><br>
+    Password: <input type="password" name="password" id="password"><br>
+
+    <input type="submit" value="login">
+
+</form>
+<script>
+$("#login_form").submit(function(event) {
+    event.preventDefault();
+    var username = $(this).find("input[name=username]").val();
+    var password = $(this).find("input[name=password]").val();
+
+    $.ajax({
+        url: "{% url 'login' %}",
+        type: 'post',
+        data: {
+            username: "{{ user.username }}" || username,
+            password: password,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        }
+    }).success(function(response) {
+        // if this ajax returns successfully, then the password is correct.
+        var raw_password = $("#password").val();
+        var decrypted_seed = CryptoJS.AES.decrypt(response['encrypted_seed'], raw_password).toString(CryptoJS.enc.Utf8);
+        console.log("decrypted_seed", decrypted_seed);
+        hd_master_seed = bitcore.HDPrivateKey(decrypted_seed.toString());
+        $("#login_error").text("");
+    }).fail(function(jqXHR) {
+        $("#login_error").text(jqXHR.responseText);
+    });
+
+});
+</script>
+
+
+{% if not user.is_authenticated %}
+
+    Or
+
+    <form id="register_form" method="post">
+        <h3>Register a New Account</h3>
+        Username: <input type="text" name="username"><br>
+        Password: <input type="password" name="password"><br>
+        Password Again: <input type="password" name="password2"><br>
+        <input type="hidden" name="encrypted_wallet_seed" id="seed">
+        {% csrf_token %}
+
+        <input type="submit" value="Register">
+
+    </form>
+    <script>
+    $("#register_form").submit(function() {
+        // when the user clicks the register button, generate a wallet seed,
+        // encrypt it with the user's password, then inject it into the registration
+        // form where it will be saved on the back end.
+        event.preventDefault();
+        hd_master_seed = bitcore.HDPrivateKey();
+
+        var t = $(this);
+        var username = t.find("input[name=username]").val();
+        var email = t.find("input[name=email]").val();
+        var password = t.find("input[name=password]").val();
+        var password2 = t.find("input[name=password2]").val();
+
+        if(password == password2) {
+            var encrypted_seed = CryptoJS.AES.encrypt(hd_master_seed.toString(), password);
+        } else {
+            return
+        }
+
+        $.ajax({
+            url: "{% url 'register_new_wallet_user' %}",
+            type: 'post',
+            data: {
+                username: username,
+                password: password,
+                email: email,
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                encrypted_wallet_seed: encrypted_seed.toString()
+            }
+        }).success(function(response) {
+            // if this ajax returns successfully, then the password is correct.
+            open_wallet();
+            $("#register_error").text("");
+        }).fail(function(jqXHR) {
+            $("#register_error").text(jqXHR.responseText);
+        });
+    });
+    </script>
+
+{% else %}
+
+{% endif %}
 {% endblock %}
