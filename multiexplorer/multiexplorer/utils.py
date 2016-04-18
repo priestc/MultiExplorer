@@ -77,18 +77,20 @@ def get_wallet_currencies():
 
         bip44 = data['bip44_coin_type']
         address_byte = data['address_version_byte']
+        priv_byte = data['private_key_prefix']
 
         services = data.get('services', {})
-        if services.get("push_tx", []) and services.get("unspent_outputs", []) and bip44:
+        pushtx = services.get("push_tx", [])
+        unspent = services.get("unspent_outputs", [])
+
+        if pushtx and unspent and bip44 and priv_byte:
             ret.append({
                 'code': currency,
                 'name': data['name'],
                 'bip44': bip44,
+                'private_key_prefix': priv_byte,
                 'address_byte': address_byte,
                 'logo': "logos/%s-logo.png" % currency,
             })
-
-        bip44 = None
-        address_byte = None
 
     return ret
