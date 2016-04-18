@@ -61,4 +61,4 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 
-*.sqlite3
+multiexplorer/db.sqlite3

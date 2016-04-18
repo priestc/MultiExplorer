@@ -1,12 +1,13 @@
+import json
 from django.contrib.auth import authenticate, login as init_login
 from django.contrib.auth.models import User
 from django.template.response import TemplateResponse
 from django import http
 
 from .models import WalletMasterKeys
-from multiexplorer.utils import make_crypto_data_json
+from multiexplorer.utils import get_wallet_currencies
 
-crypto_data_json = make_crypto_data_json()
+crypto_data_json = json.dumps(get_wallet_currencies())
 
 def home(request):
 
