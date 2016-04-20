@@ -1,14 +1,23 @@
-<form id="register_form" method="post">
-    <h3>Register a New Account</h3>
-    Username: <input type="text" name="username"><br>
-    Password: <input type="password" name="password"><br>
-    Password Again: <input type="password" name="password2"><br>
-    <input type="hidden" name="encrypted_wallet_seed" id="seed">
-    {% csrf_token %}
+<style>
+    #register_form input {
+        margin: 10px;
+    }
+</style>
 
-    <input type="submit" value="Register">
+<div class="center_box" id="login_box">
+    <form id="register_form" method="post">
+        <h3>Register a New Account</h3>
+        Username: <input type="text" name="username"><br>
+        Email (optional): <input type="email" name="email">
+        Password: <input type="password" name="password"><br>
+        Password Again: <input type="password" name="password2"><br>
+        <input type="hidden" name="encrypted_wallet_seed" id="seed">
+        {% csrf_token %}
+        <br><br>
+        <input type="submit" value="Register">
 
-</form>
+    </form>
+</div>
 <script>
 $("#register_form").submit(function() {
     // when the user clicks the register button, generate a wallet seed,

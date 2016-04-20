@@ -1,13 +1,15 @@
-<form id="login_form" method="post">
-    <h3>Login {% if user.is_authenticated %} as {{ user.username }}{% endif%}</h3>
-    <span id="login_error" style="color: red"></span><br>
-    <span {% if user.is_authenticated %}style="display: none"{% endif %}>
-    Username: <input type="text" name="username" value="{{ username }}"></span><br>
-    Password: <input type="password" name="password" id="password"><br>
+<div class="center_box" id="login_box">
+    <form id="login_form" method="post">
+        <h3>Login {% if user.is_authenticated %} as {{ user.username }}{% endif%}</h3>
+        <span id="login_error" style="color: red"></span><br>
+        <div {% if user.is_authenticated %}style="display: none"{% endif %}>
+        Username: <input type="text" name="username" value="{{ username }}"></div><br>
+        Password: <input type="password" name="password" id="password"><br>
+        <br><br>
+        <input type="submit" value="login">
 
-    <input type="submit" value="login">
-
-</form>
+    </form>
+</div>
 <script>
 $("#login_form").submit(function(event) {
     event.preventDefault();
@@ -26,9 +28,9 @@ $("#login_form").submit(function(event) {
         // if this ajax returns successfully, then the password is correct.
         var raw_password = $("#password").val();
         var decrypted_seed = CryptoJS.AES.decrypt(response['encrypted_seed'], raw_password).toString(CryptoJS.enc.Utf8);
-        console.log("decrypted_seed", decrypted_seed);
         hd_master_seed = bitcore.HDPrivateKey(decrypted_seed.toString());
         $("#login_error").text("");
+        open_wallet();
     }).fail(function(jqXHR) {
         $("#login_error").text(jqXHR.responseText);
     });

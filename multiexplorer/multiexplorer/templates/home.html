@@ -18,25 +18,6 @@
         height: 120px;
         margin: 10px 10px 10px 10px;
     }
-</style>
-<section  id="get_block">
-    <h2>The Block Explorer that uses other block explorers.</h2>
-    There are zero full nodes running behind this block explorer.
-
-    <h3>Currencies supported:</h3>
-
-    <div id="supported_currencies">
-    {% for supported in supported_currencies %}
-        <div class="supported_currency">
-            <strong>{{ supported.name }}</strong><br>
-            <img src="{% static supported.logo %}" style="width: 100px; height: 100px">
-        </div>
-    {% endfor %}
-    </div>
-</section>
-
-<style>
-
     .utxo_table {
         margin: 10px;
         width: 25em;
@@ -67,7 +48,21 @@
     .utxo_table td {
         text-align: left;
     }
-
 </style>
+<section  id="get_block">
+    <h2>The Block Explorer that uses other block explorers.</h2>
+    There are zero full nodes running behind this block explorer.
+
+    <h3>Currencies supported:</h3>
+
+    <div id="supported_currencies">
+    {% for supported in supported_currencies %}
+        <div class="supported_currency">
+            <strong>{{ supported.name }}</strong><br>
+            <img src="{% static supported.logo %}" style="width: 100px; height: 100px">
+        </div>
+    {% endfor %}
+    </div>
+</section>
 
 {% endblock %}

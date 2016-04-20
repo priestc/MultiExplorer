@@ -7,7 +7,8 @@ from django import http
 from .models import WalletMasterKeys
 from multiexplorer.utils import get_wallet_currencies
 
-crypto_data_json = json.dumps(get_wallet_currencies())
+crypto_data = get_wallet_currencies()
+crypto_data_json = json.dumps(crypto_data)
 
 def home(request):
 
@@ -18,6 +19,7 @@ def home(request):
     return TemplateResponse(request, "wallet_home.html", {
         'encrypted_seed': seed and seed.encrypted_seed,
         'crypto_data_json': crypto_data_json,
+        'crypto_data': crypto_data
     })
 
 

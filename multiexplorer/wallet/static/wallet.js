@@ -52,3 +52,8 @@ function get_balance_for_crypto(crypto) {
         'type': 'get',
     })
 }
+
+function open_wallet() {
+    $("#register_box, #login_box").hide();
+    $(".balances").show();
+}

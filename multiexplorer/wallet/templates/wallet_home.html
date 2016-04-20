@@ -8,23 +8,55 @@
     var bitcore = require('bitcore-lib');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = null;
-
-    function open_wallet() {
-        console.log("wallet opened!!", hd_master_seed);
-    }
 </script>
 <script src="{% static 'wallet.js' %}"></script>
+<style>
+    .center_box {
+        width: 300px;
+        margin: 20px auto 0 auto;
+        background: #dfdfdf;
+        padding: 10px;
+        border: 1px solid brown;
+        border-radius: 7px;
+    }
 
+    .balances {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .crypto_box {
+        border: 1px solid green;
+        background: #efd4ef;
+        padding: 10px;
+    }
+
+    .qr {
+        width: 100px;
+        height: 100px;
+    }
+</style>
 {% include "login.html" %}
 
 
 {% if not user.is_authenticated %}
 
-    Or
-
     {% include "register.html" %}
 
-{% else %}
-
 {% endif %}
+
+<div class="balances" style="display: none">
+{% for data in crypto_data %}
+<div class="crypto_box" data-currency="{{ data.code }}">
+    <h3>{{ data.name }} ({{ data.code|upper }})</h3>
+    <img src="{% static data.logo %}" style="width: 100px; height: 100px">
+    <div class="qr">
+    <br>
+    <button>Send</button>
+</div>
+{% endfor %}
+</div>
+
 {% endblock %}
