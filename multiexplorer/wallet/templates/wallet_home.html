@@ -7,7 +7,8 @@
 <script>
     var bitcore = require('bitcore-lib');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
-    var hd_master_seed = null;
+    var hd_master_seed = undefined;
+    var wallet_state = undefined;
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
@@ -31,6 +32,7 @@
         border: 1px solid green;
         background: #efd4ef;
         padding: 10px;
+        margin: 10px;
     }
 
     .qr {
@@ -40,19 +42,19 @@
 </style>
 {% include "login.html" %}
 
-
 {% if not user.is_authenticated %}
-
     {% include "register.html" %}
-
 {% endif %}
 
 <div class="balances" style="display: none">
 {% for data in crypto_data %}
 <div class="crypto_box" data-currency="{{ data.code }}">
     <h3>{{ data.name }} ({{ data.code|upper }})</h3>
+    Balance: <span class="balance_crypto"></span>
+    <span class="balance_fiat"></span>
     <img src="{% static data.logo %}" style="width: 100px; height: 100px">
-    <div class="qr">
+    <div class="qr"></div>
+    <span class="address"></span>
     <br>
     <button>Send</button>
 </div>

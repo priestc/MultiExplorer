@@ -43,6 +43,7 @@ def perform_lookup(request, service_mode, service_id):
             }, status=400)
 
     address = request.GET.get('address', None)
+    xpub = request.GET.get('xpub', None)
 
     block_args = {
         'latest': request.GET.get('latest', ''),
@@ -80,8 +81,8 @@ def perform_lookup(request, service_mode, service_id):
     return http.JsonResponse(response_dict)
 
 
-def _cached_fetch(service_mode, service_id, address, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
-    key_ending = address or ":".join(block_args.values())
+def _cached_fetch(service_mode, service_id, address, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
+    key_ending = address or ":".join(block_args.values()) or xpub
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
@@ -90,10 +91,10 @@ def _cached_fetch(service_mode, service_id, address, currency, currency_name, in
         #time.sleep(random.random() * 2) # simulate external call
         response_dict = hit
     else:
-        try:
-            response_dict = _make_moneywagon_fetch(**locals())
-        except Exception as exc:
-            return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
+        #try:
+        response_dict = _make_moneywagon_fetch(**locals())
+        #except Exception as exc:
+        #    return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
 
         response_dict.update({
             'timestamp': int(time.time()),
@@ -116,7 +117,7 @@ def _cached_fetch(service_mode, service_id, address, currency, currency_name, in
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency, currency_name, block_args, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address, xpub, currency, currency_name, block_args, **k):
     if Service:
         if currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
@@ -137,13 +138,13 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, currency,
         modes['average'] = int(service_id[7:])
 
     if service_mode == 'address_balance':
-        used_services, balance = get_address_balance(currency, address, **modes)
+        used_services, balance = get_address_balance(currency, address or xpub, **modes)
         ret = {'balance': balance}
     elif service_mode == 'unspent_outputs':
-        used_services, utxos = get_unspent_outputs(currency, address, **modes)
+        used_services, utxos = get_unspent_outputs(currency, address or xpub, **modes)
         ret = {'utxos': sorted(utxos, key=lambda x: x['output'])}
     elif service_mode == 'historical_transactions':
-        used_services, txs = get_historical_transactions(currency, address, **modes)
+        used_services, txs = get_historical_transactions(currency, address or xpub, **modes)
         ret = {'transactions': sorted(txs, key=lambda x: -x['confirmations'])}
     elif service_mode == 'get_block':
         modes.update(block_args)

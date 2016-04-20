@@ -52,6 +52,13 @@ def login(request):
 
         return http.JsonResponse({
             'encrypted_seed': seed.encrypted_seed,
+            'wallet_state': [
+                {'code': 'btc', 'deposit_head': 3, 'deposit_tail': 2},
+                {'code': 'ltc', 'deposit_head': 5, 'deposit_tail': 3},
+                {'code': 'doge', 'deposit_head': 7, 'deposit_tail': 4},
+                {'code': 'ftc', 'deposit_head': 7, 'deposit_tail': 4},
+                {'code': 'rdd', 'deposit_head': 7, 'deposit_tail': 4},
+            ]
         })
 
     return http.HttpResponse("Invalid Login", status=401)
