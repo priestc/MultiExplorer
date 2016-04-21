@@ -28,6 +28,10 @@
         justify-content: space-around;
     }
 
+    .address {
+        font-size: x-small;
+    }
+
     .crypto_box {
         border: 1px solid green;
         background: #efd4ef;
@@ -52,11 +56,20 @@
     <h3>{{ data.name }} ({{ data.code|upper }})</h3>
     Balance: <span class="balance_crypto"></span>
     <span class="balance_fiat"></span>
-    <img src="{% static data.logo %}" style="width: 100px; height: 100px">
-    <div class="qr"></div>
+    <table style="width: 100%">
+        <tr>
+            <td style="width: 50%">
+                <img src="{% static data.logo %}" style="width: 100px; height: 100px">
+            </td>
+            <td style="width: 50%">
+                <div class="qr"></div>
+            </td>
+        </tr>
+    </table>
+
     <span class="address"></span>
     <br>
-    <button>Send</button>
+    <button>Send</button> <button>Exchange</button> <button>History</button>
 </div>
 {% endfor %}
 </div>
