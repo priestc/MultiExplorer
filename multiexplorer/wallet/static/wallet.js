@@ -21,9 +21,6 @@ function get_crypto_root(crypto) {
     if(crypto == 'btc') {
         crypto = 'livenet';
     }
-
-    var network = bitcore.Networks.get(crypto);
-
     //                         purpose       coin type
     return hd_master_seed.derive(44, true).derive(bip44);
 }
@@ -56,7 +53,8 @@ function get_balance_for_crypto(crypto) {
 
 function open_wallet() {
     $("#register_box, #login_box").hide();
-    $(".balances").show();
+    $("#loading_screen").show();
+    console.log("start");
 
     $.each(wallet_state, function(i, data) {
         var crypto = data.code;
@@ -76,4 +74,8 @@ function open_wallet() {
         box.find(".deposit_address").text(latest_deposit[1]);
         box.find(".qr").qrcode({width: 100, height: 100, text: latest_deposit[1]});
     });
+
+    $("#loading_screen").hide();
+    $("#wallets").show();
+    console.log('end');
 }

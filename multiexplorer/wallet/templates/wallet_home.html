@@ -21,7 +21,7 @@
         border-radius: 7px;
     }
 
-    .balances {
+    #wallets {
         display: flex;
         flex-wrap: wrap;
         flex-direction: row;
@@ -50,28 +50,33 @@
     {% include "register.html" %}
 {% endif %}
 
-<div class="balances" style="display: none">
-{% for data in crypto_data %}
-<div class="crypto_box" data-currency="{{ data.code }}">
-    <h3>{{ data.name }} ({{ data.code|upper }})</h3>
-    Balance: <span class="balance_crypto"></span>
-    <span class="balance_fiat"></span>
-    <table style="width: 100%">
-        <tr>
-            <td style="width: 50%">
-                <img src="{% static data.logo %}" style="width: 100px; height: 100px">
-            </td>
-            <td style="width: 50%">
-                <div class="qr"></div>
-            </td>
-        </tr>
-    </table>
-
-    <span class="deposit_address"></span>
-    <br>
-    <button>Send</button> <button>Exchange</button> <button>History</button>
+<div id="loading_screen" style="display: none; border: 1px solid green; width: 250px; margin; 0 auto 0 auto">
+    Deriving Wallet Addresses and Generating QR codes...
 </div>
-{% endfor %}
+
+<div id="wallets" style="display: none">
+    {% for data in crypto_data %}
+    <div class="crypto_box" data-currency="{{ data.code }}">
+        <h3>{{ data.name }} ({{ data.code|upper }})</h3>
+        Balance: <span class="balance_crypto"></span>
+        <span class="balance_fiat"></span>
+        <table style="width: 100%">
+            <tr>
+                <td style="width: 50%">
+                    <img src="{% static data.logo %}" style="width: 100px; height: 100px">
+                </td>
+                <td style="width: 50%">
+                    <div class="qr"></div>
+                </td>
+            </tr>
+        </table>
+
+        Deposit Address:<br>
+        <span class="deposit_address"></span>
+        <br><br>
+        <button>Send</button> <button>Exchange</button> <button>History</button>
+    </div>
+    {% endfor %}
 </div>
 
 {% endblock %}
