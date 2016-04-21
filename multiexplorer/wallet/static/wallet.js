@@ -73,7 +73,7 @@ function open_wallet() {
         var box = $(".crypto_box[data-currency=" + crypto + "]");
         var index = data.deposit_head + 1
         var latest_deposit = get_deposit_keypair(crypto, index);
-        box.find(".address").text(latest_deposit[1]);
+        box.find(".deposit_address").text(latest_deposit[1]);
         box.find(".qr").qrcode({width: 100, height: 100, text: latest_deposit[1]});
     });
 }
