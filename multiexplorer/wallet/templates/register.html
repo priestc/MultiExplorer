@@ -7,10 +7,16 @@
 <div class="center_box" id="login_box">
     <form id="register_form" method="post">
         <h3>Register a New Account</h3>
-        Username: <input type="text" name="username"><br>
-        Email (optional): <input type="email" name="email">
-        Password: <input type="password" name="password"><br>
-        Password Again: <input type="password" name="password2"><br>
+        Username:<br>
+        <input type="text" name="username"><br>
+
+        Email (optional):<br>
+        <input type="email" name="email"><br>
+
+        Password:<br>
+        <input type="password" name="password"><br>
+
+        Password Again:<br><input type="password" name="password2"><br>
         <input type="hidden" name="encrypted_wallet_seed" id="seed">
         {% csrf_token %}
         <br><br>

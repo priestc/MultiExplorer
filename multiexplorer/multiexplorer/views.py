@@ -32,7 +32,11 @@ def perform_lookup(request, service_mode, service_id):
     """
     include_raw = request.GET.get('include_raw', False)
 
-    if service_id == "fallback" or service_id.startswith("paranoid") or service_id.startswith("average"):
+    paranoid = service_id.startswith("paranoid")
+    average_mode = service_id.startswith("average")
+    private_mode = service_id.startswith("private")
+
+    if service_id == "fallback" or paranoid or average_mode or private_mode:
         Service = None
     else:
         try:
@@ -43,6 +47,7 @@ def perform_lookup(request, service_mode, service_id):
             }, status=400)
 
     address = request.GET.get('address', None)
+    addresses = request.GET.get('addresses', None)
     xpub = request.GET.get('xpub', None)
 
     block_args = {
@@ -81,14 +86,13 @@ def perform_lookup(request, service_mode, service_id):
     return http.JsonResponse(response_dict)
 
 
-def _cached_fetch(service_mode, service_id, address, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
+def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
     key_ending = address or ":".join(block_args.values()) or xpub
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
 
     if hit:
-        #time.sleep(random.random() * 2) # simulate external call
         response_dict = hit
     else:
         #try:
@@ -111,13 +115,12 @@ def _cached_fetch(service_mode, service_id, address, xpub, currency, currency_na
                 {'name': x['name'], 'id': x['id']} for x in services
             ]
 
-
     response_dict['fetched_seconds_ago'] = int(time.time()) - response_dict['timestamp']
     del response_dict['timestamp']
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, xpub, currency, currency_name, block_args, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, **k):
     if Service:
         if currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
@@ -136,15 +139,22 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, xpub, cur
         modes['paranoid'] = int(service_id[8:])
     elif service_id.startswith("average"):
         modes['average'] = int(service_id[7:])
+    elif service_id.startswith("private"):
+        modes['private'] = int(service_id[7:])
+
+    if address:
+        modes['address'] = address
+    elif addresses:
+        modes['addresses'] = addresses.split(',')
 
     if service_mode == 'address_balance':
-        used_services, balance = get_address_balance(currency, address or xpub, **modes)
+        used_services, balance = get_address_balance(currency, **modes)
         ret = {'balance': balance}
     elif service_mode == 'unspent_outputs':
-        used_services, utxos = get_unspent_outputs(currency, address or xpub, **modes)
+        used_services, utxos = get_unspent_outputs(currency, **modes)
         ret = {'utxos': sorted(utxos, key=lambda x: x['output'])}
     elif service_mode == 'historical_transactions':
-        used_services, txs = get_historical_transactions(currency, address or xpub, **modes)
+        used_services, txs = get_historical_transactions(currency, **modes)
         ret = {'transactions': sorted(txs, key=lambda x: -x['confirmations'])}
     elif service_mode == 'get_block':
         modes.update(block_args)
@@ -156,7 +166,9 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, xpub, cur
     else:
         raise Exception("Unsupported Service mode")
 
-    if len(used_services) == 1:
+    if not used_services:
+        pass # private mode does not return services
+    elif len(used_services) == 1:
         s = used_services[0]
         if s:
             ret['url'] = s.last_url

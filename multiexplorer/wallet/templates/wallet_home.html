@@ -4,16 +4,16 @@
 {% block content %}
 <script src="{% static 'aes.js' %}"></script>
 <script src="{% static 'bitcore-lib.min.js' %}"></script>
+<script src="{% static 'underscore-min.js' %}"></script>
 <script>
     var bitcore = require('bitcore-lib');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
-    var wallet_state = undefined;
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
     .center_box {
-        width: 300px;
+        width: 250px;
         margin: 20px auto 0 auto;
         background: #dfdfdf;
         padding: 10px;

@@ -27,7 +27,6 @@ $("#login_form").submit(function(event) {
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.
         var raw_password = $("#password").val();
-        wallet_state = response.wallet_state;
         var decrypted_seed = CryptoJS.AES.decrypt(response['encrypted_seed'], raw_password).toString(CryptoJS.enc.Utf8);
         hd_master_seed = bitcore.HDPrivateKey(decrypted_seed.toString());
         $("#login_error").text("");

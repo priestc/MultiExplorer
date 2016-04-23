@@ -47,7 +47,23 @@ function get_change_keypair(crypto, index) {
 
 function get_balance_for_crypto(crypto) {
     var xpriv = get_crypto_root(crypto);
+    var deposit_addresses = [];
+    var change_addresses = [];
 
+    $.each(_.range(20), function(i) {
+        change_addresses.push(get_change_keypair(crypto, i));
+        deposit_addresses.push(get_deposit_keypair(crypto, i));
+    });
+
+    var addresses = change_addresses.concat(deposit_addresses);
+
+    var args = "?addresses=" + addresses.join(",") + "&currency=" + crypto;
+    $.ajax({
+        'url': "/api/address_balance/private5" + args,
+        'type': 'get',
+    }).success(function (response) {
+        box.find(".balance").text(response.total_balance);
+    });
 
 }
 
@@ -56,20 +72,13 @@ function open_wallet() {
     $("#loading_screen").show();
     console.log("start");
 
-    $.each(wallet_state, function(i, data) {
+    $.each(crypto_data, function(i, data) {
         var crypto = data.code;
         var xpriv = get_crypto_root(crypto);
 
-        var args = "?xpub=" + xpriv.hdPublicKey.toString() + "&currency=" + crypto;
-        $.ajax({
-            'url': "/api/address_balance/fallback" + args,
-            'type': 'get',
-        }).success(function (response) {
-            box.find(".balance").text(response.balance);
-        });
-
         var box = $(".crypto_box[data-currency=" + crypto + "]");
-        var index = data.deposit_head + 1
+        var balance = get_balance_for_crypto(crypto);
+
         var latest_deposit = get_deposit_keypair(crypto, index);
         box.find(".deposit_address").text(latest_deposit[1]);
         box.find(".qr").qrcode({width: 100, height: 100, text: latest_deposit[1]});
@@ -78,4 +87,8 @@ function open_wallet() {
     $("#loading_screen").hide();
     $("#wallets").show();
     console.log('end');
+}
+
+function get_balance(crypto_xpriv) {
+
 }
