@@ -30,7 +30,8 @@ $("#register_form").submit(function() {
     // encrypt it with the user's password, then inject it into the registration
     // form where it will be saved on the back end.
     event.preventDefault();
-    hd_master_seed = bitcore.HDPrivateKey();
+    var mn = new Mnemonic()
+    hd_master_seed = mn.toHDPrivateKey();
 
     var t = $(this);
     var username = t.find("input[name=username]").val();
@@ -39,7 +40,7 @@ $("#register_form").submit(function() {
     var password2 = t.find("input[name=password2]").val();
 
     if(password == password2) {
-        var encrypted_seed = CryptoJS.AES.encrypt(hd_master_seed.toString(), password);
+        var encrypted_mnemonic = CryptoJS.AES.encrypt(mn.phrase, password);
     } else {
         return
     }
@@ -52,7 +53,7 @@ $("#register_form").submit(function() {
             password: password,
             email: email,
             csrfmiddlewaretoken: "{{ csrf_token }}",
-            encrypted_wallet_seed: encrypted_seed.toString()
+            encrypted_mnemonic: encrypted_mnemonic.toString()
         }
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.

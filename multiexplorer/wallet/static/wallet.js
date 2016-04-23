@@ -50,19 +50,20 @@ function get_balance_for_crypto(crypto) {
     var deposit_addresses = [];
     var change_addresses = [];
 
-    $.each(_.range(20), function(i) {
-        change_addresses.push(get_change_keypair(crypto, i));
-        deposit_addresses.push(get_deposit_keypair(crypto, i));
+    $.each(_.range(5), function(i) {
+        change_addresses.push(get_change_keypair(crypto, i)[1]);
+        deposit_addresses.push(get_deposit_keypair(crypto, i)[1]);
     });
 
     var addresses = change_addresses.concat(deposit_addresses);
 
     var args = "?addresses=" + addresses.join(",") + "&currency=" + crypto;
     $.ajax({
-        'url': "/api/address_balance/private5" + args,
+        'url': "/api/historical_transactions/private5" + args,
         'type': 'get',
     }).success(function (response) {
-        box.find(".balance").text(response.total_balance);
+        var box = $(".crypto_box[data-currency=" + crypto + "]");
+        box.find(".balance").text(response.balance.total);
     });
 
 }

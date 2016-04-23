@@ -47,7 +47,7 @@ def perform_lookup(request, service_mode, service_id):
             }, status=400)
 
     address = request.GET.get('address', None)
-    addresses = request.GET.get('addresses', None)
+    addresses = request.GET.get('addresses', [])
     xpub = request.GET.get('xpub', None)
 
     block_args = {
@@ -87,7 +87,7 @@ def perform_lookup(request, service_mode, service_id):
 
 
 def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
-    key_ending = address or ":".join(block_args.values()) or xpub
+    key_ending = address or ":".join(block_args.values()) or xpub or ','.join(addresses)
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
@@ -141,6 +141,8 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         modes['average'] = int(service_id[7:])
     elif service_id.startswith("private"):
         modes['private'] = int(service_id[7:])
+        if modes['private'] > 30:
+            raise Exception("Private mode maximum of 30")
 
     if address:
         modes['address'] = address

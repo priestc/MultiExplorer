@@ -8,7 +8,7 @@ class WalletMasterKeys(models.Model):
     The seed is stored encrypted with the user's password.
     """
     user = models.ForeignKey('auth.User')
-    encrypted_seed = models.CharField(max_length=172)
+    encrypted_mnemonic = models.CharField(max_length=172)
 
     def __unicode__(self):
         return self.user.username

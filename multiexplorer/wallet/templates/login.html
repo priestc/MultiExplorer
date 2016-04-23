@@ -11,24 +11,25 @@
     </form>
 </div>
 <script>
+var raw_password = undefined;
+var raw_mnemonic = undefined;
 $("#login_form").submit(function(event) {
     event.preventDefault();
     var username = $(this).find("input[name=username]").val();
-    var password = $(this).find("input[name=password]").val();
+    raw_password = $(this).find("input[name=password]").val();
 
     $.ajax({
         url: "{% url 'login' %}",
         type: 'post',
         data: {
             username: "{{ user.username }}" || username,
-            password: password,
+            password: raw_password,
             csrfmiddlewaretoken: "{{ csrf_token }}"
         }
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.
-        var raw_password = $("#password").val();
-        var decrypted_seed = CryptoJS.AES.decrypt(response['encrypted_seed'], raw_password).toString(CryptoJS.enc.Utf8);
-        hd_master_seed = bitcore.HDPrivateKey(decrypted_seed.toString());
+        raw_mnemonic = CryptoJS.AES.decrypt(response['encrypted_mnemonic'], raw_password).toString(CryptoJS.enc.Utf8);
+        hd_master_seed = (new Mnemonic(raw_mnemonic)).toHDPrivateKey();
         $("#login_error").text("");
         open_wallet();
     }).fail(function(jqXHR) {
