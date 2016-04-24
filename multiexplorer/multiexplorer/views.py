@@ -25,6 +25,10 @@ service_info_json = make_service_info_json()
 block_info_currencies = get_block_currencies()
 service_table_html = service_table(format='html')
 
+from moneywagon.services import ThisIsVTC, ReddcoinCom
+ThisIsVTC.protocol = 'http'
+ReddcoinCom.protocol = 'http'
+
 def perform_lookup(request, service_mode, service_id):
     """
     Passes on this request to the API, then return their response normalized to

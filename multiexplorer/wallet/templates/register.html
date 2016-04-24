@@ -32,7 +32,7 @@ $("#register_form").submit(function() {
     event.preventDefault();
     var mn = new Mnemonic()
     hd_master_seed = mn.toHDPrivateKey();
-
+    
     var t = $(this);
     var username = t.find("input[name=username]").val();
     var email = t.find("input[name=email]").val();

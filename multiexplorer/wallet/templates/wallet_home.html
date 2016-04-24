@@ -31,7 +31,7 @@
     }
 
     .deposit_address {
-        font-size: x-small;
+        font-size: small;
     }
 
     .crypto_box {
@@ -39,11 +39,17 @@
         background: #efd4ef;
         padding: 10px;
         margin: 10px;
+        text-align: center;
     }
 
     .qr {
         width: 100px;
         height: 100px;
+    }
+    button {
+        padding: 7px;
+        margin: 3px;
+        font-weight: bold;
     }
 </style>
 {% include "login.html" %}
@@ -60,7 +66,7 @@
     {% for data in crypto_data %}
     <div class="crypto_box" data-currency="{{ data.code }}">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
-        Balance: <span class="balance_crypto"></span>
+        Balance: <span class="crypto_balance"></span> {{ data.code|upper }}
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
@@ -71,12 +77,17 @@
                     <div class="qr"></div>
                 </td>
             </tr>
+            <tr>
+                <td><button class="deposit_shift_up" style="width: 75%">&larr;</button></td>
+                <td><button class="deposit_shift_down" style="width: 75%">&rarr;</button></td>
+            </tr>
         </table>
-
-        Deposit Address:<br>
-        <span class="deposit_address"></span>
-        <br><br>
-        <button>Send</button> <button>Exchange</button> <button>History</button>
+        <div style="background: white; padding: 5px 3px 5px 3px; margin: 5px;">
+            <span class="deposit_address"></span>
+        </div>
+        <button class="send">Send</button>
+        <button class="exchange">Exchange</button>
+        <button class="history">History</button>
     </div>
     {% endfor %}
 </div>
