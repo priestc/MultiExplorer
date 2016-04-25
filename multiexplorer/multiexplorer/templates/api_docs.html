@@ -147,6 +147,58 @@
         </ul>
     </div>
 
+    <h3>Current Price</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">http://{{ domain }}/api/current_price/<i>[service_id]</i>?[fiat=<i>fiat</i>|currency=<i>currency</i>]</span>
+        <ul>
+            <li><i>service_id</i> is a number corresponding to the service number in the table above,
+                or a servcie mode such as "fallback", "average3". Note, "paranoid mode"
+                and "private mode" does not apply in the context of curent price.</li>
+            <li>The <i>currency</i> argument is required. Enter three leter cryptocurrency code.</li>
+            <li>The <i>fiat</i> argument is required. Enter three leter fiat currency code.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the raw_response field in the response.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/current_price/fallback?fiat=usd&amp;crypto=btc&amp;include_raw=true
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "currency": [
+            "btc",
+            "Bitcoin"
+        ],
+        "current_price": 459.34,
+        "fetched_seconds_ago": 2829,
+        "raw_response": {
+            "ask": "459.40",
+            "bid": "458.56",
+            "high": "470.02",
+            "last": "459.34",
+            "low": "447.06",
+            "open": 460.03,
+            "timestamp": "1461553988",
+            "volume": "6514.37766937",
+            "vwap": "458.48"
+        },
+        "service_id": 1,
+        "service_name": "Bitstamp",
+        "url": "https://www.bitstamp.net/api/ticker/"
+    }
+            </pre>
+            </code>
+        </div>
+
+
     <h3>Address Balance</h3>
 
     <div class="info">

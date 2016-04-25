@@ -63,21 +63,38 @@ function calculate_balance(crypto, addresses) {
 
     var box = $(".crypto_box[data-currency=" + crypto + "]");
 
-    var args = "?addresses=" + addresses.join(",") + "&currency=" + crypto;
+    if(addresses.length == 1) {
+        var a = "?address=" + addresses[0];
+        var mode = "fallback";
+    } else {
+        var a = "?addresses=" + addresses.join(",");
+        var mode = "private5";
+    }
+
     $.ajax({
-        'url': "/api/address_balance/private5" + args,
+        'url': "/api/address_balance/" + mode + a + "&currency=" + crypto,
         'type': 'get',
     }).success(function (response) {
-        var existing = parseFloat(box.find(".crypto_balance").text());
-        box.find(".crypto_balance").text(existing + response.balance.total);
+        //console.log("balance returned", response);
+        var bal = box.find(".crypto_balance");
+        var existing = parseFloat(bal.text());
+        var new_balance = existing + (response.balance.total || response.balance);
+
+        bal.text(new_balance);
+
+        var exchange_rate = parseFloat($("#fiat_exchange_rates .rate." + crypto).text());
+        console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
+        box.find(".fiat_balance").text((exchange_rate * new_balance).toFixed(2));
     });
 }
 
 var unused_deposit_addresses = {};
 var unused_change_addresses = {};
-function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used) {
-    // iterates through the deposit chain until it finds 20 blank addresses.
-
+function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
+    // iterates through the deposit chain until it finds `blank_length` blank addresses.
+    // the last two args are used in iteration, and shoud be passed in empty lists
+    // to initialize.
+    var all_used = all_used_arg;
     var addresses = [];
     var i = 0;
     while(addresses.length < blank_length) {
@@ -103,21 +120,28 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         var mode = "private5";
     }
 
-    args += "&full_fetch=true";
+    args += "&extended_fetch=true";
+
+    var all_my_addresses = already_tried_addresses.concat(addresses);
 
     $.ajax({
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
     }).success(function (response) {
+        //console.log("success getting response txs for:", addresses, blank_length);
         $.each(response['transactions'], function(i, tx) {
             //console.log("found tx!", tx);
-            var all_addresses = tx.inputs.concat(tx.putputs);
-            $.each(tx.addresses, function(i, address) {
-                //console.log('trying address', address);
+            var ins_and_outs = tx.inputs.concat(tx.outputs);
+            $.each(ins_and_outs, function(i, in_or_out) {
+                var address = in_or_out['address'];
+                //console.log('trying address', address, all_my_addresses, addresses_with_activity);
+                var my_address = all_my_addresses.indexOf(address) >= 0;
                 var not_already_marked = addresses_with_activity.indexOf(address) == -1;
-                if(not_already_marked) {
-                    //console.log("adding to used list", address);
+                if(my_address && not_already_marked) {
+                    //console.log("adding my address to used list:", address);
                     addresses_with_activity.push(address);
+                } else {
+                    //console.log("not my address, or not adding again:", address)
                 }
             });
         });
@@ -125,14 +149,20 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         //console.log(crypto, "pre all_used", all_used);
 
         var all_tried = addresses.concat(already_tried_addresses);
-        var all_used = addresses_with_activity.concat(all_used || []);
+        all_used = addresses_with_activity.concat(all_used);
 
         //console.log("all tried", all_tried);
         //console.log(crypto, "all used", all_used);
 
         var needs_to_go = addresses_with_activity.length;
+
+        //console.log("needs to go", needs_to_go);
+
         if(needs_to_go == 0) {
             // all results returned no activity
+
+            //console.log("=========== found too many blank addresses", all_tried, all_used)
+
             var i = 0;
             var unused_address_pool = [];
             while(unused_address_pool.length < 5) {
@@ -175,14 +205,13 @@ function rotate_deposit(crypto, up) {
 function open_wallet() {
     $("#register_box, #login_box").hide();
     $("#loading_screen").show();
-    console.log("start");
-
+    
     $.each(crypto_data, function(i, data) {
         var crypto = data.code;
         var box = $(".crypto_box[data-currency=" + crypto + "]");
 
         fetch_used_addresses(crypto, 'deposit', function(used_addresses) {
-            console.log(crypto, "======== found deposit addresses:", used_addresses);
+            //console.log(crypto, "======== found deposit addresses:", used_addresses);
 
             var address = unused_deposit_addresses[crypto][0];
             box.find(".deposit_address").text(address);
@@ -198,7 +227,7 @@ function open_wallet() {
         }, 10, [], []);
 
         fetch_used_addresses(crypto, 'change', function(used_addresses) {
-            console.log("used addresses", used_addresses);
+            //console.log("used change addresses", used_addresses);
             if(used_addresses.length > 0) {
                 calculate_balance(crypto, used_addresses);
             }
@@ -216,7 +245,5 @@ function open_wallet() {
         });
     });
 
-    $("#loading_screen").hide();
     $("#wallets").show();
-    console.log('end');
 }

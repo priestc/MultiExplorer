@@ -64,6 +64,14 @@
     {% include "register.html" %}
 {% endif %}
 
+<div id="fiat_exchange_rates" style="display: none">
+    <span class="fiat_symbol">USD</span>
+    {% for crypto, data in exchange_rates.items %}
+        <span class="rate {{ crypto }}">{{ data.rate }}</span>
+        <span class="provider {{ crypto }}">{{ data.provider }}</span>
+    {% endfor %}
+</div>
+
 <div id="loading_screen" style="display: none; border: 1px solid green; width: 250px; margin; 0 auto 0 auto">
     Deriving Wallet Addresses and Generating QR codes...
 </div>
@@ -72,7 +80,8 @@
     {% for data in crypto_data %}
     <div class="crypto_box" data-currency="{{ data.code }}">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
-        Balance: <span class="crypto_balance"></span> {{ data.code|upper }}
+        Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
+        Fiat: <span class="fiat_balance">0.0</span> <span class="fiat_unit">USD</span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>

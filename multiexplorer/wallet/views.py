@@ -10,10 +10,29 @@ from multiexplorer.utils import get_wallet_currencies
 crypto_data = get_wallet_currencies()
 crypto_data_json = json.dumps(crypto_data)
 
+from multiexplorer.views import _cached_fetch
+
 def home(request):
+
+    rates = {}
+    for data in crypto_data:
+        services, response = _cached_fetch(
+            service_mode="current_price",
+            service_id="fallback",
+            fiat='usd',
+            currency=data['code'],
+            currency_name=data['name']
+        )
+
+        rates[data['code']] = {
+            'rate': response['current_price'],
+            'provider': response['service_name']
+        }
+
     return TemplateResponse(request, "wallet_home.html", {
         'crypto_data_json': crypto_data_json,
-        'crypto_data': crypto_data
+        'crypto_data': crypto_data,
+        'exchange_rates': rates
     })
 
 

@@ -11,7 +11,7 @@ from django.conf import settings
 from moneywagon import (
     service_table, get_address_balance, guess_currency_from_address, ALL_SERVICES,
     get_unspent_outputs, get_historical_transactions, get_optimal_fee, get_block,
-    get_single_transaction
+    get_single_transaction, get_current_price
 )
 
 from moneywagon.crypto_data import crypto_data
@@ -62,6 +62,7 @@ def perform_lookup(request, service_mode, service_id):
     address = request.GET.get('address', None)
     addresses = request.GET.get('addresses', [])
     xpub = request.GET.get('xpub', None)
+    fiat = request.GET.get('fiat', None)
 
     block_args = {
         'latest': request.GET.get('latest', ''),
@@ -99,11 +100,16 @@ def perform_lookup(request, service_mode, service_id):
     return http.JsonResponse(response_dict)
 
 
-def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
-    key_ending = address or ":".join(block_args.values()) or xpub or ','.join(addresses)
+def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
+    currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
+    extended_fetch=False, **k):
 
-    eh = k['extended_fetch']
-    if eh:
+    if not block_args:
+        block_args = {}
+
+    key_ending = address or ":".join(block_args.values()) or xpub or fiat or ','.join(addresses)
+
+    if extended_fetch:
         key_ending += "--ExtendedFetch"
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
@@ -114,7 +120,7 @@ def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, 
     else:
         #try:
         response_dict = _make_moneywagon_fetch(**locals())
-        if eh:
+        if extended_fetch:
             response_dict = _do_extended_fetch(currency, response_dict)
 
         #except Exception as exc:
@@ -140,7 +146,7 @@ def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, 
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, fiat=None, **k):
     if Service:
         if currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
@@ -169,7 +175,10 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
     elif addresses:
         modes['addresses'] = addresses.split(',')
 
-    if service_mode == 'address_balance':
+    if service_mode == 'current_price':
+        used_services, price = get_current_price(currency, fiat, **modes)
+        ret = {'current_price': price}
+    elif service_mode == 'address_balance':
         used_services, balance = get_address_balance(currency, **modes)
         ret = {'balance': balance}
     elif service_mode == 'unspent_outputs':
