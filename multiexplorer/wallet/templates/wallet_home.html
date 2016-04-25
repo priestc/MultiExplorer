@@ -51,6 +51,12 @@
         margin: 3px;
         font-weight: bold;
     }
+    .deposit_area {
+        background: white;
+        padding: 5px 3px 5px 3px;
+        margin: 5px;
+        width: 17em;
+    }
 </style>
 {% include "login.html" %}
 
@@ -82,7 +88,7 @@
                 <td><button class="deposit_shift_down" style="width: 75%">&rarr;</button></td>
             </tr>
         </table>
-        <div style="background: white; padding: 5px 3px 5px 3px; margin: 5px;">
+        <div class="deposit_area">
             <span class="deposit_address"></span>
         </div>
         <button class="send">Send</button>

@@ -1,3 +1,4 @@
+import datetime
 import json
 from moneywagon.crypto_data import crypto_data
 from moneywagon import ALL_SERVICES
@@ -94,3 +95,14 @@ def get_wallet_currencies():
             })
 
     return ret
+
+def datetime_to_iso(obj):
+    """
+    Python's default json encoder will blow up when it encounters datetime objects.
+    So this work around is needed in order to just handle making datetime
+    objects into iso8601 string format.
+    """
+    if isinstance(obj, datetime.datetime):
+        serial = obj.isoformat()
+        return serial
+    raise TypeError("Type not serializable")

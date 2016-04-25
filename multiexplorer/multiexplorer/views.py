@@ -10,7 +10,8 @@ from django.conf import settings
 
 from moneywagon import (
     service_table, get_address_balance, guess_currency_from_address, ALL_SERVICES,
-    get_unspent_outputs, get_historical_transactions, get_optimal_fee, get_block
+    get_unspent_outputs, get_historical_transactions, get_optimal_fee, get_block,
+    get_single_transaction
 )
 
 from moneywagon.crypto_data import crypto_data
@@ -19,6 +20,9 @@ from .utils import (
     make_crypto_data_json, make_service_info_json, service_modes,
     get_block_currencies, get_balance_currencies
 )
+
+from .models import CachedTransaction
+
 services_by_id = {s.service_id: s for s in ALL_SERVICES}
 crypto_data_json = make_crypto_data_json()
 service_info_json = make_service_info_json()
@@ -32,9 +36,14 @@ ReddcoinCom.protocol = 'http'
 def perform_lookup(request, service_mode, service_id):
     """
     Passes on this request to the API, then return their response normalized to
-    a single API.
+    a single API. service_mode == (address_balance, historical_transactions)
     """
     include_raw = request.GET.get('include_raw', False)
+
+    extended_fetch = (
+        request.GET.get('extended_fetch', 'false') == 'true' and
+        service_mode == 'historical_transactions'
+    )
 
     paranoid = service_id.startswith("paranoid")
     average_mode = service_id.startswith("average")
@@ -93,6 +102,10 @@ def perform_lookup(request, service_mode, service_id):
 def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, currency_name, include_raw=False, Service=None, block_args=None, **k):
     key_ending = address or ":".join(block_args.values()) or xpub or ','.join(addresses)
 
+    eh = k['extended_fetch']
+    if eh:
+        key_ending += "--ExtendedFetch"
+
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
 
@@ -101,6 +114,9 @@ def _cached_fetch(service_mode, service_id, address, addresses, xpub, currency, 
     else:
         #try:
         response_dict = _make_moneywagon_fetch(**locals())
+        if eh:
+            response_dict = _do_extended_fetch(currency, response_dict)
+
         #except Exception as exc:
         #    return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
 
@@ -161,7 +177,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         ret = {'utxos': sorted(utxos, key=lambda x: x['output'])}
     elif service_mode == 'historical_transactions':
         used_services, txs = get_historical_transactions(currency, **modes)
-        ret = {'transactions': sorted(txs, key=lambda x: -x['confirmations'])}
+        ret = {'transactions': sorted(txs, key=lambda x: x['txid'])}
     elif service_mode == 'get_block':
         modes.update(block_args)
         used_services, block_data = get_block(currency, **modes)
@@ -188,6 +204,14 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         ]
 
     return ret
+
+def _do_extended_fetch(crypto, response):
+    txs = []
+    for tx in response['transactions']:
+        full_tx = CachedTransaction.fetch_full_tx(crypto, txid=tx['txid'])
+        txs.append(full_tx)
+
+    return {'transactions': txs}
 
 
 def home(request):

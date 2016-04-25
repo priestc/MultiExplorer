@@ -1,4 +1,6 @@
+import json
 from django.db import models
+from moneywagon import get_single_transaction
 
 # Create your models here.
 
