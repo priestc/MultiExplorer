@@ -111,6 +111,7 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
     }).success(function (response) {
         $.each(response['transactions'], function(i, tx) {
             //console.log("found tx!", tx);
+            var all_addresses = tx.inputs.concat(tx.putputs);
             $.each(tx.addresses, function(i, address) {
                 //console.log('trying address', address);
                 var not_already_marked = addresses_with_activity.indexOf(address) == -1;
