@@ -54,6 +54,10 @@ function get_change_keypair(crypto, index) {
     return derive_addresses(get_crypto_root(crypto), crypto, true, index);
 }
 
+function get_exchange_rate(crypto) {
+    return parseFloat($("#fiat_exchange_rates .rate." + crypto).text());
+}
+
 function calculate_balance(crypto, addresses) {
     // active_deposit_addresses == list of dposit addresses that have acivity
     // these addresses will make up the balance. (plus the change addresses
@@ -82,7 +86,7 @@ function calculate_balance(crypto, addresses) {
 
         bal.text(new_balance);
 
-        var exchange_rate = parseFloat($("#fiat_exchange_rates .rate." + crypto).text());
+        var exchange_rate = get_exchange_rate(crypto);
         console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").text((exchange_rate * new_balance).toFixed(2));
     });
@@ -265,8 +269,35 @@ $(function() {
 
     $(".send").click(function() {
         var crypto = $(this).parent().data('currency');
+        $("#sending_crypto_unit").text(crypto);
+
         $("#send_modal").dialog({
             title: "Send " + crypto.toUpperCase(),
         });
     });
+
+    $(".crypto_amount").keyup(function() {
+        var crypto = $("#sending_crypto_unit").text();
+        var exchange_rate = get_exchange_rate(crypto);
+        var converted = exchange_rate * parseFloat($(this).val());
+        if(converted) {
+            $(".fiat_amount").val(converted.toFixed(2));
+        }
+    });
+
+    $(".fiat_amount").keyup(function() {
+        var crypto = $("#sending_crypto_unit").text();
+        var exchange_rate = get_exchange_rate(crypto);
+        var converted = (1 / exchange_rate) * parseFloat($(this).val());
+        if(converted) {
+            $("#sending_crypto_amount").val(converted.toFixed(8));
+        }
+    });
+
+    $("#send_btn").click(function() {
+        var crypto = $("#sending_crypto_unit").text();
+        var sending_address = $("#sending_recipient_address").val();
+        var sending_amount = parseFloat($("#sending_crypto_amount").val());
+
+    })
 });
