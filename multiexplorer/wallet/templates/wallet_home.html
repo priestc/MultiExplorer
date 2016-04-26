@@ -2,6 +2,8 @@
 {% load staticfiles %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'jquery-ui.min.css' %}">
+<script src="{% static 'jquery-ui.min.js' %}"></script>
 <script src="{% static 'aes.js' %}"></script>
 <script src="{% static 'bitcore-lib.min.js' %}"></script>
 <script src="{% static 'bitcore-mnemonic.min.js' %}"></script>
@@ -107,4 +109,19 @@
     {% endfor %}
 </div>
 
+<div style="display: none">
+    <div id="send_modal">
+        <input type="radio" name="fee" value="Half Optimal Fee">
+        <input type="radio" name="fee" value="Optimal Fee">
+        <input type="radio" name="fee" value="Double Optimal Fee">
+    </div>
+
+    <div id="history_modal">
+        history
+    </div>
+
+    <div id="exchange_modal">
+        exchange
+    </div>
+</div>
 {% endblock %}

@@ -205,7 +205,7 @@ function rotate_deposit(crypto, up) {
 function open_wallet() {
     $("#register_box, #login_box").hide();
     $("#loading_screen").show();
-    
+
     $.each(crypto_data, function(i, data) {
         var crypto = data.code;
         var box = $(".crypto_box[data-currency=" + crypto + "]");
@@ -247,3 +247,26 @@ function open_wallet() {
 
     $("#wallets").show();
 }
+
+$(function() {
+    $(".history").click(function() {
+        var crypto = $(this).parent().data('currency');
+        $("#history_modal").dialog({
+            title: "History",
+        });
+    });
+
+    $(".exchange").click(function() {
+        var crypto = $(this).parent().data('currency');
+        $("#exchange_modal").dialog({
+            title: "Exchange",
+        });
+    });
+
+    $(".send").click(function() {
+        var crypto = $(this).parent().data('currency');
+        $("#send_modal").dialog({
+            title: "Send " + crypto.toUpperCase(),
+        });
+    });
+});
