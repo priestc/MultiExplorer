@@ -5,7 +5,7 @@ from moneywagon import ALL_SERVICES
 
 service_modes = [
     'current_price', 'address_balance', 'historical_transactions', 'push_tx',
-    'unspent_outputs', 'get_block', 'get_optimal_fee'
+    'unspent_outputs', 'block_information', 'optimal_fee'
 ]
 
 def make_service_info_json():

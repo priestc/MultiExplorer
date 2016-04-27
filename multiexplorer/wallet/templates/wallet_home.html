@@ -65,6 +65,15 @@
         padding: 5px;
         margin: 5px;
     }
+
+    #loading_screen {
+        display: none;
+        border: 1px solid green;
+        width: 250px;
+        margin: 0 auto 0 auto;
+        padding: 10px;
+        text-align: center;
+    }
 </style>
 {% include "login.html" %}
 
@@ -80,8 +89,11 @@
     {% endfor %}
 </div>
 
-<div id="loading_screen" style="display: none; border: 1px solid green; width: 250px; margin; 0 auto 0 auto">
-    Deriving Wallet Addresses and Generating QR codes...
+<div style="width: 100%;">
+    <div id="loading_screen">
+        Deriving Wallet Addresses and Generating QR codes...<br><br>
+        <img src="{% static 'spin.gif' %}">
+    </div>
 </div>
 
 <div id="wallets" style="display: none">
@@ -130,19 +142,16 @@
         <label>Fiat Amount</label><br>
         <input type="text" id="sending_fiat_amount"> <span class="fiat_unit">USD</span>
 
-
         <br><br>
 
-        <input id="half" type="radio" name="fee" value="Half Optimal Fee">
-        <label for="half">Half Optimal Fee ($0.03)</label><br>
+        <input id="half_fee" type="radio" name="fee" value="">
+        <label for="half">Half Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
 
-        <input id="full" type="radio" name="fee" value="Optimal Fee" checked>
-        <label for="full">Optimal Fee ($0.06)</label><br>
+        <input id="full_fee" type="radio" name="fee" value="" checked>
+        <label for="full">Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
 
-        <input id="double" type="radio" name="fee" value="Double Optimal Fee">
-        <label for="double">Double Optimal Fee ($0.12)</label><br>
-
-        <button id="send_btn">Send</button>
+        <input id="double_fee" type="radio" name="fee" value="">
+        <label for="double">Double Optimal Fee (<span id="double_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
     </div>
 
     <div id="history_modal">

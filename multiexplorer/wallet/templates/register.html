@@ -19,7 +19,12 @@
         Password Again:<br><input type="password" name="password2"><br>
         <input type="hidden" name="encrypted_wallet_seed" id="seed">
         {% csrf_token %}
-        <br><br>
+        <br>
+
+        Mnemonic (optional):<br>
+        <span id="mnemonic_error" class="error"></span>
+        <textarea style="width: 80%; height: 4em"></textarea>
+        <br>
         <input type="submit" value="Register">
 
     </form>
@@ -30,10 +35,21 @@ $("#register_form").submit(function() {
     // encrypt it with the user's password, then inject it into the registration
     // form where it will be saved on the back end.
     event.preventDefault();
-    var mn = new Mnemonic()
-    hd_master_seed = mn.toHDPrivateKey();
-    
     var t = $(this);
+    var mnemonic = t.find("textarea").val();
+
+    if(mnemonic) {
+        if(Mnemonic.isValid(mnemonic)) {
+            var mn = new Mnemonic(mnemonic);
+        } else {
+            $("#mnemonic_error").text("Invalid mnemonic");
+            return false;
+        }
+    } else {
+        var mn = new Mnemonic();
+    }
+    hd_master_seed = mn.toHDPrivateKey();
+
     var username = t.find("input[name=username]").val();
     var email = t.find("input[name=email]").val();
     var password = t.find("input[name=password]").val();

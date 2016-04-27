@@ -58,6 +58,10 @@ function get_exchange_rate(crypto) {
     return parseFloat($("#fiat_exchange_rates .rate." + crypto).text());
 }
 
+function send_coin(crypto, recipients, fee_rate) {
+    var tx = bitcore.Transaction();
+}
+
 function calculate_balance(crypto, addresses) {
     // active_deposit_addresses == list of dposit addresses that have acivity
     // these addresses will make up the balance. (plus the change addresses
@@ -207,9 +211,6 @@ function rotate_deposit(crypto, up) {
 }
 
 function open_wallet() {
-    $("#register_box, #login_box").hide();
-    $("#loading_screen").show();
-
     $.each(crypto_data, function(i, data) {
         var crypto = data.code;
         var box = $(".crypto_box[data-currency=" + crypto + "]");
@@ -235,6 +236,8 @@ function open_wallet() {
             if(used_addresses.length > 0) {
                 calculate_balance(crypto, used_addresses);
             }
+            $("#wallets").show();
+            $("#loading_screen").hide();
         }, 10, [], []);
 
         box.find(".deposit_shift_down").click(function() {
@@ -248,8 +251,6 @@ function open_wallet() {
             box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
         });
     });
-
-    $("#wallets").show();
 }
 
 $(function() {
@@ -273,6 +274,31 @@ $(function() {
 
         $("#send_modal").dialog({
             title: "Send " + crypto.toUpperCase(),
+            buttons: [{
+                text: "Send",
+                click: function() {
+                    var crypto = $("#sending_crypto_unit").text();
+                    var sending_address = $("#sending_recipient_address").val();
+                    var sending_amount = parseFloat($("#sending_crypto_amount").val());
+                    var fee = parseFloat($(""));
+                    send_coin(crypto, [sending_address, sending_amount], fee);
+                }
+            }]
+        });
+
+        $.ajax({
+            url: "/api/optimal_fee/average3?currency=" + crypto,
+        }).on(function(response) {
+            console.log(response);
+            var fee = parseFloat(response.optimal_fee);
+            $("#full_fee").val(fee);
+            $("#full_fee_rate").text((fee / 2014).toFixed(2));
+
+            $("#half_fee").val(fee / 2);
+            $("#half_fee_rate").text(((fee / 2) / 2014).toFixed(2));
+
+            $("#double_fee").val(fee * 2);
+            $("#double_fee_rate").text((fee * 2 / 2014).toFixed(2));
         });
     });
 
@@ -293,11 +319,4 @@ $(function() {
             $("#sending_crypto_amount").val(converted.toFixed(8));
         }
     });
-
-    $("#send_btn").click(function() {
-        var crypto = $("#sending_crypto_unit").text();
-        var sending_address = $("#sending_recipient_address").val();
-        var sending_amount = parseFloat($("#sending_crypto_amount").val());
-
-    })
 });

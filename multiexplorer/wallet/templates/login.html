@@ -18,6 +18,9 @@ $("#login_form").submit(function(event) {
     var username = $(this).find("input[name=username]").val();
     raw_password = $(this).find("input[name=password]").val();
 
+    $("#register_box, #login_box").hide();
+    $("#loading_screen").show();
+
     $.ajax({
         url: "{% url 'login' %}",
         type: 'post',
@@ -34,6 +37,7 @@ $("#login_form").submit(function(event) {
         open_wallet();
     }).fail(function(jqXHR) {
         $("#login_error").text(jqXHR.responseText);
+        $("#register_box, #login_box").show();
     });
 
 });

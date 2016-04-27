@@ -187,7 +187,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         modes.update(block_args)
         used_services, block_data = get_block(currency, **modes)
         ret = {'block': block_data}
-    elif service_mode == 'get_optimal_fee':
+    elif service_mode == 'optimal_fee':
         used_services, fee = get_optimal_fee(currency, 1024, **modes)
         ret = {'optimal_fee_per_KiB': fee}
     else:
