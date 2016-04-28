@@ -13,6 +13,7 @@
     var Mnemonic = require('bitcore-mnemonic');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
+    var spinner_url = "{% static 'spin.gif' %}";
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
@@ -58,6 +59,7 @@
         padding: 5px 3px 5px 3px;
         margin: 5px;
         width: 17em;
+        border: 1px solid #dfdfdf;
     }
 
     .send_btn {
@@ -73,6 +75,17 @@
         margin: 0 auto 0 auto;
         padding: 10px;
         text-align: center;
+    }
+
+    .qr {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .arrow_button {
+        width: 9em;
     }
 </style>
 {% include "login.html" %}
@@ -101,7 +114,7 @@
     <div class="crypto_box" data-currency="{{ data.code }}">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        Fiat: <span class="fiat_balance">0.0</span> <span class="fiat_unit">USD</span>
+        <span class="fiat_balance">0.0</span> <span class="fiat_unit">USD</span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
@@ -112,14 +125,13 @@
                     <div class="qr"></div>
                 </td>
             </tr>
-            <tr>
-                <td><button class="deposit_shift_up" style="width: 75%">&larr;</button></td>
-                <td><button class="deposit_shift_down" style="width: 75%">&rarr;</button></td>
-            </tr>
         </table>
         <div class="deposit_area">
             <span class="deposit_address"></span>
         </div>
+        <button class="deposit_shift_up arrow_button">&larr;</button>
+        <button class="deposit_shift_down arrow_button">&rarr;</button>
+        <br>
         <button class="send">Send</button>
         <button class="exchange">Exchange</button>
         <button class="history">History</button>
@@ -145,13 +157,13 @@
         <br><br>
 
         <input id="half_fee" type="radio" name="fee" value="">
-        <label for="half">Half Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <label for="half_fee">Half Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
 
         <input id="full_fee" type="radio" name="fee" value="" checked>
-        <label for="full">Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <label for="full_fee">Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
 
         <input id="double_fee" type="radio" name="fee" value="">
-        <label for="double">Double Optimal Fee (<span id="double_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <label for="double_fee">Double Optimal Fee (<span id="double_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
     </div>
 
     <div id="history_modal">

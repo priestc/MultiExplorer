@@ -240,15 +240,15 @@ function open_wallet() {
             $("#loading_screen").hide();
         }, 10, [], []);
 
-        box.find(".deposit_shift_down").click(function() {
-            var address = rotate_deposit(crypto, true);
+        box.find(".deposit_shift_down, .deposit_shift_up").click(function() {
+            var which = $(this).hasClass('deposit_shift_up');
+            var qr_container = box.find(".qr");
+            qr_container.empty().append("<img src='" + spinner_url + "'>");
+            var address = rotate_deposit(crypto, which);
             box.find(".deposit_address").text(address);
-            box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
-        });
-        box.find(".deposit_shift_up").click(function() {
-            var address = rotate_deposit(crypto, false);
-            box.find(".deposit_address").text(address);
-            box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
+            setTimeout(function() {
+                qr_container.empty().qrcode({render: 'png', width: 100, height: 100, text: address});
+            }, 1);
         });
     });
 }
