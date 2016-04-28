@@ -200,7 +200,11 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
             //console.log(crypto, 'recursing:', needs_to_go, all_tried, all_used);
             fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
         }
-    });
+    }).fail(function(jqXHR) {
+        var box = $(".crypto_box[data-currency=" + crypto + "]");
+        console.log(jqXHR);
+        box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
+    })
 }
 
 function rotate_deposit(crypto, up) {

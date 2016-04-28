@@ -114,13 +114,13 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     if hit:
         response_dict = hit
     else:
-        #try:
-        response_dict = _make_moneywagon_fetch(**locals())
-        if extended_fetch:
-            response_dict = _do_extended_fetch(currency, response_dict)
+        try:
+            response_dict = _make_moneywagon_fetch(**locals())
+            if extended_fetch:
+                response_dict = _do_extended_fetch(currency, response_dict)
 
-        #except Exception as exc:
-        #    return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
+        except Exception as exc:
+            return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
 
         response_dict.update({
             'timestamp': int(time.time()),
