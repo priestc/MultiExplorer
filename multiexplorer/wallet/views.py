@@ -1,6 +1,7 @@
 import json
 from django.contrib.auth import authenticate, login as init_login
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.template.response import TemplateResponse
 from django import http
 
@@ -32,7 +33,8 @@ def home(request):
     return TemplateResponse(request, "wallet_home.html", {
         'crypto_data_json': crypto_data_json,
         'crypto_data': crypto_data,
-        'exchange_rates': rates
+        'exchange_rates': rates,
+        'supported_fiats': settings.WALLET_SUPPORTED_FIATS
     })
 
 

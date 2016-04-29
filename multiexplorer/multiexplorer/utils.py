@@ -2,6 +2,7 @@ import datetime
 import json
 from moneywagon.crypto_data import crypto_data
 from moneywagon import ALL_SERVICES
+from django.conf import settings
 
 service_modes = [
     'current_price', 'address_balance', 'historical_transactions', 'push_tx',
@@ -84,7 +85,10 @@ def get_wallet_currencies():
         pushtx = services.get("push_tx", [])
         unspent = services.get("unspent_outputs", [])
 
-        if pushtx and unspent and bip44 and priv_byte:
+        sc = settings.WALLET_SUPPORTED_CRYPTOS
+        is_supported = sc and (currency.lower() in sc)
+
+        if pushtx and unspent and bip44 and priv_byte and is_supported:
             ret.append({
                 'code': currency,
                 'name': data['name'],
@@ -95,6 +99,31 @@ def get_wallet_currencies():
             })
 
     return ret
+
+
+def needs_bip44():
+    """
+    Lists all currencies that have full wallet support from moneywagon, but
+    have no defined BIP44 sequence.
+    """
+    ret = []
+    for currency, data in crypto_data.items():
+        if not hasattr(data, 'get'):
+            continue
+
+        bip44 = data['bip44_coin_type']
+        address_byte = data['address_version_byte']
+        priv_byte = data['private_key_prefix']
+
+        services = data.get('services', {})
+        pushtx = services.get("push_tx", [])
+        unspent = services.get("unspent_outputs", [])
+
+        if pushtx and unspent and not bip44 and priv_byte:
+            ret.append(currency)
+
+    return ret
+
 
 def datetime_to_iso(obj):
     """

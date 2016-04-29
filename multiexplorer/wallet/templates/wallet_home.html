@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 
+{% block extra_menu_items %}
+
+<a href="#" id="wallet_settings">Wallet Settings</a> -
+
+{% endblock %}
+
 {% block content %}
 <link rel="stylesheet" href="{% static 'jquery-ui.min.css' %}">
 <script src="{% static 'jquery-ui.min.js' %}"></script>
@@ -87,6 +93,13 @@
     .arrow_button {
         width: 9em;
     }
+
+    #mnemonic_disp {
+        background: white;
+        padding: 5px;
+        width: 100%;
+        border: 1px solid gray
+    }
 </style>
 {% include "login.html" %}
 
@@ -157,7 +170,7 @@
         <br><br>
 
         <input id="half_fee" type="radio" name="fee" value="">
-        <label for="half_fee">Half Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <label for="half_fee">Half Optimal Fee (<span id="half_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
 
         <input id="full_fee" type="radio" name="fee" value="" checked>
         <label for="full_fee">Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
@@ -169,9 +182,22 @@
     <div id="history_modal">
         history
     </div>
-
     <div id="exchange_modal">
         exchange
+    </div>
+
+    <div id="settings_modal">
+        Display Currency:
+        <select class="fiat">
+            {% for fiat in supported_fiats %}
+            <option value="{{ fiat }}">{{ fiat|upper }}</option>
+            {% endfor %}
+        <select>
+        <br>
+        Wallet Backup Mnemonic:
+        <div id="mnemonic_disp">
+        </div>
+
     </div>
 </div>
 {% endblock %}

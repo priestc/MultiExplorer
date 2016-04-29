@@ -83,6 +83,7 @@
             <a href="{% url 'block_lookup' %}">Block Data</a> -
             <a href="{% url 'api_docs' %}">API Docs</a> -
             <a href="{% url 'wallet' %}">Wallet</a> -
+            {% block extra_menu_items %}{% endblock %}
             <a href="{% url 'exchange' %}">Exchange</a>
         </div>
         <script>

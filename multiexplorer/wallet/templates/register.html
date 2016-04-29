@@ -73,6 +73,7 @@ $("#register_form").submit(function() {
         }
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.
+        $("#register_box, #login_box").hide();
         open_wallet();
         $("#register_error").text("");
     }).fail(function(jqXHR) {

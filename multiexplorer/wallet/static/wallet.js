@@ -67,7 +67,7 @@ function calculate_balance(crypto, addresses) {
     // these addresses will make up the balance. (plus the change addresses
     // which will be made in another concurrent thread)
 
-    console.log("calculate balances with:", addresses);
+    //console.log("calculate balances with:", addresses);
 
     var box = $(".crypto_box[data-currency=" + crypto + "]");
 
@@ -91,11 +91,12 @@ function calculate_balance(crypto, addresses) {
         bal.text(new_balance);
 
         var exchange_rate = get_exchange_rate(crypto);
-        console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
+        //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").text((exchange_rate * new_balance).toFixed(2));
     });
 }
 
+var optimal_fees = {};
 var unused_deposit_addresses = {};
 var unused_change_addresses = {};
 function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
@@ -197,12 +198,11 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
             //console.log(crypto, 'finished fetch!:', addresses, chain, all_used);
             callback(all_used);
         } else {
-            //console.log(crypto, 'recursing:', needs_to_go, all_tried, all_used);
+            //console.log(crypto, 'recursing:', 'needs to go: 'needs_to_go, 'all tried:', all_tried, 'all_used', all_used);
             fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
         }
     }).fail(function(jqXHR) {
         var box = $(".crypto_box[data-currency=" + crypto + "]");
-        console.log(jqXHR);
         box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
     })
 }
@@ -258,6 +258,14 @@ function open_wallet() {
 }
 
 $(function() {
+    $("#wallet_settings").click(function(event) {
+        event.preventDefault();
+        $("#mnemonic_disp").text(raw_mnemonic);
+        $("#settings_modal").dialog({
+            title: "Wallet Settings",
+        });
+    });
+
     $(".history").click(function() {
         var crypto = $(this).parent().data('currency');
         $("#history_modal").dialog({
@@ -292,17 +300,15 @@ $(function() {
 
         $.ajax({
             url: "/api/optimal_fee/average3?currency=" + crypto,
-        }).on(function(response) {
-            console.log(response);
-            var fee = parseFloat(response.optimal_fee);
-            $("#full_fee").val(fee);
-            $("#full_fee_rate").text((fee / 2014).toFixed(2));
+        }).success(function(response) {
+            //console.log(response);
+            var fee_per_byte = parseFloat(response.optimal_fee_per_KiB) / 1024;
+            optimal_fees[crypto] = fee_per_byte;
 
-            $("#half_fee").val(fee / 2);
-            $("#half_fee_rate").text(((fee / 2) / 2014).toFixed(2));
-
-            $("#double_fee").val(fee * 2);
-            $("#double_fee_rate").text((fee * 2 / 2014).toFixed(2));
+            //console.log('using optmal fee per byte:', fee_per_byte);
+            $("#full_fee_rate").text(fee_per_byte.toFixed(2));
+            $("#half_fee_rate").text((fee_per_byte / 2).toFixed(2));
+            $("#double_fee_rate").text((fee_per_byte * 2).toFixed(2));
         });
     });
 

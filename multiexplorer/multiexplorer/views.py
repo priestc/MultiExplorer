@@ -103,7 +103,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     if not block_args:
         block_args = {}
 
-    key_ending = address or ":".join(block_args.values()) or xpub or fiat or ','.join(addresses)
+    key_ending = address or xpub or fiat or (''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
 
     if extended_fetch:
         key_ending += "--ExtendedFetch"
