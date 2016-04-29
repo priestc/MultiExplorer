@@ -37,6 +37,12 @@ def home(request):
         'supported_fiats': settings.WALLET_SUPPORTED_FIATS
     })
 
+def save_settings(request):
+    wallet = WalletMasterKeys.objects.get(user=request.user)
+    wallet.display_fiat = request.POST['display_fiat']
+    wallet.auto_logout = request.POST['auto_logout']
+    wallet.save()
+    return http.HttpResponse("OK")
 
 def register_new_wallet_user(request):
     encrypted_mnemonic = request.POST['encrypted_mnemonic']

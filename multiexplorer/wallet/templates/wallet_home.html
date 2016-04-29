@@ -97,7 +97,7 @@
     #mnemonic_disp {
         background: white;
         padding: 5px;
-        width: 100%;
+        width: calc(100% - 5px);
         border: 1px solid gray
     }
 </style>
@@ -188,12 +188,22 @@
 
     <div id="settings_modal">
         Display Currency:
-        <select class="fiat">
-            {% for fiat in supported_fiats %}
-            <option value="{{ fiat }}">{{ fiat|upper }}</option>
-            {% endfor %}
-        <select>
-        <br>
+        <form id="settings_form">
+            <select name="display_fiat">
+                {% for fiat in supported_fiats %}
+                <option value="{{ fiat }}">{{ fiat|upper }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            Automatically log out after...
+            <select name="auto_logout">
+                <option value="5">5 minutes of inactivity</option>
+                <option value="10">10 minutes of inactivity</option>
+                <option value="30">30 minutes minutes of inactivity</option>
+                <option value="30" selected>Never</option>
+            </select>
+        </form>
+        <br><br>
         Wallet Backup Mnemonic:
         <div id="mnemonic_disp">
         </div>

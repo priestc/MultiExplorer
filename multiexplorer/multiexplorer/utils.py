@@ -9,10 +9,12 @@ service_modes = [
     'unspent_outputs', 'block_information', 'optimal_fee'
 ]
 
+
 def make_service_info_json():
     return json.dumps({
         s.service_id: {'name': s.name, 'url': s.api_homepage} for s in ALL_SERVICES
     })
+
 
 def make_crypto_data_json():
     """
@@ -40,6 +42,7 @@ def make_crypto_data_json():
 
     return json.dumps(ret)
 
+
 def get_block_currencies():
     """
     Returns currencies that have block info services defined.
@@ -50,6 +53,7 @@ def get_block_currencies():
             ret.append({'code': currency, 'name': data['name']})
 
     return ret
+
 
 def get_balance_currencies():
     """
@@ -65,6 +69,7 @@ def get_balance_currencies():
             })
 
     return ret
+
 
 def get_wallet_currencies():
     """

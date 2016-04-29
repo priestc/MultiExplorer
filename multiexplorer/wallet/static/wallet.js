@@ -263,6 +263,18 @@ $(function() {
         $("#mnemonic_disp").text(raw_mnemonic);
         $("#settings_modal").dialog({
             title: "Wallet Settings",
+            buttons: [{
+                text: "Save Settings",
+                click: function() {
+                    $.ajax({
+                        url: '/wallet/save_settings',
+                        type: 'post',
+                        data: $("#settings_form").serialize(),
+                    }).success(function(response) {
+                        $("#settings_modal").dialog('close');
+                    });
+                }
+            }]
         });
     });
 
