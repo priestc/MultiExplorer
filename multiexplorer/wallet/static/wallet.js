@@ -344,7 +344,7 @@ $(function() {
 
     $(".send").click(function() {
         var crypto = $(this).parent().data('currency');
-        $("#sending_crypto_unit").text(crypto);
+        $("#sending_crypto_unit").text(crypto.toUpperCase());
 
         $("#send_modal").dialog({
             title: "Send " + crypto.toUpperCase(),
@@ -374,19 +374,31 @@ $(function() {
         });
     });
 
-    $(".crypto_amount").keyup(function() {
+    $("#sending_crypto_amount").keyup(function(event) {
+        if(event.keyCode == 9) {
+            return // tab key was pressed
+        }
         var crypto = $("#sending_crypto_unit").text();
-        var er = exchange_rate[crypto]['rate'];
-        var converted = er * parseFloat($(this).val());
+        var value_entered = parseFloat($(this).val());
+
+        var er = exchange_rates[crypto.toLowerCase()]['rate'];
+        var converted = er * value_entered
+
         if(converted) {
-            $(".fiat_amount").val(converted.toFixed(2));
+            $("#sending_fiat_amount").val(converted.toFixed(2));
         }
     });
 
-    $(".fiat_amount").keyup(function() {
+    $("#sending_fiat_amount").keyup(function(event) {
+        if(event.keyCode == 9) {
+            return // tab key was pressed
+        }
         var crypto = $("#sending_crypto_unit").text();
-        var er = exchange_rate[crypto]['rate'];
-        var converted = (1 / er) * parseFloat($(this).val());
+        var value_entered = parseFloat($(this).val());
+
+            var er = exchange_rates[crypto.toLowerCase()]['rate'];
+        var converted = (1 / er) * value_entered;
+
         if(converted) {
             $("#sending_crypto_amount").val(converted.toFixed(8));
         }
