@@ -58,6 +58,13 @@ function send_coin(crypto, recipients, fee_rate) {
     var tx = bitcore.Transaction();
 }
 
+function get_crypto_balance(crypto) {
+    return parseFloat(
+        $(".crypto_box[data-currency=" + crypto.toLowerCase() + "]").find('.crypto_balance').text()
+    )
+}
+
+
 function calculate_balance(crypto, addresses) {
     // active_deposit_addresses == list of dposit addresses that have acivity
     // these addresses will make up the balance. (plus the change addresses
@@ -226,26 +233,31 @@ function open_wallet(show_wallet_list) {
 
         box.show();
 
-        fetch_used_addresses(crypto, 'deposit', function(used_addresses) {
-            //console.log(crypto, "======== found deposit addresses:", used_addresses);
+        used_addresses[crypto] = []
+
+        fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
+            //console.log(crypto, "======== found deposit addresses:", found_used_addresses);
+            used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
 
             var address = unused_deposit_addresses[crypto][0];
             box.find(".deposit_address").text(address);
             box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
 
-            if(used_addresses.length == 0) {
+            if(found_used_addresses.length == 0) {
                 // if the external chain has no activity, then the internal chain
-                // must have none either.
+                // must have none either. Don't bother calculating balance.
                 box.find(".crypto_balance").text("0.0");
             } else {
-                calculate_balance(crypto, used_addresses);
+                calculate_balance(crypto, found_used_addresses);
             }
         }, 10, [], []);
 
-        fetch_used_addresses(crypto, 'change', function(used_addresses) {
-            //console.log("used change addresses", used_addresses);
-            if(used_addresses.length > 0) {
-                calculate_balance(crypto, used_addresses);
+        fetch_used_addresses(crypto, 'change', function(found_used_addresses) {
+            //console.log(crypto, "======== found change addresses", found_used_addresses);
+            used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
+
+            if(found_used_addresses.length > 0) {
+                calculate_balance(crypto, found_used_addresses);
             }
             box.show();
             $("#loading_screen").hide();
@@ -288,6 +300,28 @@ function fill_in_settings(settings) {
         form.find("input[value=" + crypto + "]").attr("checked", "checked");
     });
     open_wallet(settings.show_wallet_list);
+}
+
+function update_actual_fee_estimation(crypto, satoshis_will_send, outs_length) {
+    var used_ins = [];
+    $.each(utxos[crypto], function(i, utxo) {
+        used_ins.push(utxo);
+        var added = used_ins.reduce(function(x, y) {return x+y.amount}, 0);
+        if(added >= satoshis_will_send) {
+            return false;
+        }
+    });
+    var tx_size = (used_ins.length * 148) + (34 * outs_length) + 10;
+    fill_in_fee_radios(crypto, tx_size);
+}
+
+function fill_in_fee_radios(crypto, tx_size) {
+    var fee_per_byte = optimal_fees[crypto];
+    var fiat_exchange = exchange_rates[crypto]['rate'];
+    var fiat_fee_this_tx = fee_per_byte * tx_size * fiat_exchange / 1e8;
+    $("#full_fee_rate").text(fiat_fee_this_tx.toFixed(2));
+    $("#half_fee_rate").text((fiat_fee_this_tx / 2).toFixed(2));
+    $("#double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
 }
 
 $(function() {
@@ -363,44 +397,75 @@ $(function() {
         $.ajax({
             url: "/api/optimal_fee/average3?currency=" + crypto,
         }).success(function(response) {
-            //console.log(response);
             var fee_per_byte = parseFloat(response.optimal_fee_per_KiB) / 1024;
             optimal_fees[crypto] = fee_per_byte;
+            $("#optimal_fee_rate_per_byte").text(fee_per_byte.toFixed(2));
+            fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
+        });
 
-            //console.log('using optmal fee per byte:', fee_per_byte);
-            $("#full_fee_rate").text(fee_per_byte.toFixed(2));
-            $("#half_fee_rate").text((fee_per_byte / 2).toFixed(2));
-            $("#double_fee_rate").text((fee_per_byte * 2).toFixed(2));
+        var addrs = used_addresses[crypto].join(',');
+
+        $.ajax({
+            url: "/api/unspent_outputs/fallback?addresses=" + addrs + "&currency=" + crypto,
+        }).success(function(response) {
+            // sort so highest value utxo is the first element.
+            var sorted = utxos[crypto].sort(function(x,y){return y.amount-x.amount});
+            utxos[crypto] = sorted;
         });
     });
+
+    // The below two functions get called whenever the user changes the fiat or
+    // crypto amount in the sending dialog. These functions estimate the fee
+    // and convert to and fro. The two functions are very similar and can
+    // be merged into a single function in the future.
 
     $("#sending_crypto_amount").keyup(function(event) {
         if(event.keyCode == 9) {
             return // tab key was pressed
         }
-        var crypto = $("#sending_crypto_unit").text();
+        var crypto = $("#sending_crypto_unit").text().toLowerCase();
         var value_entered = parseFloat($(this).val());
 
-        var er = exchange_rates[crypto.toLowerCase()]['rate'];
+        var er = exchange_rates[crypto]['rate'];
         var converted = er * value_entered
 
         if(converted) {
             $("#sending_fiat_amount").val(converted.toFixed(2));
         }
+
+        var crypto_balance = get_crypto_balance(crypto);
+        if(value_entered > crypto_balance) {
+            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'red'});
+            $("#send_modal .ui-button").attr('disabled');
+        } else {
+            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'inherit'});
+            $("#send_modal .ui-button").removeAttr('disabled');
+        }
+        update_actual_fee_estimation(crypto, (value_entered * 1e8).toFixed(0), 1);
     });
 
     $("#sending_fiat_amount").keyup(function(event) {
         if(event.keyCode == 9) {
             return // tab key was pressed
         }
-        var crypto = $("#sending_crypto_unit").text();
+        var crypto = $("#sending_crypto_unit").text().toLowerCase();
         var value_entered = parseFloat($(this).val());
 
-            var er = exchange_rates[crypto.toLowerCase()]['rate'];
+        var er = exchange_rates[crypto]['rate'];
         var converted = (1 / er) * value_entered;
 
         if(converted) {
             $("#sending_crypto_amount").val(converted.toFixed(8));
         }
+
+        var crypto_balance = get_crypto_balance(crypto);
+        if(converted > crypto_balance) {
+            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'red'});
+            $("#send_modal .ui-button").attr('disabled');
+        } else {
+            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'inherit'});
+            $("#send_modal .ui-button").removeAttr('disabled');
+        }
+        update_actual_fee_estimation(crypto, (converted * 1e8).toFixed(0), 1);
     });
 });

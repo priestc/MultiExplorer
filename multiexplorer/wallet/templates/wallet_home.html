@@ -21,9 +21,11 @@
     var hd_master_seed = undefined;
     var spinner_url = "{% static 'spin.gif' %}";
     var optimal_fees = {};
+    var used_addresses = {}
     var unused_deposit_addresses = {};
     var unused_change_addresses = {};
     var exchange_rates = {};
+    var utxos = {};
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
@@ -107,6 +109,15 @@
     #wallet_settings_wrapper {
         display: none;
     }
+
+    #fee_rate_area {
+        font-size: x-small;
+        margin-bottom: 10px;
+    }
+
+    #optimal_fee_rate_per_byte {
+        font-weight: bold;
+    }
 </style>
 {% include "login.html" %}
 
@@ -168,14 +179,34 @@
 
         <br><br>
 
-        <input id="half_fee" type="radio" name="fee" value="">
-        <label for="half_fee">Half Optimal Fee (<span id="half_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <div id="fee_rate_area">
+            Optimal transaction fee based on current network conditions:
+            <span id="optimal_fee_rate_per_byte"></span> Satoshi/byte
+        </div>
 
-        <input id="full_fee" type="radio" name="fee" value="" checked>
-        <label for="full_fee">Optimal Fee (<span id="full_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <input id="half_fee" type="radio" name="fee" value="half">
+        <label for="half_fee">
+            Half Optimal Fee (<span id="half_fee_rate" class="fiat_fee">
+            <img src="{% static 'spin.gif' %}"></span>
+            <span class="fiat_unit"></span>)
+        </label>
+        <br>
 
-        <input id="double_fee" type="radio" name="fee" value="">
-        <label for="double_fee">Double Optimal Fee (<span id="double_fee_rate"><img src="{% static 'spin.gif' %}"></span>)</label><br>
+        <input id="full_fee" type="radio" name="fee" value="full" checked>
+        <label for="full_fee">
+            Optimal Fee (<span id="full_fee_rate" class="fiat_fee">
+            <img src="{% static 'spin.gif' %}"></span>
+            <span class="fiat_unit"></span>)
+        </label>
+        <br>
+
+        <input id="double_fee" type="radio" name="fee" value="double">
+        <label for="double_fee">
+            Double Optimal Fee (<span class="fiat_fee" id="double_fee_rate">
+            <img src="{% static 'spin.gif' %}"></span>
+            <span class="fiat_unit"></span>)
+        </label>
+        <br>
     </div>
 
     <div id="history_modal">
