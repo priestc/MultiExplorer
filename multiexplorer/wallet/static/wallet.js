@@ -70,6 +70,7 @@ function calculate_balance(crypto, addresses) {
     //console.log("calculate balances with:", addresses);
 
     var box = $(".crypto_box[data-currency=" + crypto + "]");
+    box.find(".fiat_balance").html("<img src='" + spinner_url + "'>");
 
     if(addresses.length == 1) {
         var a = "?address=" + addresses[0];
@@ -92,7 +93,9 @@ function calculate_balance(crypto, addresses) {
 
         var exchange_rate = get_exchange_rate(crypto);
         //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
-        box.find(".fiat_balance").text((exchange_rate * new_balance).toFixed(2));
+        box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
+    }).fail(function() {
+        box.find(".fiat_balance").css({color: "red"}).text("Balance Error");
     });
 }
 
@@ -211,13 +214,24 @@ function rotate_deposit(crypto, up) {
     var pool = unused_deposit_addresses[crypto];
     unused_deposit_addresses[crypto] = arrayRotate(pool, up);
     return pool[0];
-
 }
 
-function open_wallet() {
+function open_wallet(show_wallet_list) {
+    $("#wallet_settings_wrapper").show();
     $.each(crypto_data, function(i, data) {
         var crypto = data.code;
         var box = $(".crypto_box[data-currency=" + crypto + "]");
+
+        if(show_wallet_list.indexOf(crypto) == -1) {
+            box.hide();
+            return; // don't do anything if this crypto is disabled.
+        } else {
+            if(box.css('display') != 'none') {
+                return; // don't do anything if it's enabled and already open
+            }
+        }
+
+        box.show();
 
         fetch_used_addresses(crypto, 'deposit', function(used_addresses) {
             //console.log(crypto, "======== found deposit addresses:", used_addresses);
@@ -240,7 +254,7 @@ function open_wallet() {
             if(used_addresses.length > 0) {
                 calculate_balance(crypto, used_addresses);
             }
-            $("#wallets").show();
+            box.show();
             $("#loading_screen").hide();
         }, 10, [], []);
 
@@ -257,6 +271,16 @@ function open_wallet() {
     });
 }
 
+function fill_in_settings(settings) {
+    var form = $("#settings_form");
+    form.find("select[name=display_fiat]").val(settings.display_fiat);
+    form.find("select[name=auto_logout]").val(settings.auto_logout);
+    $.each(settings.show_wallet_list, function(i, crypto) {
+        form.find("input[value=" + crypto + "]").attr("checked", "checked");
+    });
+    open_wallet(settings.show_wallet_list);
+}
+
 $(function() {
     $("#wallet_settings").click(function(event) {
         event.preventDefault();
@@ -266,11 +290,24 @@ $(function() {
             buttons: [{
                 text: "Save Settings",
                 click: function() {
+                    var form = $("#settings_form");
+                    var swl = [];
+                    form.find(".supported_crypto:checked").each(function(i, crypto) {
+                        var c = $(crypto);
+                        swl.push(c.val())
+                    });
+                    var settings = {
+                        auto_logout: form.find("select[name=auto_logout]").val(),
+                        display_fiat: form.find("select[name=display_fiat]").val(),
+                        show_wallet_list: swl.join(','),
+                    }
                     $.ajax({
                         url: '/wallet/save_settings',
                         type: 'post',
-                        data: $("#settings_form").serialize(),
+                        data: settings,
                     }).success(function(response) {
+                        settings.show_wallet_list = swl; // replace comma seperated string with list
+                        fill_in_settings(settings);
                         $("#settings_modal").dialog('close');
                     });
                 }

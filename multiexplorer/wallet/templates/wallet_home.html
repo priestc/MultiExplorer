@@ -3,7 +3,7 @@
 
 {% block extra_menu_items %}
 
-<a href="#" id="wallet_settings">Wallet Settings</a> -
+<span id="wallet_settings_wrapper"><a href="#" id="wallet_settings">Wallet Settings</a> -</span>
 
 {% endblock %}
 
@@ -100,6 +100,9 @@
         width: calc(100% - 5px);
         border: 1px solid gray
     }
+    #wallet_settings_wrapper {
+        display: none;
+    }
 </style>
 {% include "login.html" %}
 
@@ -122,9 +125,9 @@
     </div>
 </div>
 
-<div id="wallets" style="display: none">
+<div id="wallets">
     {% for data in crypto_data %}
-    <div class="crypto_box" data-currency="{{ data.code }}">
+    <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
         <span class="fiat_balance">0.0</span> <span class="fiat_unit">USD</span>
@@ -187,20 +190,25 @@
     </div>
 
     <div id="settings_modal">
-        Display Currency:
         <form id="settings_form">
+            Display Local Currency:<br>
             <select name="display_fiat">
                 {% for fiat in supported_fiats %}
                 <option value="{{ fiat }}">{{ fiat|upper }}</option>
                 {% endfor %}
             </select>
             <br><br>
+            Display Crypto wallets:<br>
+            {% for crypto in supported_cryptos %}
+                <input type="checkbox" value="{{ crypto }}" class="supported_crypto">
+                {{ crypto|upper }}<br>
+            {% endfor %}
+            <br><br>
             Automatically log out after...
             <select name="auto_logout">
-                <option value="5">5 minutes of inactivity</option>
-                <option value="10">10 minutes of inactivity</option>
-                <option value="30">30 minutes minutes of inactivity</option>
-                <option value="30" selected>Never</option>
+                {% for ch in autologout_choices %}
+                <option value="{{ ch.0 }}">{{ ch.1 }}</option>
+                {% endfor %}
             </select>
         </form>
         <br><br>

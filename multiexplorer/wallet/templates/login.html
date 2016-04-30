@@ -34,7 +34,7 @@ $("#login_form").submit(function(event) {
         raw_mnemonic = CryptoJS.AES.decrypt(response['encrypted_mnemonic'], raw_password).toString(CryptoJS.enc.Utf8);
         hd_master_seed = (new Mnemonic(raw_mnemonic)).toHDPrivateKey();
         $("#login_error").text("");
-        open_wallet();
+        fill_in_settings(response.wallet_settings);
     }).fail(function(jqXHR) {
         $("#login_error").text(jqXHR.responseText);
         $("#register_box, #login_box").show();
