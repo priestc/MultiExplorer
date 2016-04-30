@@ -54,10 +54,6 @@ function get_change_keypair(crypto, index) {
     return derive_addresses(get_crypto_root(crypto), crypto, true, index);
 }
 
-function get_exchange_rate(crypto) {
-    return parseFloat($("#fiat_exchange_rates .rate." + crypto).text());
-}
-
 function send_coin(crypto, recipients, fee_rate) {
     var tx = bitcore.Transaction();
 }
@@ -91,7 +87,7 @@ function calculate_balance(crypto, addresses) {
 
         bal.text(new_balance);
 
-        var exchange_rate = get_exchange_rate(crypto);
+        var exchange_rate = exchange_rates[crypto]['rate'];
         //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
     }).fail(function() {
@@ -99,9 +95,6 @@ function calculate_balance(crypto, addresses) {
     });
 }
 
-var optimal_fees = {};
-var unused_deposit_addresses = {};
-var unused_change_addresses = {};
 function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
     // iterates through the deposit chain until it finds `blank_length` blank addresses.
     // the last two args are used in iteration, and shoud be passed in empty lists
@@ -271,10 +264,26 @@ function open_wallet(show_wallet_list) {
     });
 }
 
+function refresh_fiat() {
+    // after new fiat exchnage rates come in, this function gets called which
+    // recalculates balances from new rates.
+    $(".crypto_box:visible").each(function(i, dom_box){
+        var box = $(dom_box);
+        var crypto = box.data('currency');
+        var crypto_balance = parseFloat(box.find('.crypto_balance').text());
+        var new_fiat = crypto_balance * exchange_rates[crypto]['rate'];
+        box.find('.fiat_balance').text(new_fiat.toFixed(2));
+    });
+}
+
 function fill_in_settings(settings) {
     var form = $("#settings_form");
+
     form.find("select[name=display_fiat]").val(settings.display_fiat);
+    $(".fiat_unit").text(settings.display_fiat.toUpperCase());
+
     form.find("select[name=auto_logout]").val(settings.auto_logout);
+
     $.each(settings.show_wallet_list, function(i, crypto) {
         form.find("input[value=" + crypto + "]").attr("checked", "checked");
     });
@@ -308,6 +317,10 @@ $(function() {
                     }).success(function(response) {
                         settings.show_wallet_list = swl; // replace comma seperated string with list
                         fill_in_settings(settings);
+                        if(response.exchange_rates) {
+                            exchange_rates = response.exchange_rates;
+                            refresh_fiat();
+                        }
                         $("#settings_modal").dialog('close');
                     });
                 }
@@ -363,8 +376,8 @@ $(function() {
 
     $(".crypto_amount").keyup(function() {
         var crypto = $("#sending_crypto_unit").text();
-        var exchange_rate = get_exchange_rate(crypto);
-        var converted = exchange_rate * parseFloat($(this).val());
+        var er = exchange_rate[crypto]['rate'];
+        var converted = er * parseFloat($(this).val());
         if(converted) {
             $(".fiat_amount").val(converted.toFixed(2));
         }
@@ -372,8 +385,8 @@ $(function() {
 
     $(".fiat_amount").keyup(function() {
         var crypto = $("#sending_crypto_unit").text();
-        var exchange_rate = get_exchange_rate(crypto);
-        var converted = (1 / exchange_rate) * parseFloat($(this).val());
+        var er = exchange_rate[crypto]['rate'];
+        var converted = (1 / er) * parseFloat($(this).val());
         if(converted) {
             $("#sending_crypto_amount").val(converted.toFixed(8));
         }

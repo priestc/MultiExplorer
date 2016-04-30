@@ -20,6 +20,10 @@
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
     var spinner_url = "{% static 'spin.gif' %}";
+    var optimal_fees = {};
+    var unused_deposit_addresses = {};
+    var unused_change_addresses = {};
+    var exchange_rates = {};
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
@@ -110,14 +114,6 @@
     {% include "register.html" %}
 {% endif %}
 
-<div id="fiat_exchange_rates" style="display: none">
-    <span class="fiat_symbol">USD</span>
-    {% for crypto, data in exchange_rates.items %}
-        <span class="rate {{ crypto }}">{{ data.rate }}</span>
-        <span class="provider {{ crypto }}">{{ data.provider }}</span>
-    {% endfor %}
-</div>
-
 <div style="width: 100%;">
     <div id="loading_screen">
         Deriving Wallet Addresses and Generating QR codes...<br><br>
@@ -130,7 +126,7 @@
     <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_balance">0.0</span> <span class="fiat_unit">USD</span>
+        <span class="fiat_balance">0.0</span> <span class="fiat_unit"></span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
@@ -168,7 +164,7 @@
         <br><br>
 
         <label>Fiat Amount</label><br>
-        <input type="text" id="sending_fiat_amount"> <span class="fiat_unit">USD</span>
+        <input type="text" id="sending_fiat_amount"> <span class="fiat_unit"></span>
 
         <br><br>
 
@@ -203,8 +199,8 @@
                 <input type="checkbox" value="{{ crypto }}" class="supported_crypto">
                 {{ crypto|upper }}<br>
             {% endfor %}
-            <br><br>
-            Automatically log out after...
+            <br>
+            Automatically log out after...<br>
             <select name="auto_logout">
                 {% for ch in autologout_choices %}
                 <option value="{{ ch.0 }}">{{ ch.1 }}</option>
