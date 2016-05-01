@@ -339,6 +339,7 @@ function open_wallet(show_wallet_list) {
                 // if the external chain has no activity, then the internal chain
                 // must have none either. Don't bother calculating balance.
                 box.find(".crypto_balance").text("0.0");
+                box.find(".fiat_balance").text("0.0");
                 box.find(".switch_to_send").attr('disabled', 'disabled');
                 box.find(".switch_to_exchange").attr('disabled', 'disabled');
                 box.find(".switch_to_history").attr('disabled', 'disabled');
