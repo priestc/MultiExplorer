@@ -591,6 +591,36 @@
 
     </div>
 
+    <h3>Push Transaction</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">http://{{ domain }}/api/push_tx/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
+        <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3".
+            <li>The <i>currency</i> argument is <strong>required</strong>. Must be 3 or 4 letter cryptocurrency code.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the response as it was returned directly from the service.</li>
+            <li>Returned is txid of the newly pushed transaction.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            http://{{ domain }}/api/push_tx/average4?currency=btc
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+
+            </pre>
+            </code>
+        </div>
+
+    </div>
+
 </section>
 
 {% endblock %}

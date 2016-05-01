@@ -139,6 +139,13 @@
     .fee_wrapper {
         margin: 20px;
     }
+
+    .send_error_area {
+        float: left;
+        text-align: center;
+        color: red;
+        max-width: 300px;
+    }
 </style>
 {% include "login.html" %}
 
@@ -235,7 +242,7 @@
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">
                 <button class="submit_send" style="float: left">Send</button>
-                <div class="send_error_area" style="float: left; text-align: center; color: red"></div>
+                <div class="send_error_area"></div>
             </div>
         </div>
     </div>

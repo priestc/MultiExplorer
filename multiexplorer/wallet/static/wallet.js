@@ -519,9 +519,17 @@ $(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
             var fee = box.find("input[name=" + crypto + "_fee]").val();
-            //console.log("recipients:", [sending_address, sending_amount * 1e8]);
             var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee);
             console.log(tx);
+            $.ajax({
+                url: "/api/push_tx/fallback",
+                type: "post",
+                data: {currency: crypto, tx: tx}
+            }).success(function(response){
+                console.log("push tx successful!", response);
+            }).fail(function(jqXHR) {
+                box.find(".send_error_area").text(jqXHR.responseJSON.error);
+            });
         });
 
         $.ajax({
