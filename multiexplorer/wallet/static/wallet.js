@@ -64,8 +64,17 @@ function get_crypto_balance(crypto) {
     )
 }
 
+function validate_address(crypto, address) {
+    if(crypto == 'btc') {
+        crypto = 'livenet'
+    }
+    if(bitcore.Address.isValid(address, bitcore.Networks.get(crypto))) {
+        return true
+    }
+    return false
+}
 
-function calculate_balance(crypto, addresses) {
+function add_to_balance(crypto, addresses) {
     // active_deposit_addresses == list of dposit addresses that have acivity
     // these addresses will make up the balance. (plus the change addresses
     // which will be made in another concurrent thread)
@@ -98,7 +107,8 @@ function calculate_balance(crypto, addresses) {
         //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
     }).fail(function() {
-        box.find(".fiat_balance").css({color: "red"}).text("Balance Error");
+        box.find(".fiat_balance").css({color: "red"}).text("Error getting balance.");
+        box.find(".switch_to_send").attr('disabled', 'disabled');
     });
 }
 
@@ -206,7 +216,11 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         }
     }).fail(function(jqXHR) {
         var box = $(".crypto_box[data-currency=" + crypto + "]");
+        box.find(".fiat_balance").css({color: 'red'}).text("Network error getting balance.");
         box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
+        box.find(".switch_to_send").attr('disabled', 'disabled');
+        box.find(".switch_to_exchange").attr('disabled', 'disabled');
+        box.find(".switch_to_history").attr('disabled', 'disabled');
     })
 }
 
@@ -233,7 +247,7 @@ function open_wallet(show_wallet_list) {
 
         box.show();
 
-        used_addresses[crypto] = []
+        used_addresses[crypto] = [];
 
         fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
             //console.log(crypto, "======== found deposit addresses:", found_used_addresses);
@@ -247,8 +261,11 @@ function open_wallet(show_wallet_list) {
                 // if the external chain has no activity, then the internal chain
                 // must have none either. Don't bother calculating balance.
                 box.find(".crypto_balance").text("0.0");
+                box.find(".switch_to_send").attr('disabled', 'disabled');
+                box.find(".switch_to_exchange").attr('disabled', 'disabled');
+                box.find(".switch_to_history").attr('disabled', 'disabled');
             } else {
-                calculate_balance(crypto, found_used_addresses);
+                add_to_balance(crypto, found_used_addresses);
             }
         }, 10, [], []);
 
@@ -257,7 +274,7 @@ function open_wallet(show_wallet_list) {
             used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
 
             if(found_used_addresses.length > 0) {
-                calculate_balance(crypto, found_used_addresses);
+                add_to_balance(crypto, found_used_addresses);
             }
             box.show();
             $("#loading_screen").hide();
@@ -319,9 +336,38 @@ function fill_in_fee_radios(crypto, tx_size) {
     var fee_per_byte = optimal_fees[crypto];
     var fiat_exchange = exchange_rates[crypto]['rate'];
     var fiat_fee_this_tx = fee_per_byte * tx_size * fiat_exchange / 1e8;
-    $("#full_fee_rate").text(fiat_fee_this_tx.toFixed(2));
-    $("#half_fee_rate").text((fiat_fee_this_tx / 2).toFixed(2));
-    $("#double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+
+    box.find(".full_fee_rate").text(fiat_fee_this_tx.toFixed(2));
+    box.find(".half_fee_rate").text((fiat_fee_this_tx / 2).toFixed(2));
+    box.find(".double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
+}
+
+function get_utxos(crypto) {
+    addresses = used_addresses[crypto];
+    console.log("getting utxos for", addresses);
+    if(addresses.length == 1) {
+        var addrs = "address=" + addresses[0];
+    } else {
+        var addrs = "addresses=" + addresses.join(',');
+    }
+    $.ajax({
+        url: "/api/unspent_outputs/fallback?" + addrs + "&currency=" + crypto,
+    }).success(function(response) {
+        // sort so highest value utxo is the first element.
+        var sorted = response.utxos.sort(function(x,y){return y.amount-x.amount});
+        var rewritten = [];
+        $.each(sorted, function(i, utxo) {
+            // rewrite the utxo list to be in a format that Bitcore can understand.
+            rewritten.push({
+                script: utxo.scriptPubKey,
+                prevTxId: utxo.txid,
+                outputIndex: utxo.vout,
+                amount: utxo.amount
+            })
+        });
+        utxos[crypto] = rewritten;
+    });
 }
 
 $(function() {
@@ -376,22 +422,29 @@ $(function() {
         });
     });
 
-    $(".send").click(function() {
-        var crypto = $(this).parent().data('currency');
-        $("#sending_crypto_unit").text(crypto.toUpperCase());
+    $(".switch_to_send").click(function() {
+        var box = $(this).parent().parent();
+        var crypto = box.data('currency');
 
-        $("#send_modal").dialog({
-            title: "Send " + crypto.toUpperCase(),
-            buttons: [{
-                text: "Send",
-                click: function() {
-                    var crypto = $("#sending_crypto_unit").text();
-                    var sending_address = $("#sending_recipient_address").val();
-                    var sending_amount = parseFloat($("#sending_crypto_amount").val());
-                    var fee = parseFloat($(""));
-                    send_coin(crypto, [sending_address, sending_amount], fee);
-                }
-            }]
+        box.find(".send_part").show();
+        box.find(".receive_part").hide();
+
+        box.find(".cancel_send").click(function(){
+            box.find(".send_part").hide();
+            box.find(".receive_part").show();
+        });
+
+        get_utxos(crypto);
+
+        box.find(".submit_send").click(function() {
+            var sending_address = box.find(".sending_recipient_address").val();
+            var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
+            var fee = box.find("input[name=fee]").val();
+            if(!validate_address(sending_address)) {
+                box.find(".submit_send").attr('disabled', 'disabled');
+                box.find(".send_error_area").text("Invalid Sending Address");
+            }
+            send_coin(crypto, [sending_address, sending_amount], fee);
         });
 
         $.ajax({
@@ -399,73 +452,79 @@ $(function() {
         }).success(function(response) {
             var fee_per_byte = parseFloat(response.optimal_fee_per_KiB) / 1024;
             optimal_fees[crypto] = fee_per_byte;
-            $("#optimal_fee_rate_per_byte").text(fee_per_byte.toFixed(2));
+            box.find(".optimal_fee_rate_per_byte").text(fee_per_byte.toFixed(0));
             fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
-        });
-
-        var addrs = used_addresses[crypto].join(',');
-
-        $.ajax({
-            url: "/api/unspent_outputs/fallback?addresses=" + addrs + "&currency=" + crypto,
-        }).success(function(response) {
-            // sort so highest value utxo is the first element.
-            var sorted = utxos[crypto].sort(function(x,y){return y.amount-x.amount});
-            utxos[crypto] = sorted;
         });
     });
 
     // The below two functions get called whenever the user changes the fiat or
     // crypto amount in the sending dialog. These functions estimate the fee
-    // and convert to and fro. The two functions are very similar and can
-    // be merged into a single function in the future.
+    // and convert to and fro.
 
-    $("#sending_crypto_amount").keyup(function(event) {
-        if(event.keyCode == 9) {
-            return // tab key was pressed
-        }
-        var crypto = $("#sending_crypto_unit").text().toLowerCase();
-        var value_entered = parseFloat($(this).val());
+    $(".sending_recipient_address").keyup(function(event) {
+        var sending_address = $(this).val();
+        var box = $(this).parent().parent().parent();
+        var crypto = box.data('currency');
 
-        var er = exchange_rates[crypto]['rate'];
-        var converted = er * value_entered
-
-        if(converted) {
-            $("#sending_fiat_amount").val(converted.toFixed(2));
-        }
-
-        var crypto_balance = get_crypto_balance(crypto);
-        if(value_entered > crypto_balance) {
-            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'red'});
-            $("#send_modal .ui-button").attr('disabled');
+        if(!validate_address(crypto, sending_address)) {
+            box.find(".submit_send").attr('disabled', 'disabled');
+            box.find(".send_error_area").text("Invalid Sending Address");
+            $(this).css({color: 'red'});
         } else {
-            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'inherit'});
-            $("#send_modal .ui-button").removeAttr('disabled');
+            box.find(".submit_send").removeAttr('disabled');
+            box.find(".send_error_area").text("");
+            $(this).css({color: 'inherit'});
         }
-        update_actual_fee_estimation(crypto, (value_entered * 1e8).toFixed(0), 1);
     });
 
-    $("#sending_fiat_amount").keyup(function(event) {
+    $(".sending_fiat_amount, .sending_crypto_amount").keyup(function(event) {
         if(event.keyCode == 9) {
             return // tab key was pressed
         }
-        var crypto = $("#sending_crypto_unit").text().toLowerCase();
+        var box = $(this).parent().parent().parent();
+        var which = "fiat";
+        if($(this).hasClass("sending_crypto_amount")) {
+            which = "crypto";
+        }
+        var crypto = box.data('currency');
         var value_entered = parseFloat($(this).val());
 
         var er = exchange_rates[crypto]['rate'];
-        var converted = (1 / er) * value_entered;
+
+        var converted = er * value_entered;
+        if(which == 'fiat') {
+            converted = (1 / er) * value_entered;
+        }
 
         if(converted) {
-            $("#sending_crypto_amount").val(converted.toFixed(8));
+            if(which == 'fiat') {
+                box.find(".sending_crypto_amount").val(converted.toFixed(8));
+            } else {
+                box.find(".sending_fiat_amount").val(converted.toFixed(2));
+            }
+        } else {
+            return
+        }
+
+        var to_compare = value_entered;
+        var sat = (value_entered * 1e8).toFixed(0);
+
+        if(which == 'fiat') {
+            to_compare = converted;
+            sat = (converted * 1e8).toFixed(0)
         }
 
         var crypto_balance = get_crypto_balance(crypto);
-        if(converted > crypto_balance) {
-            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'red'});
-            $("#send_modal .ui-button").attr('disabled');
+
+        if(to_compare > crypto_balance) {
+            box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'red'});
+            box.find(".submit_send").attr('disabled', 'disabled');
+            box.find(".send_error_area").text("Amount exceeds balance");
         } else {
-            $("#sending_fiat_amount, #sending_crypto_amount").css({color: 'inherit'});
-            $("#send_modal .ui-button").removeAttr('disabled');
+            box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'inherit'});
+            box.find(".submit_send").removeAttr('disabled');
+            box.find(".send_error_area").text("");
         }
-        update_actual_fee_estimation(crypto, (converted * 1e8).toFixed(0), 1);
+        update_actual_fee_estimation(crypto, sat, 1);
     });
 });

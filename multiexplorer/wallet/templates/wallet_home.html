@@ -87,6 +87,7 @@
         margin: 0 auto 0 auto;
         padding: 10px;
         text-align: center;
+        background: #dfdfdf;
     }
 
     .qr {
@@ -110,13 +111,33 @@
         display: none;
     }
 
-    #fee_rate_area {
+    .fee_rate_area {
         font-size: x-small;
         margin-bottom: 10px;
     }
 
-    #optimal_fee_rate_per_byte {
+    .optimal_fee_rate_per_byte {
         font-weight: bold;
+    }
+
+    .send_part {
+        display: none;
+        text-align: left;
+    }
+
+    .cancel_send {
+        background: #FFAEAE;
+    }
+    .submit_send {
+        background: #AFFFB3;
+    }
+
+    .submit_send:disabled {
+        background: #FEFEFE;
+    }
+
+    .fee_wrapper {
+        margin: 20px;
     }
 </style>
 {% include "login.html" %}
@@ -137,7 +158,7 @@
     <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_balance">0.0</span> <span class="fiat_unit"></span>
+        <span class="fiat_balance"><img src="{% static 'spin.gif' %}"></span> <span class="fiat_unit"></span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
@@ -149,65 +170,77 @@
                 </td>
             </tr>
         </table>
-        <div class="deposit_area">
-            <span class="deposit_address"></span>
+        <div class="receive_part">
+            <div class="deposit_area">
+                <span class="deposit_address"></span>
+            </div>
+            <button class="deposit_shift_up arrow_button">&larr;</button>
+            <button class="deposit_shift_down arrow_button">&rarr;</button>
+            <br>
+            <button class="switch_to_send">Send</button>
+            <button class="switch_to_exchange">Exchange</button>
+            <button class="switch_to_history">History</button>
         </div>
-        <button class="deposit_shift_up arrow_button">&larr;</button>
-        <button class="deposit_shift_down arrow_button">&rarr;</button>
-        <br>
-        <button class="send">Send</button>
-        <button class="exchange">Exchange</button>
-        <button class="history">History</button>
+        <div class="send_part">
+            <button class="cancel_send">Cancel Send</button>
+            <br>
+            <lable>Address</label><br>
+            <input type="text" class="sending_recipient_address" style="width: 100%">
+
+            <br><br>
+
+            <label>Crypto Amount</label><br>
+            <input type="text" class="sending_crypto_amount"> {{ data.code|upper }}
+
+            <br><br>
+
+            <label>Fiat Amount</label><br>
+            <input type="text" class="sending_fiat_amount"> <span class="fiat_unit"></span>
+
+            <br><br>
+
+            <div class="fee_rate_area">
+                Optimal transaction fee based on current<br>
+                network conditions:
+                <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
+            </div>
+
+            <div class="fee_wrapper">
+                <label>
+                    <input type="radio" name="{{ data.code }}_fee" value="half">
+                    Half Optimal Fee (<span class="half_fee_rate fiat_fee">
+                    <img src="{% static 'spin.gif' %}"></span>
+                    <span class="fiat_unit"></span>)
+                </label>
+            </div>
+
+            <div class="fee_wrapper">
+                <label>
+                    <input type="radio" name="{{ data.code }}_fee" value="full" checked="checked">
+                    Optimal Fee (<span class="full_fee_rate fiat_fee">
+                    <img src="{% static 'spin.gif' %}"></span>
+                    <span class="fiat_unit"></span>)
+                </label>
+            </div>
+
+            <div class="fee_wrapper">
+                <label>
+                    <input type="radio" name="{{ data.code }}_fee" value="double">
+                    Double Optimal Fee (<span class="fiat_fee double_fee_rate">
+                    <img src="{% static 'spin.gif' %}"></span>
+                    <span class="fiat_unit"></span>)
+                </label>
+            </div>
+            
+            <hr>
+            <button class="submit_send">Send</button>
+            <div class="send_error_area"></div>
+        </div>
     </div>
     {% endfor %}
 </div>
 
 <div style="display: none">
-    <div id="send_modal">
-        <lable>Address</label><br>
-        <input type="text" id="sending_recipient_address">
-
-        <br><br>
-
-        <label>Crypto Amount</label><br>
-        <input type="text" id="sending_crypto_amount"> <span id="sending_crypto_unit"></span>
-
-        <br><br>
-
-        <label>Fiat Amount</label><br>
-        <input type="text" id="sending_fiat_amount"> <span class="fiat_unit"></span>
-
-        <br><br>
-
-        <div id="fee_rate_area">
-            Optimal transaction fee based on current network conditions:
-            <span id="optimal_fee_rate_per_byte"></span> Satoshi/byte
-        </div>
-
-        <input id="half_fee" type="radio" name="fee" value="half">
-        <label for="half_fee">
-            Half Optimal Fee (<span id="half_fee_rate" class="fiat_fee">
-            <img src="{% static 'spin.gif' %}"></span>
-            <span class="fiat_unit"></span>)
-        </label>
-        <br>
-
-        <input id="full_fee" type="radio" name="fee" value="full" checked>
-        <label for="full_fee">
-            Optimal Fee (<span id="full_fee_rate" class="fiat_fee">
-            <img src="{% static 'spin.gif' %}"></span>
-            <span class="fiat_unit"></span>)
-        </label>
-        <br>
-
-        <input id="double_fee" type="radio" name="fee" value="double">
-        <label for="double_fee">
-            Double Optimal Fee (<span class="fiat_fee" id="double_fee_rate">
-            <img src="{% static 'spin.gif' %}"></span>
-            <span class="fiat_unit"></span>)
-        </label>
-        <br>
-    </div>
 
     <div id="history_modal">
         history
