@@ -54,8 +54,86 @@ function get_change_keypair(crypto, index) {
     return derive_addresses(get_crypto_root(crypto), crypto, true, index);
 }
 
-function send_coin(crypto, recipients, fee_rate) {
-    var tx = bitcore.Transaction();
+function get_unused_change_address(crypto) {
+    var i = 0;
+    var change_address = undefined;
+    while(true) {
+        change_address = get_change_keypair(crypto, i)[1];
+        if(used_addresses[crypto].indexOf(change_address) == -1) {
+            return change_address;
+        }
+        i += 1;
+        console.log('get_unused_change iterating', i);
+    }
+}
+
+function get_privkey(crypto, address) {
+    var i = 0;
+    while(true) {
+        var data = get_change_keypair(crypto, i);
+        var privkey = data[0];
+        var this_address = data[1];
+
+        if(address == this_address) {
+            return privkey;
+        }
+
+        data = get_deposit_keypair(crypto, i);
+        privkey = data[0];
+        this_address = data[1];
+
+        if(address == this_address) {
+            return privkey;
+        }
+        i += 1;
+        console.log('get_privkey iterating', address, i);
+    }
+}
+
+function get_privkeys_from_inputs(crypto, inputs) {
+    var privkeys = [];
+    $.each(inputs, function(i, input) {
+        privkeys.push(get_privkey(crypto, input.address))
+    });
+    return privkeys
+}
+
+function send_coin(crypto, recipients, fee_multiplier) {
+    var fee_rate = optimal_fees[crypto];
+    if(fee_multiplier == 'double') {
+        fee_rate *= 2;
+    } else if (fee_multiplier == 'half') {
+        fee_rate /= 2;
+    }
+
+    var tx = new bitcore.Transaction()
+
+    var total_outs = 0;
+    $.each(recipients, function(i, recip) {
+        var address = recip[0];
+        var amount = recip[1];
+        console.log("adding amount", amount)
+        tx = tx.to(address, amount);
+        total_outs += amount / 1e8;
+    });
+
+    var total_added = 0;
+    var inputs_to_add = [];
+    $.each(utxos[crypto], function(i, utxo) {
+        inputs_to_add.push(utxo);
+        total_added += utxo.amount;
+        if(total_added >= total_outs) {
+            return false;
+        }
+    });
+
+    console.log("adding inputs", inputs_to_add);
+    tx = tx.from(inputs_to_add);
+    tx = tx.change(get_unused_change_address(crypto));
+    tx = tx.sign(get_privkeys_from_inputs(crypto, inputs_to_add))
+
+    return tx.toString()
+
 }
 
 function get_crypto_balance(crypto) {
@@ -361,9 +439,10 @@ function get_utxos(crypto) {
             // rewrite the utxo list to be in a format that Bitcore can understand.
             rewritten.push({
                 script: utxo.scriptPubKey,
-                prevTxId: utxo.txid,
+                txid: utxo.txid,
                 outputIndex: utxo.vout,
-                amount: utxo.amount
+                amount: utxo.amount / 1e8,
+                address: utxo.address
             })
         });
         utxos[crypto] = rewritten;
@@ -439,12 +518,10 @@ $(function() {
         box.find(".submit_send").click(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
-            var fee = box.find("input[name=fee]").val();
-            if(!validate_address(sending_address)) {
-                box.find(".submit_send").attr('disabled', 'disabled');
-                box.find(".send_error_area").text("Invalid Sending Address");
-            }
-            send_coin(crypto, [sending_address, sending_amount], fee);
+            var fee = box.find("input[name=" + crypto + "_fee]").val();
+            //console.log("recipients:", [sending_address, sending_amount * 1e8]);
+            var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee);
+            console.log(tx);
         });
 
         $.ajax({
@@ -457,9 +534,8 @@ $(function() {
         });
     });
 
-    // The below two functions get called whenever the user changes the fiat or
-    // crypto amount in the sending dialog. These functions estimate the fee
-    // and convert to and fro.
+    // The below two functions get called whenever the user changes the fiat,
+    // crypto amount, or address field in the sending section.
 
     $(".sending_recipient_address").keyup(function(event) {
         var sending_address = $(this).val();

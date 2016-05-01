@@ -231,10 +231,12 @@
                     <span class="fiat_unit"></span>)
                 </label>
             </div>
-            
+
             <hr>
-            <button class="submit_send">Send</button>
-            <div class="send_error_area"></div>
+            <div class="sending_bottom_area" style="overflow: hidden">
+                <button class="submit_send" style="float: left">Send</button>
+                <div class="send_error_area" style="float: left; text-align: center; color: red"></div>
+            </div>
         </div>
     </div>
     {% endfor %}
