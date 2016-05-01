@@ -268,9 +268,9 @@
             </select>
             <br><br>
             Display Crypto wallets:<br>
-            {% for crypto in supported_cryptos %}
-                <input type="checkbox" value="{{ crypto }}" class="supported_crypto">
-                {{ crypto|upper }}<br>
+            {% for data in crypto_data %}
+                <label><input type="checkbox" value="{{ data.code }}" class="supported_crypto">
+                {{ data.code|upper }} - {{ data.name }}</label><br>
             {% endfor %}
             <br>
             Automatically log out after...<br>

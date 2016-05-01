@@ -36,7 +36,6 @@ def home(request):
         'crypto_data_json': crypto_data_json,
         'crypto_data': crypto_data,
         'supported_fiats': settings.WALLET_SUPPORTED_FIATS,
-        'supported_cryptos': settings.WALLET_SUPPORTED_CRYPTOS,
         'autologout_choices': AUTO_LOGOUT_CHOICES
     })
 

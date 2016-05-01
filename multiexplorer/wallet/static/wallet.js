@@ -178,8 +178,7 @@ function add_to_balance(crypto, addresses) {
         var bal = box.find(".crypto_balance");
         var existing = parseFloat(bal.text());
         var new_balance = existing + (response.balance.total || response.balance);
-
-        bal.text(new_balance);
+        bal.text(new_balance.toFixed(8));
 
         var exchange_rate = exchange_rates[crypto]['rate'];
         //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));

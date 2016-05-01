@@ -25,3 +25,17 @@ urlpatterns = [
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
 ]
+
+
+from django.conf import settings
+from django.core.handlers.base import BaseHandler
+
+handle_uncaught_exception = BaseHandler.handle_uncaught_exception
+
+def _handle_uncaught_exception_monkey_patch(self, request, resolver, exc_info):
+    if settings.DEBUG:
+        request.is_ajax = lambda: False
+
+    return handle_uncaught_exception(self, request, resolver, exc_info)
+
+BaseHandler.handle_uncaught_exception = _handle_uncaught_exception_monkey_patch
