@@ -50,11 +50,35 @@
     }
 
     .crypto_box {
-        border: 1px solid green;
-        background: #efd4ef;
+        border: 1px solid gray;
         padding: 10px;
         margin: 10px;
         text-align: center;
+    }
+
+    .crypto_box[data-currency=btc] {
+        background: gold;
+    }
+
+    .crypto_box[data-currency=ltc] {
+        background: silver;
+    }
+
+    .crypto_box[data-currency=doge] {
+        background: yellow;
+    }
+
+    .crypto_box[data-currency=vtc] {
+        background: #1B5C2E;
+        color: white;
+    }
+
+    .crypto_box[data-currency=rdd] {
+        background: #6B59FF;
+    }
+
+    .crypto_box[data-currency=myr] {
+        background: pink;
     }
 
     .qr {
@@ -69,6 +93,7 @@
     .deposit_area {
         background: white;
         padding: 5px 3px 5px 3px;
+        color: black;
         margin: 5px;
         width: 17em;
         border: 1px solid #dfdfdf;
@@ -187,6 +212,7 @@
             <button class="switch_to_send">Send</button>
             <button class="switch_to_exchange">Exchange</button>
             <button class="switch_to_history">History</button>
+            <button class="switch_to_sweep">Sweep</button>
         </div>
         <div class="send_part">
             <button class="cancel_send">Cancel Send</button>

@@ -127,9 +127,10 @@ function send_coin(crypto, recipients, fee_multiplier) {
         }
     });
 
-    console.log("adding inputs", inputs_to_add);
+    console.log("adding inputs", inputs_to_add, fee_rate);
     tx = tx.from(inputs_to_add);
     tx = tx.change(get_unused_change_address(crypto));
+    tx = tx.feePerKb(fee_rate);
     tx = tx.sign(get_privkeys_from_inputs(crypto, inputs_to_add))
 
     return tx.toString()
@@ -185,7 +186,7 @@ function add_to_balance(crypto, addresses) {
         box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
     }).fail(function() {
         box.find(".fiat_balance").css({color: "red"}).text("Error getting balance.");
-        box.find(".switch_to_send").attr('disabled', 'disabled');
+        box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
     });
 }
 
@@ -295,9 +296,9 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         var box = $(".crypto_box[data-currency=" + crypto + "]");
         box.find(".fiat_balance").css({color: 'red'}).text("Network error getting balance.");
         box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
-        box.find(".switch_to_send").attr('disabled', 'disabled');
-        box.find(".switch_to_exchange").attr('disabled', 'disabled');
-        box.find(".switch_to_history").attr('disabled', 'disabled');
+        box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
+        box.find(".switch_to_exchange").hide(); //attr('disabled', 'disabled');
+        box.find(".switch_to_history").hide(); //attr('disabled', 'disabled');
     })
 }
 
@@ -339,11 +340,14 @@ function open_wallet(show_wallet_list) {
                 // must have none either. Don't bother calculating balance.
                 box.find(".crypto_balance").text("0.0");
                 box.find(".fiat_balance").text("0.0");
-                box.find(".switch_to_send").attr('disabled', 'disabled');
-                box.find(".switch_to_exchange").attr('disabled', 'disabled');
-                box.find(".switch_to_history").attr('disabled', 'disabled');
+                box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
+                box.find(".switch_to_exchange").hide(); //attr('disabled', 'disabled');
+                box.find(".switch_to_history").hide(); //attr('disabled', 'disabled');
             } else {
                 add_to_balance(crypto, found_used_addresses);
+                box.find(".switch_to_send").show();
+                box.find(".switch_to_exchange").show();
+                box.find(".switch_to_history").show();
             }
         }, 10, [], []);
 
@@ -411,9 +415,9 @@ function update_actual_fee_estimation(crypto, satoshis_will_send, outs_length) {
 }
 
 function fill_in_fee_radios(crypto, tx_size) {
-    var fee_per_byte = optimal_fees[crypto];
+    var fee_per_kb = optimal_fees[crypto];
     var fiat_exchange = exchange_rates[crypto]['rate'];
-    var fiat_fee_this_tx = fee_per_byte * tx_size * fiat_exchange / 1e8;
+    var fiat_fee_this_tx = (fee_per_kb / 1024) * tx_size * fiat_exchange / 1e8;
     var box = $(".crypto_box[data-currency=" + crypto + "]");
 
     box.find(".full_fee_rate").text(fiat_fee_this_tx.toFixed(2));
@@ -535,8 +539,8 @@ $(function() {
         $.ajax({
             url: "/api/optimal_fee/average3?currency=" + crypto,
         }).success(function(response) {
-            var fee_per_byte = parseFloat(response.optimal_fee_per_KiB) / 1024;
-            optimal_fees[crypto] = fee_per_byte;
+            var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
+            optimal_fees[crypto] = fee_per_kb;
             box.find(".optimal_fee_rate_per_byte").text(fee_per_byte.toFixed(0));
             fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
         });
