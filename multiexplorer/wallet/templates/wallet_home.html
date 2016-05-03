@@ -9,6 +9,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'jquery-ui.min.css' %}">
+<link rel="stylesheet" href="{% static 'spinner.css' %}">
 <script src="{% static 'jquery-ui.min.js' %}"></script>
 <script src="{% static 'aes.js' %}"></script>
 <script src="{% static 'bitcore-lib.min.js' %}"></script>
@@ -173,6 +174,7 @@
         max-width: 300px;
     }
 </style>
+
 {% include "login.html" %}
 
 {% if not user.is_authenticated %}
@@ -182,7 +184,7 @@
 <div style="width: 100%;">
     <div id="loading_screen">
         Deriving Wallet Addresses and Generating QR codes...<br><br>
-        <img src="{% static 'spin.gif' %}">
+        <div class="spinner" style="height: 60px; width: 60px;"></div>
     </div>
 </div>
 
@@ -191,7 +193,7 @@
     <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_balance"><img src="{% static 'spin.gif' %}"></span> <span class="fiat_unit"></span>
+        <span class="fiat_balance"><div class="thin-spinner" style="height: 20px; width: 20px;"></div></span> <span class="fiat_unit"></span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>

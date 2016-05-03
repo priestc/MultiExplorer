@@ -6,6 +6,9 @@ from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation
 )
 
+class TEST(TemplateView):
+    template_name="spinner_test.html"
+
 urlpatterns = [
     # Examples:
     # url(r'^$', 'multiexplorer.views.home', name='home'),
@@ -24,6 +27,8 @@ urlpatterns = [
 
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
+
+    url(r'test', TEST.as_view()),
 ]
 
 

@@ -65,7 +65,7 @@ def get_balance_currencies():
             ret.append({
                 'code': currency,
                 'name': data['name'],
-                'logo': "logos/%s-logo.png" % currency,
+                'logo': "logos/%s-logo_100x100.png" % currency,
             })
 
     return ret
