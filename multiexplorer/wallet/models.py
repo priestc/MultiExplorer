@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 from django.db import models
 from moneywagon import get_single_transaction
@@ -29,8 +31,20 @@ class WalletMasterKeys(models.Model):
         return self.show_wallet_list.split(",")
 
     def get_settings(self):
+        if self.display_fiat == 'usd':
+            symbol = '$'
+        elif self.display_fiat == 'eur':
+            symbol = '€'
+        elif self.display_fiat == 'gbp':
+            symbol = '£'
+        elif self.display_fiat in ['jpy', 'cny']:
+            symbol = '¥'
+        else:
+            symbol = ''
+
         return {
             'show_wallet_list': self.get_show_wallet_list(),
-            'display_fiat': self.display_fiat,
+            'display_fiat_unit': self.display_fiat,
+            'display_fiat_symbol': symbol,
             'auto_logout': self.auto_logout
         }

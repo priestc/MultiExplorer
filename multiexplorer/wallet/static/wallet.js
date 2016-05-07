@@ -1,3 +1,4 @@
+var text_spinner = '<div class="thin-spinner" style="height: 12px; width: 12px;"></div>';
 var bip44_coin_types = {};
 $.each(crypto_data, function(i, data) {
 
@@ -98,14 +99,7 @@ function get_privkeys_from_inputs(crypto, inputs) {
     return privkeys
 }
 
-function send_coin(crypto, recipients, fee_multiplier) {
-    var fee_rate = optimal_fees[crypto];
-    if(fee_multiplier == 'double') {
-        fee_rate *= 2;
-    } else if (fee_multiplier == 'half') {
-        fee_rate /= 2;
-    }
-
+function send_coin(crypto, recipients, fee_per_kb) {
     var tx = new bitcore.Transaction()
 
     var total_outs = 0;
@@ -127,10 +121,10 @@ function send_coin(crypto, recipients, fee_multiplier) {
         }
     });
 
-    console.log("adding inputs", inputs_to_add, fee_rate);
+    console.log("adding inputs", inputs_to_add, fee_per_kb);
     tx = tx.from(inputs_to_add);
     tx = tx.change(get_unused_change_address(crypto));
-    tx = tx.feePerKb(fee_rate);
+    tx = tx.feePerKb(fee_per_kb);
     tx = tx.sign(get_privkeys_from_inputs(crypto, inputs_to_add))
 
     return tx.toString()
@@ -161,7 +155,7 @@ function add_to_balance(crypto, addresses) {
     //console.log("calculate balances with:", addresses);
 
     var box = $(".crypto_box[data-currency=" + crypto + "]");
-    box.find(".fiat_balance").html("<img src='" + spinner_url + "'>");
+    box.find(".fiat_balance").html(text_spinner);
 
     if(addresses.length == 1) {
         var a = "?address=" + addresses[0];
@@ -365,7 +359,7 @@ function open_wallet(show_wallet_list) {
         box.find(".deposit_shift_down, .deposit_shift_up").click(function() {
             var which = $(this).hasClass('deposit_shift_up');
             var qr_container = box.find(".qr");
-            qr_container.empty().append("<img src='" + spinner_url + "'>");
+            qr_container.empty().append(text_spinner);
             var address = rotate_deposit(crypto, which);
             box.find(".deposit_address").text(address);
             setTimeout(function() {
@@ -390,8 +384,9 @@ function refresh_fiat() {
 function fill_in_settings(settings) {
     var form = $("#settings_form");
 
-    form.find("select[name=display_fiat]").val(settings.display_fiat);
-    $(".fiat_unit").text(settings.display_fiat.toUpperCase());
+    form.find("select[name=display_fiat]").val(settings.display_fiat_unit);
+    $(".fiat_unit").text(settings.display_fiat_unit.toUpperCase());
+    $(".fiat_symbol").text(settings.display_fiat_symbol);
 
     form.find("select[name=auto_logout]").val(settings.auto_logout);
 
@@ -425,13 +420,17 @@ function fill_in_fee_radios(crypto, tx_size) {
     box.find(".double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
 }
 
-function get_utxos(crypto) {
-    addresses = used_addresses[crypto];
-    console.log("getting utxos for", addresses);
-    if(addresses.length == 1) {
-        var addrs = "address=" + addresses[0];
+function get_utxos(crypto, sweep_address, sweep_callback) {
+    if(sweep_address) {
+        var addrs = "address=" + sweep_address;
     } else {
-        var addrs = "addresses=" + addresses.join(',');
+        addresses = used_addresses[crypto];
+        console.log("getting utxos for", addresses);
+        if(addresses.length == 1) {
+            var addrs = "address=" + addresses[0];
+        } else {
+            var addrs = "addresses=" + addresses.join(',');
+        }
     }
     $.ajax({
         url: "/api/unspent_outputs/fallback?" + addrs + "&currency=" + crypto,
@@ -449,7 +448,22 @@ function get_utxos(crypto) {
                 address: utxo.address
             })
         });
-        utxos[crypto] = rewritten;
+        if(sweep_address) {
+            sweep_callback(rewritten);
+        } else {
+            utxos[crypto] = rewritten;
+        }
+    });
+}
+
+function get_optimal_fee(crypto, box) {
+    $.ajax({
+        url: "/api/optimal_fee/average3?currency=" + crypto,
+    }).success(function(response) {
+        var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
+        optimal_fees[crypto] = fee_per_kb;
+        box.find(".optimal_fee_rate_per_byte").text((fee_per_kb / 1024).toFixed(0));
+        fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
     });
 }
 
@@ -479,7 +493,7 @@ $(function() {
                         data: settings,
                     }).success(function(response) {
                         settings.show_wallet_list = swl; // replace comma seperated string with list
-                        fill_in_settings(settings);
+                        fill_in_settings(response.settings);
                         if(response.exchange_rates) {
                             exchange_rates = response.exchange_rates;
                             refresh_fiat();
@@ -491,18 +505,113 @@ $(function() {
         });
     });
 
-    $(".history").click(function() {
-        var crypto = $(this).parent().data('currency');
-        $("#history_modal").dialog({
-            title: "History",
+    $(".cancel_button").click(function() {
+        var box = $(this).parent().parent();
+        box.find(".send_part").hide();
+        box.find(".sweep_part").hide();
+        box.find(".exchange_part").hide();
+        box.find(".history_part").hide();
+
+        box.find(".receive_part").show();
+    });
+
+    $(".switch_to_history").click(function() {
+        var box = $(this).parent().parent();
+        var crypto = box.data('currency');
+
+        box.find(".history_part").show();
+
+        box.find(".send_part").hide();
+        box.find(".receive_part").hide();
+        box.find(".exchange_part").hide();
+        box.find(".sweep_part").hide();
+    });
+
+    $(".switch_to_sweep").click(function() {
+        var box = $(this).parent().parent();
+        var error_area = box.find(".sweep_part .error_area")
+        var crypto = box.data('currency');
+
+        box.find(".sweep_part").show();
+
+        box.find(".send_part").hide();
+        box.find(".receive_part").hide();
+        box.find(".exchange_part").hide();
+        box.find(".history_part").hide();
+
+        get_optimal_fee(crypto, box);
+
+        box.find(".submit_sweep").unbind('click').click(function() {
+            box.find(".sweep_part .error_area").html(text_spinner);
+            var priv = box.find(".sweeping_key").val();
+            var fee_multiplier = parseFloat(box.find(".sweep_part input[name=fee]:checked").val());
+            var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
+
+            console.log("Sweeping with fee multiplier of", fee_multiplier);
+
+            var network = crypto;
+            if(crypto == 'btc') {
+                network = 'livenet';
+            }
+            var net = bitcore.Networks.get(network);
+            var sweep_priv = new bitcore.PrivateKey(priv);
+            var sweep_address = sweep_priv.toAddress(net);
+
+            get_utxos(crypto, sweep_address, function(utxos) {
+                var tx = new bitcore.Transaction()
+                var amount = 0;
+                var to_address = get_unused_change_address(crypto);
+                $.each(utxos, function(i, utxo) {
+                    amount += utxo.amount;
+                });
+                if(amount == 0) {
+                    error_area.html("Private Key does not have a balance.");
+                    return
+                }
+                tx = tx.from(utxos);
+                tx = tx.feePerKb(fee_per_kb);
+                tx = tx.to(null, 0);
+                tx = tx.change(to_address);
+                tx = tx.sign(sweep_priv);
+                console.log("Sweep TX:", tx.toString());
+                error_area.html("Sweep Completed!");
+            });
         });
     });
 
-    $(".exchange").click(function() {
-        var crypto = $(this).parent().data('currency');
-        $("#exchange_modal").dialog({
-            title: "Exchange",
-        });
+    $(".sweeping_key").keyup(function(event) {
+        // Validate the private key as the user types. Once a valid private
+        // key has been entered, make the sweep button enabled.
+        var box = $(this).parent().parent().parent();
+        var priv = $(this).val();
+        var crypto = box.data('currency');
+
+        if(crypto == 'btc') {
+            crypto = 'livenet';
+        }
+        var valid = bitcore.PrivateKey.isValid(priv, bitcore.Networks.get(crypto));
+        var error_area = box.find(".sweep_part .error_area");
+        if(valid) {
+            error_area.css({color: 'inherit'}).text("");
+            $(this).css({color: 'inherit'});
+            box.find(".submit_sweep").removeAttr('disabled');
+        } else {
+            error_area.css({color: 'red'}).text("Invalid Private Key");
+            $(this).css({color: 'red'});
+            box.find(".submit_sweep").attr('disabled', 'disabled');
+        }
+    });
+
+    $(".switch_to_exchange").click(function() {
+        var box = $(this).parent().parent();
+        var crypto = box.data('currency');
+
+        box.find(".exchange_part").show();
+
+        box.find(".sweep_part").hide();
+        box.find(".send_part").hide();
+        box.find(".receive_part").hide();
+        box.find(".history_part").hide();
     });
 
     $(".switch_to_send").click(function() {
@@ -510,21 +619,24 @@ $(function() {
         var crypto = box.data('currency');
 
         box.find(".send_part").show();
-        box.find(".receive_part").hide();
 
-        box.find(".cancel_send").click(function(){
-            box.find(".send_part").hide();
-            box.find(".receive_part").show();
-        });
+        box.find(".sweep_part").hide();
+        box.find(".receive_part").hide();
+        box.find(".exchange_part").hide();
+        box.find(".history_part").hide();
 
         get_utxos(crypto);
+        get_optimal_fee(crypto, box);
 
-        box.find(".submit_send").click(function() {
+        box.find(".submit_send").unbind('click').click(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
-            var fee = box.find("input[name=" + crypto + "_fee]").val();
-            var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee);
+            var fee_multiplier = parseFloat(box.find(".send_part input[name=fee]:checked").val());
+            var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
+            var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee_per_kb);
             console.log(tx);
+            return;
+
             $.ajax({
                 url: "/api/push_tx/fallback",
                 type: "post",
@@ -532,17 +644,8 @@ $(function() {
             }).success(function(response){
                 console.log("push tx successful!", response);
             }).fail(function(jqXHR) {
-                box.find(".send_error_area").text(jqXHR.responseJSON.error);
+                box.find(".send_part .error_area").text(jqXHR.responseJSON.error);
             });
-        });
-
-        $.ajax({
-            url: "/api/optimal_fee/average3?currency=" + crypto,
-        }).success(function(response) {
-            var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
-            optimal_fees[crypto] = fee_per_kb;
-            box.find(".optimal_fee_rate_per_byte").text(fee_per_byte.toFixed(0));
-            fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
         });
     });
 
@@ -556,11 +659,11 @@ $(function() {
 
         if(!validate_address(crypto, sending_address)) {
             box.find(".submit_send").attr('disabled', 'disabled');
-            box.find(".send_error_area").text("Invalid Sending Address");
+            box.find(".send_part .error_area").text("Invalid Sending Address");
             $(this).css({color: 'red'});
         } else {
             box.find(".submit_send").removeAttr('disabled');
-            box.find(".send_error_area").text("");
+            box.find(".send_part .error_area").text("");
             $(this).css({color: 'inherit'});
         }
     });
@@ -607,12 +710,30 @@ $(function() {
         if(to_compare > crypto_balance) {
             box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'red'});
             box.find(".submit_send").attr('disabled', 'disabled');
-            box.find(".send_error_area").text("Amount exceeds balance");
+            box.find(".send_part .error_area").text("Amount exceeds balance");
         } else {
             box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'inherit'});
             box.find(".submit_send").removeAttr('disabled');
-            box.find(".send_error_area").text("");
+            box.find(".send_part .error_area").text("");
         }
         update_actual_fee_estimation(crypto, sat, 1);
+    });
+
+    $("input[name=fee]").change(function() {
+        var container = $(this).parents(".fee_wrapper");
+        var all_containers = container.parents(".subsection");
+        all_containers.find(".fee_wrapper").css({background: 'inherit'});
+        var sel_fee = $(this).val();
+        var color = 'inherit';
+        if(sel_fee == 'half') {
+            color = 'yellow';
+        } else if (sel_fee == 'double') {
+            color = 'green';
+        } else if (sel_fee == 'no_fee') {
+            color = 'red';
+        }
+
+        container.css({background: color});
+        console.log("fee changed");
     });
 });

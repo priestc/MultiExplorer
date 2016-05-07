@@ -52,6 +52,7 @@ def save_settings(request):
     if previous_fiat != new_fiat:
         return http.JsonResponse({
             'exchange_rates': get_rates(new_fiat),
+            'settings': wallet.get_settings()
         })
 
     return http.HttpResponse("OK")

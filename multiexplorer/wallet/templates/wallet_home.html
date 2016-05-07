@@ -20,7 +20,6 @@
     var Mnemonic = require('bitcore-mnemonic');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
-    var spinner_url = "{% static 'spin.gif' %}";
     var optimal_fees = {};
     var used_addresses = {}
     var unused_deposit_addresses = {};
@@ -30,6 +29,10 @@
 </script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
+    body {
+        font-family: 'Times New Roman';
+    }
+
     .center_box {
         width: 250px;
         margin: 20px auto 0 auto;
@@ -96,7 +99,7 @@
         background: white;
         padding: 5px 3px 5px 3px;
         color: black;
-        margin: 5px;
+        margin: 5px auto 5px auto;
         width: 17em;
         border: 1px solid #dfdfdf;
     }
@@ -147,31 +150,48 @@
         font-weight: bold;
     }
 
-    .send_part {
-        display: none;
-        text-align: left;
-    }
-
-    .cancel_send {
-        background: #FFAEAE;
-    }
-    .submit_send {
-        background: #AFFFB3;
-    }
-
-    .submit_send:disabled {
-        background: #FEFEFE;
-    }
-
     .fee_wrapper {
-        margin: 20px;
+        margin: 10px;
+        border-radius: 4px;
     }
 
-    .send_error_area {
+    .error_area {
         float: left;
         text-align: center;
         color: red;
         max-width: 300px;
+        display: flex;
+        justify-content: center; /* align horizontal */
+        align-items: center; /* align vertical */
+        height: 35px;
+        width: 200px;
+    }
+
+
+    .subsection {
+        background: rgba(10, 10, 10, 0.15);
+        border: 1px solid rgba(3, 3, 3, 0.15);
+        padding: 3px;
+        display: none;
+        text-align: left;
+    }
+
+    .subsection .full_width {
+        width: -moz-calc(100% - 5px);
+        width: calc(100% - 5px);
+    }
+
+    .submit_button {
+        background: #AFFFB3;
+    }
+
+    .cancel_button {
+        background: #FFAEAE;
+        margin-bottom: 20px;
+    }
+
+    .submit_button:disabled {
+        background: #FEFEFE;
     }
 </style>
 
@@ -193,7 +213,7 @@
     <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_balance"><div class="thin-spinner" style="height: 20px; width: 20px;"></div></span> <span class="fiat_unit"></span>
+        <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner" style="height: 20px; width: 20px;"></div></span> <span class="fiat_unit"></span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
@@ -217,11 +237,11 @@
             <button class="switch_to_history">History</button>
             <button class="switch_to_sweep">Sweep</button>
         </div>
-        <div class="send_part">
-            <button class="cancel_send">Cancel Send</button>
+        <div class="send_part subsection">
+            <button class="cancel_button"> &larr; Cancel Send</button>
             <br>
             <lable>Address</label><br>
-            <input type="text" class="sending_recipient_address" style="width: 100%">
+            <input type="text" class="sending_recipient_address full_width">
 
             <br><br>
 
@@ -241,52 +261,46 @@
                 <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
             </div>
 
-            <div class="fee_wrapper">
-                <label>
-                    <input type="radio" name="{{ data.code }}_fee" value="half">
-                    Half Optimal Fee (<span class="half_fee_rate fiat_fee">
-                    <img src="{% static 'spin.gif' %}"></span>
-                    <span class="fiat_unit"></span>)
-                </label>
-            </div>
-
-            <div class="fee_wrapper">
-                <label>
-                    <input type="radio" name="{{ data.code }}_fee" value="full" checked="checked">
-                    Optimal Fee (<span class="full_fee_rate fiat_fee">
-                    <img src="{% static 'spin.gif' %}"></span>
-                    <span class="fiat_unit"></span>)
-                </label>
-            </div>
-
-            <div class="fee_wrapper">
-                <label>
-                    <input type="radio" name="{{ data.code }}_fee" value="double">
-                    Double Optimal Fee (<span class="fiat_fee double_fee_rate">
-                    <img src="{% static 'spin.gif' %}"></span>
-                    <span class="fiat_unit"></span>)
-                </label>
-            </div>
+            {% include "fee_chooser.html" %}
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">
-                <button class="submit_send" style="float: left">Send</button>
+                <button class="submit_send submit_button" style="float: left" disabled>Send</button>
                 <div class="send_error_area"></div>
             </div>
+        </div>
+        <div class="sweep_part subsection">
+            <button class="cancel_button"> &larr; Cancel Sweep</button>
+            <br>
+            <lable>Private Key (WIF)</label><br>
+            <input type="text" class="sweeping_key full_width">
+            <br>
+
+            {% include "fee_chooser.html" %}
+
+            <hr>
+            <div class="sending_bottom_area" style="overflow: hidden">
+                <button class="submit_sweep submit_button" style="float: left" disabled>Sweep</button>
+                <div class="error_area"></div>
+            </div>
+        </div>
+        <div class="exchange_part subsection">
+            <button class="cancel_button"> &larr; Cancel Exchange</button>
+            <hr>
+            <div class="sending_bottom_area" style="overflow: hidden">
+                <button class="submit_exchange submit_button" style="float: left">Exchange</button>
+                <div class="error_area"></div>
+            </div>
+        </div>
+        <div class="history_part subsection">
+            <button class="cancel_button"> &larr; Go Back</button>
+            <br>History...
         </div>
     </div>
     {% endfor %}
 </div>
 
 <div style="display: none">
-
-    <div id="history_modal">
-        history
-    </div>
-    <div id="exchange_modal">
-        exchange
-    </div>
-
     <div id="settings_modal">
         <form id="settings_form">
             Display Local Currency:<br>
