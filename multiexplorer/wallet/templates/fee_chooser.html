@@ -1,37 +1,52 @@
-<div class="fee_wrapper">
+<style>
+    .fee_wrapper.half.selected {
+        background: yellow;
+    }
+    .fee_wrapper.single.selected {
+        background: #76FF96; /* green */
+    }
+    .fee_wrapper.double.selected {
+        background: #6876FF; /* blue */
+    }
+    .fee_wrapper.zero.selected {
+        background: #FF6873; /* red */
+    }
+</style>
+
+<div class="fee_wrapper zero">
     <label>
-        <input type="radio" name="fee" value="0">
+        <input type="radio" name="fee_{{ crypto }}_{{ which }}" value="0" class="fee_selector">
         No Fee
     </label>
 </div>
 
-<div class="fee_wrapper">
+<div class="fee_wrapper half">
     <label>
-        <input type="radio" name="fee" value="0.5">
-        Half Optimal Fee (<span class="fiat_symbol"></span>
-        <span class="half_fee_rate fiat_fee">
+        <input type="radio" name="fee_{{ crypto }}_{{ which }}" value="0.5" class="fee_selector">
+        Half Optimal Fee
+        (<span class="fiat_symbol"></span><span class="half_fee_rate fiat_fee">
             <div class="thin-spinner" style="height: 12px; width: 12px;"></div>
         </span>
         <span class="fiat_unit"></span>)
     </label>
 </div>
 
-<div class="fee_wrapper">
+<div class="fee_wrapper single selected">
     <label>
-        <input type="radio" name="fee" value="1.0" checked="checked">
-        Optimal Fee (<span class="fiat_symbol"></span>
-        <span class="full_fee_rate fiat_fee">
+        <input type="radio" name="fee_{{ crypto }}_{{ which }}" value="1.0" checked="checked" class="fee_selector">
+        Optimal Fee
+        (<span class="fiat_symbol"></span><span class="full_fee_rate fiat_fee">
             <div class="thin-spinner" style="height: 12px; width: 12px;"></div>
         </span>
         <span class="fiat_unit"></span>)
     </label>
 </div>
 
-<div class="fee_wrapper">
+<div class="fee_wrapper double">
     <label>
-        <input type="radio" name="fee" value="2.0">
-        Double Optimal Fee (<span class="fiat_symbol"></span>
-        <span class="fiat_fee double_fee_rate">
+        <input type="radio" name="fee_{{ crypto }}_{{ which }}" value="2.0" class="fee_selector">
+        Double Optimal Fee
+        (<span class="fiat_symbol"></span><span class="fiat_fee double_fee_rate">
             <div class="thin-spinner" style="height: 12px; width: 12px;"></div>
         </span>
         <span class="fiat_unit"></span>)

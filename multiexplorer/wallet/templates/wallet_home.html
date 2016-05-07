@@ -261,7 +261,7 @@
                 <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
             </div>
 
-            {% include "fee_chooser.html" %}
+            {% include "fee_chooser.html" with crypto=data.code which='send' %}
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">
@@ -276,7 +276,7 @@
             <input type="text" class="sweeping_key full_width">
             <br>
 
-            {% include "fee_chooser.html" %}
+            {% include "fee_chooser.html" with crypto=data.code which='sweep' %}
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">

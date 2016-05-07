@@ -334,9 +334,9 @@ function open_wallet(show_wallet_list) {
                 // must have none either. Don't bother calculating balance.
                 box.find(".crypto_balance").text("0.0");
                 box.find(".fiat_balance").text("0.0");
-                box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
-                box.find(".switch_to_exchange").hide(); //attr('disabled', 'disabled');
-                box.find(".switch_to_history").hide(); //attr('disabled', 'disabled');
+                box.find(".switch_to_send").hide();
+                box.find(".switch_to_exchange").hide();
+                box.find(".switch_to_history").hide();
             } else {
                 add_to_balance(crypto, found_used_addresses);
                 box.find(".switch_to_send").show();
@@ -410,6 +410,10 @@ function update_actual_fee_estimation(crypto, satoshis_will_send, outs_length) {
 }
 
 function fill_in_fee_radios(crypto, tx_size) {
+    /// Based on exchange rates and optimal fee estimations, guess how much
+    // the fees would be in fiat for a given tx size. This function fills in the
+    // estimations onto the page.
+
     var fee_per_kb = optimal_fees[crypto];
     var fiat_exchange = exchange_rates[crypto]['rate'];
     var fiat_fee_this_tx = (fee_per_kb / 1024) * tx_size * fiat_exchange / 1e8;
@@ -544,7 +548,7 @@ $(function() {
         box.find(".submit_sweep").unbind('click').click(function() {
             box.find(".sweep_part .error_area").html(text_spinner);
             var priv = box.find(".sweeping_key").val();
-            var fee_multiplier = parseFloat(box.find(".sweep_part input[name=fee]:checked").val());
+            var fee_multiplier = parseFloat(box.find(".sweep_part .fee_selector:checked").val());
             var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
 
             console.log("Sweeping with fee multiplier of", fee_multiplier);
@@ -631,7 +635,7 @@ $(function() {
         box.find(".submit_send").unbind('click').click(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
-            var fee_multiplier = parseFloat(box.find(".send_part input[name=fee]:checked").val());
+            var fee_multiplier = parseFloat(box.find(".send_part .fee_selector:checked").val());
             var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
             var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee_per_kb);
             console.log(tx);
@@ -719,21 +723,11 @@ $(function() {
         update_actual_fee_estimation(crypto, sat, 1);
     });
 
-    $("input[name=fee]").change(function() {
+    $(".fee_selector").change(function() {
         var container = $(this).parents(".fee_wrapper");
         var all_containers = container.parents(".subsection");
-        all_containers.find(".fee_wrapper").css({background: 'inherit'});
-        var sel_fee = $(this).val();
-        var color = 'inherit';
-        if(sel_fee == 'half') {
-            color = 'yellow';
-        } else if (sel_fee == 'double') {
-            color = 'green';
-        } else if (sel_fee == 'no_fee') {
-            color = 'red';
-        }
-
-        container.css({background: color});
+        all_containers.find(".fee_wrapper").removeClass('selected');
+        container.addClass("selected");
         console.log("fee changed");
     });
 });
