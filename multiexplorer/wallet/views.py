@@ -49,13 +49,15 @@ def save_settings(request):
     wallet.auto_logout = request.POST['auto_logout']
     wallet.show_wallet_list = request.POST['show_wallet_list']
     wallet.save()
-    if previous_fiat != new_fiat:
-        return http.JsonResponse({
-            'exchange_rates': get_rates(new_fiat),
-            'settings': wallet.get_settings()
-        })
 
-    return http.HttpResponse("OK")
+    resp = {
+        'settings': wallet.get_settings()
+    }
+
+    if previous_fiat != new_fiat:
+        resp['exchange_rates'] = get_rates(new_fiat),
+
+    return http.JsonResponse(resp)
 
 
 def register_new_wallet_user(request):
