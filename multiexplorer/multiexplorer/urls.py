@@ -3,7 +3,8 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 
 from views import (
-    home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation
+    home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
+    onchain_exchange_rates,
 )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     url(r'^block', block_lookup, name="block_lookup"),
 
     url(r'^api$', api_docs, name="api_docs"),
+    url(r'^api/onchain_exchange_rates', onchain_exchange_rates, name="onchain_exchange_rates"),
     url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),

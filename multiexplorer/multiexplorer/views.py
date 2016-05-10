@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.conf import settings
+import requests
 
 from moneywagon import (
     service_table, get_address_balance, guess_currency_from_address, ALL_SERVICES,
@@ -327,3 +328,48 @@ def address_disambiguation(request, address):
         'balances': balances,
         'address': address,
     })
+
+def onchain_exchange_rates(request):
+    """
+    Returns a list of
+    """
+    cache_key = 'shapeshift_marketinfo'
+    hit = cache.get(cache_key)
+
+    if not hit:
+        pairs = requests.get("https://shapeshift.io/marketinfo/").json()
+        cache.set(cache_key, pairs)
+    else:
+        pairs = hit
+
+    deposit_currency = request.GET.get('deposit_currency', '').upper()
+    final_pairs = []
+
+    for pair in pairs:
+        if deposit_currency and not pair['pair'].startswith(deposit_currency):
+            continue
+
+        deposit_code = pair['pair'].split("_")[0]
+        try:
+            deposit_name = crypto_data[deposit_code.lower()]['name']
+        except (KeyError, TypeError):
+            continue
+
+        withdraw_code = pair['pair'].split("_")[1]
+
+        try:
+            withdraw_name = crypto_data[withdraw_code.lower()]['name']
+        except (KeyError, TypeError):
+            continue
+
+        final_pairs.append({
+            'deposit_currency': {'code': deposit_code, 'name': deposit_name},
+            'withdraw_currency': {'code': withdraw_code, 'name': withdraw_name},
+            'rate': pair['rate'],
+            'max_amount': pair['maxLimit'],
+            'min_amount': pair['min'],
+            'provider': 'ShapeShift.io'
+        })
+
+
+    return http.JsonResponse({'pairs': final_pairs})

@@ -462,23 +462,71 @@ $(function() {
     $(".switch_to_exchange").click(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
+        exchange_pairs[crypto] = [];
 
         switch_section(box, "exchange");
 
+        var area = box.find(".exchange_options");
+        area.append(text_spinner);
+
         $.ajax({
             type: 'get',
-            url: '/onchain_exchange_rates?deposit_currency=' + crypto,
-        }).succes(function(response) {
-            $.each(response.pairs, function() {
+            url: '/api/onchain_exchange_rates?deposit_currency=' + crypto,
+        }).success(function(response) {
+            area.empty();
+            $.each(response.pairs, function(i, pair) {
                 var to_code = pair.withdraw_currency.code;
                 var to_name = pair.withdraw_currency.name + " (" + to_code + ")";
-                if(show_wallet_list.indexOf(to_code) != -1) {
-                    var img_url = $(".crypto_box[data-currency=" + to_code + "] img").attr('src');
+                if(show_wallet_list.indexOf(to_code.toLowerCase()) != -1) {
+                    var img_url = $(".crypto_box[data-currency=" + to_code.toLowerCase() + "] img").attr('src');
                     var icon = "<img src='" + img_url + "' style='width: 30px; height: 30px'>";
-                    var table = "<table><tr><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
-                    box.find(".exchange_options").append(table);
+                    var radio = "<input type='radio' name='" + unique + "' value='" + to_code + "' class='exchange_radio'>";
+                    var table = "<table><tr><td>" + radio + "</td><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
+                    var unique = crypto + "_exchange";
+                    var label = "<label>" + table + "</label>";
+                    area.append(label);
+                    exchange_pairs[crypto].push(pair);
                 }
             });
+            box.find(".exchange_radio").first().click();
+        });
+
+        box.on('change', ".exchange_radio", function() {
+            var selected_code = box.find(".exchange_radio:checked").val();
+            console.log("exchange changed", crypto, "->", selected_code);
+            $.each(exchange_pairs[crypto], function(i, pair) {
+                if(pair.withdraw_currency.code == selected_code) {
+                    box.find(".withdraw_unit").text(pair.withdraw_currency.name);
+                    box.find(".withdraw_code").text(pair.withdraw_currency.code);
+                    box.find(".crypto_to_crypto_rate").text(pair.rate);
+                }
+            });
+        });
+
+        box.find(".exchange_amount").keyup(function(event) {
+            if(event.keyCode == 9) {
+                return // tab key was pressed
+            }
+            var rate = parseFloat(box.find(".crypto_to_crypto_rate").text())
+            if($(this).hasClass("fiat")) {
+                var fiat = parseFloat($(this).val());
+                var deposit = fiat / exchange_rates[crypto]['rate'];
+                var withdraw = deposit * rate;
+                box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
+                box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
+            } else if($(this).hasClass("withdraw")) {
+                var withdraw = parseFloat($(this).val());
+                var deposit = withdraw / rate
+                var fiat = deposit * exchange_rates[crypto]['rate'];
+                box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
+                box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
+            } else if($(this).hasClass("deposit")) {
+                var deposit = parseFloat($(this).val());
+                var withdraw = deposit * rate;
+                var fiat = deposit * exchange_rates[crypto]['rate'];
+                box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
+                box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
+            }
         });
     });
 

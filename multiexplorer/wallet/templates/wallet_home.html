@@ -27,6 +27,7 @@
     var exchange_rates = {};
     var utxos = {};
     var show_wallet_list = [];
+    var exchange_pairs = {};
 </script>
 <script src="{% static 'blockchain.js' %}"></script>
 <script src="{% static 'wallet.js' %}"></script>
@@ -308,6 +309,18 @@
             <button class="cancel_button"> &larr; Cancel Exchange</button>
 
             <div class="exchange_options"></div>
+
+            Exchange Rate:<br>
+            1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
+
+            {{ data.name }} Amount:<br>
+            <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br><br>
+
+            <span class="fiat_unit"></span> Amount:<br>
+            <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>
+
+            <span class="withdraw_unit"></span> Amount:<br>
+            <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br><br>
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">

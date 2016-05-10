@@ -28,7 +28,7 @@ def make_crypto_data_json():
             del ret[currency]
             continue
 
-        ret[currency]['address_version_byte'] = data['address_version_byte']
+        ret[currency]['address_version_byte'] = data.get('address_version_byte', None)
 
         for mode in service_modes:
             services = data.get('services', {}).get(mode, [])
@@ -82,9 +82,9 @@ def get_wallet_currencies():
         if not hasattr(data, 'get'):
             continue
 
-        bip44 = data['bip44_coin_type']
-        address_byte = data['address_version_byte']
-        priv_byte = data['private_key_prefix']
+        bip44 = data.get('bip44_coin_type', None)
+        address_byte = data.get('address_version_byte', None)
+        priv_byte = data.get('private_key_prefix', None)
 
         services = data.get('services', {})
         pushtx = services.get("push_tx", [])
@@ -100,7 +100,7 @@ def get_wallet_currencies():
                 'bip44': bip44,
                 'private_key_prefix': priv_byte,
                 'address_byte': address_byte,
-                'logo': "logos/%s-logo.png" % currency,
+                'logo': "logos/%s-logo_100x100.png" % currency,
             })
 
     return ret
