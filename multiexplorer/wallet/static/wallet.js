@@ -205,7 +205,6 @@ function open_wallet(show_wallet_list) {
         used_addresses[crypto] = [];
 
         fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
-            //console.log(crypto, "======== found deposit addresses:", found_used_addresses);
             used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
 
             var address = unused_deposit_addresses[crypto][0];
@@ -229,7 +228,6 @@ function open_wallet(show_wallet_list) {
         }, 10, [], []);
 
         fetch_used_addresses(crypto, 'change', function(found_used_addresses) {
-            //console.log(crypto, "======== found change addresses", found_used_addresses);
             used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
 
             if(found_used_addresses.length > 0) {
@@ -311,7 +309,7 @@ function fill_in_fee_radios(crypto, tx_size) {
     box.find(".double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
 }
 
-function switch_section(crypto, to_section) {
+function switch_section(box, to_section) {
     box.find(".send_part").hide();
     box.find(".receive_part").hide();
     box.find(".exchange_part").hide();
@@ -361,14 +359,14 @@ $(function() {
 
     $(".cancel_button").click(function() {
         var box = $(this).parent().parent();
-        switch_section("receive");
+        switch_section(box, "receive");
     });
 
     $(".switch_to_history").click(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        switch_section("history");
+        switch_section(box, "history");
     });
 
     $(".switch_to_sweep").click(function() {
@@ -376,7 +374,7 @@ $(function() {
         var error_area = box.find(".sweep_part .error_area")
         var crypto = box.data('currency');
 
-        switch_section("sweep");
+        switch_section(box, "sweep");
 
         get_optimal_fee(crypto, box);
 
@@ -465,7 +463,7 @@ $(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        switch_section("exchange");
+        switch_section(box, "exchange");
 
         $.ajax({
             type: 'get',
@@ -488,7 +486,7 @@ $(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        switch_section("send");
+        switch_section(box, "send");
 
         get_utxos(crypto);
         get_optimal_fee(crypto, box);
