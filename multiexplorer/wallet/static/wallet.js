@@ -1,4 +1,4 @@
-var text_spinner = '<div class="thin-spinner" style="height: 12px; width: 12px;"></div>';
+var text_spinner = '<div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div>';
 var bip44_coin_types = {};
 $.each(crypto_data, function(i, data) {
 
@@ -13,130 +13,6 @@ $.each(crypto_data, function(i, data) {
         bitcore.Networks.add(network);
     }
 });
-
-function arrayRotate(arr, reverse){
-    // taken from http://stackoverflow.com/a/23368052/118495
-    if(reverse)
-        arr.unshift(arr.pop());
-    else
-        arr.push(arr.shift());
-    return arr;
-}
-
-function get_crypto_root(crypto) {
-    var bip44_coin_type = undefined;
-    var address_byte = undefined;
-    var bip44 = bip44_coin_types[crypto];
-
-    if(crypto == 'btc') {
-        crypto = 'livenet';
-    }
-    //                         purpose       coin type
-    return hd_master_seed.derive(44, true).derive(bip44);
-}
-
-function derive_addresses(xpriv, crypto, change, index) {
-    //           account             change             index
-    xpriv = xpriv.derive(0, true).derive(change ? 1 : 0).derive(index);
-
-    if(crypto == 'btc') {
-        crypto = 'livenet';
-    }
-
-    var wif = bitcore.PrivateKey(xpriv.privateKey.toString(), crypto).toWIF();
-    return [wif, xpriv.privateKey.toAddress(crypto).toString()];
-}
-
-function get_deposit_keypair(crypto, index) {
-    return derive_addresses(get_crypto_root(crypto), crypto, false, index);
-}
-
-function get_change_keypair(crypto, index) {
-    return derive_addresses(get_crypto_root(crypto), crypto, true, index);
-}
-
-function get_unused_change_address(crypto) {
-    var i = 0;
-    var change_address = undefined;
-    while(true) {
-        change_address = get_change_keypair(crypto, i)[1];
-        if(used_addresses[crypto].indexOf(change_address) == -1) {
-            return change_address;
-        }
-        i += 1;
-    }
-}
-
-function get_privkey(crypto, address) {
-    // Get the private key for address in this wallet. Do not pass in an address
-    // that is not part of this wallet because it will loop forever.
-    var i = 0;
-    while(true) {
-        var data = get_change_keypair(crypto, i);
-        var privkey = data[0];
-        var this_address = data[1];
-
-        if(address == this_address) {
-            return privkey;
-        }
-
-        data = get_deposit_keypair(crypto, i);
-        privkey = data[0];
-        this_address = data[1];
-
-        if(address == this_address) {
-            return privkey;
-        }
-        i += 1;
-    }
-}
-
-function get_privkeys_from_inputs(crypto, inputs) {
-    var privkeys = [];
-    $.each(inputs, function(i, input) {
-        privkeys.push(get_privkey(crypto, input.address))
-    });
-    return privkeys
-}
-
-function estimate_tx_size(in_count, out_count) {
-    return out_count * 34 + 148 * in_count + 10
-}
-
-function send_coin(crypto, recipients, fee_per_kb) {
-    var tx = new bitcore.Transaction()
-
-    var total_outs = 0;
-    $.each(recipients, function(i, recip) {
-        var address = recip[0];
-        var amount = recip[1];
-        //console.log("adding amount", amount);
-        tx = tx.to(address, amount);
-        total_outs += amount / 1e8;
-    });
-
-    var total_added = 0;
-    var inputs_to_add = [];
-    $.each(utxos[crypto], function(i, utxo) {
-        inputs_to_add.push(utxo);
-        total_added += utxo.amount;
-        if(total_added >= total_outs) {
-            return false;
-        }
-    });
-
-    var estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length);
-    var estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
-
-    //console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
-    //console.log("adding inputs", inputs_to_add, "Fee per KB:", fee_per_kb);
-
-    tx = tx.from(inputs_to_add);
-    tx = tx.change(get_unused_change_address(crypto));
-    tx = tx.fee(estimated_fee);
-    tx = tx.sign(get_privkeys_from_inputs(crypto, inputs_to_add));
-    return tx.toString();
-}
 
 function get_crypto_balance(crypto) {
     return parseFloat(
@@ -377,7 +253,7 @@ function open_wallet(show_wallet_list) {
 }
 
 function refresh_fiat() {
-    // after new fiat exchnage rates come in, this function gets called which
+    // after new fiat exchanage rates come in, this function gets called which
     // recalculates balances from new rates.
     $(".crypto_box:visible").each(function(i, dom_box){
         var box = $(dom_box);
@@ -389,6 +265,9 @@ function refresh_fiat() {
 }
 
 function fill_in_settings(settings) {
+    // this function gets called every time the settings are changed, and
+    // also once when the app first loads.
+
     var form = $("#settings_form");
 
     form.find("select[name=display_fiat]").val(settings.display_fiat_unit);
@@ -399,6 +278,7 @@ function fill_in_settings(settings) {
 
     $.each(settings.show_wallet_list, function(i, crypto) {
         form.find("input[value=" + crypto + "]").attr("checked", "checked");
+        show_wallet_list.push(crypto);
     });
     open_wallet(settings.show_wallet_list);
 }
@@ -431,64 +311,14 @@ function fill_in_fee_radios(crypto, tx_size) {
     box.find(".double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
 }
 
-function get_utxos(crypto, sweep_address, sweep_callback) {
-    if(sweep_address) {
-        var addrs = "address=" + sweep_address;
-    } else {
-        addresses = used_addresses[crypto];
-        //console.log("getting utxos for", addresses);
-        if(addresses.length == 1) {
-            var addrs = "address=" + addresses[0];
-        } else {
-            var addrs = "addresses=" + addresses.join(',');
-        }
-    }
-    $.ajax({
-        url: "/api/unspent_outputs/fallback?" + addrs + "&currency=" + crypto,
-    }).success(function(response) {
-        // sort so highest value utxo is the first element.
-        var sorted = response.utxos.sort(function(x,y){return y.amount-x.amount});
-        var rewritten = [];
-        $.each(sorted, function(i, utxo) {
-            // rewrite the utxo list to be in a format that Bitcore can understand.
-            rewritten.push({
-                script: utxo.scriptPubKey,
-                txid: utxo.txid,
-                outputIndex: utxo.vout,
-                amount: utxo.amount / 1e8,
-                address: utxo.address
-            })
-        });
-        if(sweep_address) {
-            sweep_callback(rewritten);
-        } else {
-            utxos[crypto] = rewritten;
-        }
-    });
-}
+function switch_section(crypto, to_section) {
+    box.find(".send_part").hide();
+    box.find(".receive_part").hide();
+    box.find(".exchange_part").hide();
+    box.find(".history_part").hide();
+    box.find(".sweep_part").hide();
 
-function push_tx(crypto, tx, success_callback, fail_callback) {
-    $.ajax({
-        url: "/api/push_tx/fallback",
-        type: "post",
-        data: {currency: crypto, tx: tx.toString()}
-    }).success(function(response){
-        success_callback(response)
-    }).fail(function(jqXHR) {
-        fail_callback(jqXHR.responseJSON.error)
-    });
-}
-
-
-function get_optimal_fee(crypto, box) {
-    $.ajax({
-        url: "/api/optimal_fee/average3?currency=" + crypto,
-    }).success(function(response) {
-        var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
-        optimal_fees[crypto] = fee_per_kb;
-        box.find(".optimal_fee_rate_per_byte").text((fee_per_kb / 1024).toFixed(0));
-        fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
-    });
+    box.find("." + to_section + "_part").show();
 }
 
 $(function() {
@@ -531,24 +361,14 @@ $(function() {
 
     $(".cancel_button").click(function() {
         var box = $(this).parent().parent();
-        box.find(".send_part").hide();
-        box.find(".sweep_part").hide();
-        box.find(".exchange_part").hide();
-        box.find(".history_part").hide();
-
-        box.find(".receive_part").show();
+        switch_section("receive");
     });
 
     $(".switch_to_history").click(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        box.find(".history_part").show();
-
-        box.find(".send_part").hide();
-        box.find(".receive_part").hide();
-        box.find(".exchange_part").hide();
-        box.find(".sweep_part").hide();
+        switch_section("history");
     });
 
     $(".switch_to_sweep").click(function() {
@@ -556,12 +376,7 @@ $(function() {
         var error_area = box.find(".sweep_part .error_area")
         var crypto = box.data('currency');
 
-        box.find(".sweep_part").show();
-
-        box.find(".send_part").hide();
-        box.find(".receive_part").hide();
-        box.find(".exchange_part").hide();
-        box.find(".history_part").hide();
+        switch_section("sweep");
 
         get_optimal_fee(crypto, box);
 
@@ -571,8 +386,8 @@ $(function() {
             var fee_multiplier = parseFloat(box.find(".sweep_part .fee_selector:checked").val());
             var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
 
-            console.log("Sweeping with fee multiplier of", fee_multiplier);
-            console.log("fee per kb", fee_per_kb);
+            //console.log("Sweeping with fee multiplier of", fee_multiplier);
+            //console.log("fee per kb", fee_per_kb);
 
             var network = crypto;
             if(crypto == 'btc') {
@@ -590,8 +405,8 @@ $(function() {
                 $.each(utxos, function(i, utxo) {
                     amount += utxo.amount;
                     input_count += 1
-                    if(input_count >= 675) {
-                        console.log("reached limit of 100KB, stopping at 675 inputs");
+                    if(input_count >= 670) {
+                        console.log("reached limit of 100KB, stopping at 670 inputs");
                         return false;
                     }
                 });
@@ -603,16 +418,16 @@ $(function() {
                 var estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
                 var minus_fee = (amount * 1e8) - estimated_fee;
 
-                console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
-                console.log("adding inputs", utxos, "Fee per KB:", fee_per_kb);
-                console.log("sending", minus_fee);
+                //console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
+                //console.log("adding inputs", utxos, "Fee per KB:", fee_per_kb);
+                //console.log("sending", minus_fee);
 
                 tx = tx.from(utxos);
                 tx = tx.to(get_unused_change_address(crypto), minus_fee);
                 tx = tx.fee(estimated_fee);
                 tx = tx.sign(sweep_priv);
 
-                console.log(tx.toString());
+                //console.log(tx.toString());
 
                 push_tx(crypto, tx, function(response) {
                     error_area.css({color: 'inherit'}).html("Sweep Completed!");
@@ -650,24 +465,30 @@ $(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        box.find(".exchange_part").show();
+        switch_section("exchange");
 
-        box.find(".sweep_part").hide();
-        box.find(".send_part").hide();
-        box.find(".receive_part").hide();
-        box.find(".history_part").hide();
+        $.ajax({
+            type: 'get',
+            url: '/onchain_exchange_rates?deposit_currency=' + crypto,
+        }).succes(function(response) {
+            $.each(response.pairs, function() {
+                var to_code = pair.withdraw_currency.code;
+                var to_name = pair.withdraw_currency.name + " (" + to_code + ")";
+                if(show_wallet_list.indexOf(to_code) != -1) {
+                    var img_url = $(".crypto_box[data-currency=" + to_code + "] img").attr('src');
+                    var icon = "<img src='" + img_url + "' style='width: 30px; height: 30px'>";
+                    var table = "<table><tr><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
+                    box.find(".exchange_options").append(table);
+                }
+            });
+        });
     });
 
     $(".switch_to_send").click(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
 
-        box.find(".send_part").show();
-
-        box.find(".sweep_part").hide();
-        box.find(".receive_part").hide();
-        box.find(".exchange_part").hide();
-        box.find(".history_part").hide();
+        switch_section("send");
 
         get_utxos(crypto);
         get_optimal_fee(crypto, box);
@@ -762,6 +583,5 @@ $(function() {
         var all_containers = container.parents(".subsection");
         all_containers.find(".fee_wrapper").removeClass('selected');
         container.addClass("selected");
-        console.log("fee changed");
     });
 });

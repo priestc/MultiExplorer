@@ -21,12 +21,14 @@
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
     var optimal_fees = {};
-    var used_addresses = {}
+    var used_addresses = {};
     var unused_deposit_addresses = {};
     var unused_change_addresses = {};
     var exchange_rates = {};
     var utxos = {};
+    var show_wallet_list = [];
 </script>
+<script src="{% static 'blockchain.js' %}"></script>
 <script src="{% static 'wallet.js' %}"></script>
 <style>
     body {
@@ -51,6 +53,11 @@
 
     .deposit_address {
         font-size: small;
+    }
+
+    .main_currency_logo {
+        width: 100px;
+        height: 100px
     }
 
     .crypto_box {
@@ -202,6 +209,10 @@
     .submit_button:disabled {
         background: #FEFEFE;
     }
+
+    .exchange_options table {
+        margin-bottom: 2px;
+    }
 </style>
 
 {% include "login.html" %}
@@ -213,7 +224,7 @@
 <div style="width: 100%;">
     <div id="loading_screen">
         Deriving Wallet Addresses and Generating QR codes...<br><br>
-        <div class="spinner" style="height: 60px; width: 60px;"></div>
+        <div class="thick-spinner spinner" style="height: 60px; width: 60px;"></div>
     </div>
 </div>
 
@@ -222,12 +233,12 @@
     <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner" style="height: 20px; width: 20px;"></div></span> <span class="fiat_unit"></span>
+        <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div></span> <span class="fiat_unit"></span>
         <span class="balance_fiat"></span>
         <table style="width: 100%">
             <tr>
                 <td style="width: 50%">
-                    <img src="{% static data.logo %}" style="width: 100px; height: 100px">
+                    <img src="{% static data.logo %}" class="main_currency_logo">
                 </td>
                 <td style="width: 50%">
                     <div class="qr"></div>
@@ -244,7 +255,7 @@
             <button class="switch_to_send">Send</button>
             <button class="switch_to_exchange">Exchange</button>
             <button class="switch_to_history">History</button>
-            <button class="switch_to_sweep">Sweep</button>
+            <button class="switch_to_sweep">{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
         </div>
         <div class="send_part subsection">
             <button class="cancel_button"> &larr; Cancel Send</button>
@@ -279,7 +290,7 @@
             </div>
         </div>
         <div class="sweep_part subsection">
-            <button class="cancel_button"> &larr; Cancel Sweep</button>
+            <button class="cancel_button"> &larr; Cancel {% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
             <br>
             <lable>Private Key (WIF)</label><br>
             <input type="text" class="sweeping_key full_width">
@@ -289,12 +300,15 @@
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">
-                <button class="submit_sweep submit_button" style="float: left" disabled>Sweep</button>
+                <button class="submit_sweep submit_button" style="float: left" disabled>{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
                 <div class="error_area"></div>
             </div>
         </div>
         <div class="exchange_part subsection">
             <button class="cancel_button"> &larr; Cancel Exchange</button>
+
+            <div class="exchange_options"></div>
+
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">
                 <button class="submit_exchange submit_button" style="float: left">Exchange</button>
