@@ -20,6 +20,7 @@
     var Mnemonic = require('bitcore-mnemonic');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
+    var raw_mnemonic = undefined;
     var optimal_fees = {};
     var used_addresses = {};
     var unused_deposit_addresses = {};

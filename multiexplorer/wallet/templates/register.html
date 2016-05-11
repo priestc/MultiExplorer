@@ -23,7 +23,7 @@
 
         Mnemonic (optional):<br>
         <span id="mnemonic_error" class="error"></span>
-        <textarea style="width: 80%; height: 4em"></textarea>
+        <textarea class="mnemonic" style="width: 80%; height: 4em"></textarea>
         <br>
         <input type="submit" value="Register">
 
@@ -36,17 +36,18 @@ $("#register_form").submit(function() {
     // form where it will be saved on the back end.
     event.preventDefault();
     var t = $(this);
-    var mnemonic = t.find("textarea").val();
+    raw_mnemonic = t.find("textarea.mnemonic").val();
 
-    if(mnemonic) {
-        if(Mnemonic.isValid(mnemonic)) {
-            var mn = new Mnemonic(mnemonic);
+    if(raw_mnemonic) {
+        if(Mnemonic.isValid(raw_mnemonic)) {
+            var mn = new Mnemonic(raw_mnemonic);
         } else {
             $("#mnemonic_error").text("Invalid mnemonic");
             return false;
         }
     } else {
         var mn = new Mnemonic();
+        raw_mnemonic = mn.phrase;
     }
     hd_master_seed = mn.toHDPrivateKey();
 
@@ -56,7 +57,7 @@ $("#register_form").submit(function() {
     var password2 = t.find("input[name=password2]").val();
 
     if(password == password2) {
-        var encrypted_mnemonic = CryptoJS.AES.encrypt(mn.phrase, password);
+        var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, password);
     } else {
         return
     }
