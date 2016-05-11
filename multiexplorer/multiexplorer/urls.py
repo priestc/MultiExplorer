@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
-    onchain_exchange_rates,
+    onchain_exchange_rates, logout
 )
 
 urlpatterns = [
@@ -26,6 +26,8 @@ urlpatterns = [
 
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
+
+    url(r'^logout/', logout, name="logout"),
 ]
 
 

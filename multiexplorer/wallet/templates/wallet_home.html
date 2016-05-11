@@ -315,12 +315,14 @@
 
             {{ data.name }} Amount:<br>
             <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br><br>
+            <small>Including deposit fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
 
             <span class="fiat_unit"></span> Amount:<br>
             <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>
 
             <span class="withdraw_unit"></span> Amount:<br>
-            <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br><br>
+            <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br>
+            <small>Including withdraw miner fee of <span class="withdraw_fee"></span> <span class="withdraw_code"></span></small>
 
             <hr>
             <div class="sending_bottom_area" style="overflow: hidden">

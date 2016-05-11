@@ -87,7 +87,7 @@ function estimate_tx_size(in_count, out_count) {
     return out_count * 34 + 148 * in_count + 10
 }
 
-function send_coin(crypto, recipients, fee_per_kb) {
+function make_tx(crypto, recipients, fee_per_kb) {
     var tx = new bitcore.Transaction()
 
     var total_outs = 0;
@@ -119,7 +119,7 @@ function send_coin(crypto, recipients, fee_per_kb) {
     tx = tx.change(get_unused_change_address(crypto));
     tx = tx.fee(estimated_fee);
     tx = tx.sign(get_privkeys_from_inputs(crypto, inputs_to_add));
-    return tx.toString();
+    return tx;
 }
 
 function push_tx(crypto, tx, success_callback, fail_callback) {
@@ -135,14 +135,16 @@ function push_tx(crypto, tx, success_callback, fail_callback) {
 }
 
 
-function get_optimal_fee(crypto, box) {
+function get_optimal_fee(crypto, area) {
     $.ajax({
         url: "/api/optimal_fee/average3?currency=" + crypto,
     }).success(function(response) {
         var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
         optimal_fees[crypto] = fee_per_kb;
-        box.find(".optimal_fee_rate_per_byte").text((fee_per_kb / 1024).toFixed(0));
-        fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
+        if(area) {
+            area.text((fee_per_kb / 1024).toFixed(0));
+            fill_in_fee_radios(crypto, 340); // seed with typical tx size of 340 bytes.
+        }
     });
 }
 

@@ -295,7 +295,7 @@ function update_actual_fee_estimation(crypto, satoshis_will_send, outs_length) {
 }
 
 function fill_in_fee_radios(crypto, tx_size) {
-    /// Based on exchange rates and optimal fee estimations, guess how much
+    // Based on exchange rates and optimal fee estimations, guess how much
     // the fees would be in fiat for a given tx size. This function fills in the
     // estimations onto the page.
 
@@ -371,12 +371,12 @@ $(function() {
 
     $(".switch_to_sweep").click(function() {
         var box = $(this).parent().parent();
-        var error_area = box.find(".sweep_part .error_area")
+        var error_area = box.find(".sweep_part .error_area");
         var crypto = box.data('currency');
 
         switch_section(box, "sweep");
 
-        get_optimal_fee(crypto, box);
+        get_optimal_fee(crypto, box.find(".optimal_fee_rate_per_byte"));
 
         box.find(".submit_sweep").unbind('click').click(function() {
             box.find(".sweep_part .error_area").html(text_spinner);
@@ -416,16 +416,10 @@ $(function() {
                 var estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
                 var minus_fee = (amount * 1e8) - estimated_fee;
 
-                //console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
-                //console.log("adding inputs", utxos, "Fee per KB:", fee_per_kb);
-                //console.log("sending", minus_fee);
-
                 tx = tx.from(utxos);
                 tx = tx.to(get_unused_change_address(crypto), minus_fee);
                 tx = tx.fee(estimated_fee);
                 tx = tx.sign(sweep_priv);
-
-                //console.log(tx.toString());
 
                 push_tx(crypto, tx, function(response) {
                     error_area.css({color: 'inherit'}).html("Sweep Completed!");
@@ -462,7 +456,15 @@ $(function() {
     $(".switch_to_exchange").click(function() {
         var box = $(this).parent().parent();
         var crypto = box.data('currency');
+        var error_area = box.find(".exchange_part .error_area");
         exchange_pairs[crypto] = [];
+
+        if(!utxos[crypto]) {
+            get_utxos(crypto);
+        }
+        if(!optimal_fees[crypto]) {
+
+        }
 
         switch_section(box, "exchange");
 
@@ -491,7 +493,7 @@ $(function() {
             box.find(".exchange_radio").first().click();
         });
 
-        box.on('change', ".exchange_radio", function() {
+        box.unbind('change').on('change', ".exchange_radio", function() {
             var selected_code = box.find(".exchange_radio:checked").val();
             console.log("exchange changed", crypto, "->", selected_code);
             $.each(exchange_pairs[crypto], function(i, pair) {
@@ -499,34 +501,69 @@ $(function() {
                     box.find(".withdraw_unit").text(pair.withdraw_currency.name);
                     box.find(".withdraw_code").text(pair.withdraw_currency.code);
                     box.find(".crypto_to_crypto_rate").text(pair.rate);
+                    box.find(".withdraw_fee").text(pair.withdraw_fee);
+                    box.find(".deposit.exchange_amount").val('');
+                    box.find(".withdraw.exchange_amount").val('');
+                    box.find(".fiat.exchange_amount").keyup();
                 }
             });
         });
 
-        box.find(".exchange_amount").keyup(function(event) {
+        box.find(".exchange_amount").unbind('keyup').keyup(function(event) {
             if(event.keyCode == 9) {
                 return // tab key was pressed
             }
-            var rate = parseFloat(box.find(".crypto_to_crypto_rate").text())
+            var rate = parseFloat(box.find(".crypto_to_crypto_rate").text());
+            var withdraw_fee = parseFloat(box.find(".withdraw_fee").text());
+
             if($(this).hasClass("fiat")) {
                 var fiat = parseFloat($(this).val());
                 var deposit = fiat / exchange_rates[crypto]['rate'];
-                var withdraw = deposit * rate;
+                var withdraw = (deposit * rate) - withdraw_fee;
                 box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
                 box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
             } else if($(this).hasClass("withdraw")) {
-                var withdraw = parseFloat($(this).val());
+                var withdraw = parseFloat($(this).val()) + withdraw_fee;
                 var deposit = withdraw / rate
                 var fiat = deposit * exchange_rates[crypto]['rate'];
                 box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
                 box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
             } else if($(this).hasClass("deposit")) {
                 var deposit = parseFloat($(this).val());
-                var withdraw = deposit * rate;
+                var withdraw = (deposit * rate) - withdraw_fee;
                 var fiat = deposit * exchange_rates[crypto]['rate'];
                 box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
                 box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
             }
+            var balance = parseFloat(box.find('.crypto_balance').text());
+            if(deposit > balance || deposit == 0) {
+                box.find(".exchange_amount").css({color: 'red'});
+                box.find(".submit_exchange").attr('disabled', 'disabled');
+            } else {
+                box.find(".exchange_amount").css({color: 'inherit'});
+                box.find(".submit_exchange").removeAttr('disabled');
+            }
+        });
+
+        box.find(".submit_exchange").unbind('click').click(function() {
+            var deposit_amount = parseFloat(box.find(".deposit.exchange_amount").val());
+            var withdraw_code = box.find(".withdraw_code").text();
+            $.ajax({
+                url: "http://cors.shapeshift.io/shift",
+                type: 'post',
+                data: {
+                    withdraw: get_unused_change_address(withdraw_code),
+                    pair: (crypto + "_" + withdraw_code).toLowerCase()
+                }
+            }).success(function(response) {
+                var tx = make_tx(crypto, [response.deposit, deposit_amount], optimal_fee_per_kb);
+                console.log(tx);
+                //push_tx(crypto, tx, function(response) {
+                //    error_area.css({color: 'inherit'}).html("Sweep Completed!");
+                //}, function(error_msg) {
+                //    error_area.css({color: 'red'}).text(error_msg);
+                //});
+            });
         });
     });
 
@@ -537,14 +574,14 @@ $(function() {
         switch_section(box, "send");
 
         get_utxos(crypto);
-        get_optimal_fee(crypto, box);
+        get_optimal_fee(crypto, box.find(".optimal_fee_rate_per_byte"));
 
         box.find(".submit_send").unbind('click').click(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
             var fee_multiplier = parseFloat(box.find(".send_part .fee_selector:checked").val());
             var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
-            var tx = send_coin(crypto, [[sending_address, sending_amount * 1e8]], fee_per_kb);
+            var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_per_kb);
 
             push_tx(crypto, tx, function(response) {
                 console.log("push tx successful!", response);

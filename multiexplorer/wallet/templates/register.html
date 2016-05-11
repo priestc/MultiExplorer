@@ -74,9 +74,10 @@ $("#register_form").submit(function() {
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.
         $("#register_box, #login_box").hide();
+        console.log(response);
         exchange_rates = response.exchange_rates;
         fill_in_settings(response.wallet_settings);
-        open_wallet();
+        open_wallet(response.wallet_settings.show_wallet_list);
         $("#register_error").text("");
     }).fail(function(jqXHR) {
         $("#register_error").text(jqXHR.responseText);

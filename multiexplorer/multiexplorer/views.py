@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.contrib.auth import logout as dj_logout
 import requests
 
 from moneywagon import (
@@ -368,8 +369,13 @@ def onchain_exchange_rates(request):
             'rate': pair['rate'],
             'max_amount': pair['maxLimit'],
             'min_amount': pair['min'],
+            'withdraw_fee': pair['minerFee'],
             'provider': 'ShapeShift.io'
         })
 
 
     return http.JsonResponse({'pairs': final_pairs})
+
+def logout(request):
+    dj_logout(request)
+    return http.HttpResponseRedirect("/")

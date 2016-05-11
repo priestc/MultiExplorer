@@ -62,17 +62,22 @@ def save_settings(request):
 
 def register_new_wallet_user(request):
     encrypted_mnemonic = request.POST['encrypted_mnemonic']
+    password = request.POST['password']
+    username = request.POST['username']
 
     user = User.objects.create(
-        username=request.POST['username'],
+        username=username,
         email=request.POST.get('email', ''),
     )
-    user.set_password(request.POST['password'])
+    user.set_password(password)
     user.save()
 
     wal = WalletMasterKeys.objects.create(
         user=user, encrypted_mnemonic=encrypted_mnemonic
     )
+
+    user = authenticate(username=username, password=password)
+    init_login(request, user)
 
     return http.JsonResponse({
         'wallet_settings': wal.get_settings(),

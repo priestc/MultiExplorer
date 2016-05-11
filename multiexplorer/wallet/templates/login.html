@@ -1,6 +1,6 @@
 <div class="center_box" id="login_box">
     <form id="login_form" method="post">
-        <h3>Login {% if user.is_authenticated %} as {{ user.username }}{% endif%}</h3>
+        <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout">Log Out</a>{% endif %}</h3>
         <span id="login_error" style="color: red"></span><br>
         <div {% if user.is_authenticated %}style="display: none"{% endif %}>
         Username: <input type="text" name="username" value="{{ username }}"></div><br>
