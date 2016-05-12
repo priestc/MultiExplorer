@@ -281,19 +281,6 @@ function fill_in_settings(settings) {
     open_wallet(settings.show_wallet_list);
 }
 
-function update_actual_fee_estimation(crypto, satoshis_will_send, outs_length) {
-    var used_ins = [];
-    $.each(utxos[crypto], function(i, utxo) {
-        used_ins.push(utxo);
-        var added = used_ins.reduce(function(x, y) {return x+y.amount}, 0);
-        if(added >= satoshis_will_send) {
-            return false;
-        }
-    });
-    var tx_size = estimate_tx_size(used_ins.length, outs_length)
-    fill_in_fee_radios(crypto, tx_size);
-}
-
 function fill_in_fee_radios(crypto, tx_size) {
     // Based on exchange rates and optimal fee estimations, guess how much
     // the fees would be in fiat for a given tx size. This function fills in the
@@ -301,12 +288,17 @@ function fill_in_fee_radios(crypto, tx_size) {
 
     var fee_per_kb = optimal_fees[crypto];
     var fiat_exchange = exchange_rates[crypto]['rate'];
-    var fiat_fee_this_tx = (fee_per_kb / 1024) * tx_size * fiat_exchange / 1e8;
+    var satoshi_fee_this_tx = parseInt((fee_per_kb / 1024) * tx_size);
+    var fiat_fee_this_tx = satoshi_fee_this_tx * fiat_exchange / 1e8;
+
     var box = $(".crypto_box[data-currency=" + crypto + "]");
 
     box.find(".full_fee_rate").text(fiat_fee_this_tx.toFixed(2));
+    box.find(".optimal_fee").text((satoshi_fee_this_tx / 1e8).toFixed(8));
     box.find(".half_fee_rate").text((fiat_fee_this_tx / 2).toFixed(2));
     box.find(".double_fee_rate").text((fiat_fee_this_tx * 2).toFixed(2));
+
+    return satoshi_fee_this_tx;
 }
 
 function switch_section(box, to_section) {
@@ -459,11 +451,9 @@ $(function() {
         var error_area = box.find(".exchange_part .error_area");
         exchange_pairs[crypto] = [];
 
-        if(!utxos[crypto]) {
-            get_utxos(crypto);
-        }
+        get_utxos(crypto);
         if(!optimal_fees[crypto]) {
-
+            get_optimal_fee(crypto);
         }
 
         switch_section(box, "exchange");
@@ -493,7 +483,7 @@ $(function() {
             box.find(".exchange_radio").first().click();
         });
 
-        box.unbind('change').on('change', ".exchange_radio", function() {
+        box.off('change', ".exchange_radio").on('change', ".exchange_radio", function() {
             var selected_code = box.find(".exchange_radio:checked").val();
             console.log("exchange changed", crypto, "->", selected_code);
             $.each(exchange_pairs[crypto], function(i, pair) {
@@ -510,33 +500,59 @@ $(function() {
         });
 
         box.find(".exchange_amount").unbind('keyup').keyup(function(event) {
-            if(event.keyCode == 9) {
-                return // tab key was pressed
+            if(event.keyCode < 0x20 && event.keyCode != 8) {
+                return // non printable char pressed (let backspace through)
             }
+
             var rate = parseFloat(box.find(".crypto_to_crypto_rate").text());
             var withdraw_fee = parseFloat(box.find(".withdraw_fee").text());
 
             if($(this).hasClass("fiat")) {
                 var fiat = parseFloat($(this).val());
+                if(!fiat) {
+                    return
+                }
                 var deposit = fiat / exchange_rates[crypto]['rate'];
                 var withdraw = (deposit * rate) - withdraw_fee;
+
+                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                deposit += (deposit_fee_satoshi / 1e8);
+
                 box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
                 box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
             } else if($(this).hasClass("withdraw")) {
                 var withdraw = parseFloat($(this).val()) + withdraw_fee;
-                var deposit = withdraw / rate
+                if(!withdraw) {
+                    return
+                }
+                var deposit = withdraw / rate;
                 var fiat = deposit * exchange_rates[crypto]['rate'];
+
+                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                deposit += (deposit_fee_satoshi / 1e8)
+
                 box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
                 box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
             } else if($(this).hasClass("deposit")) {
                 var deposit = parseFloat($(this).val());
+                if(!deposit) {
+                    return
+                }
+
+                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                deposit -= (deposit_fee_satoshi / 1e8);
+
                 var withdraw = (deposit * rate) - withdraw_fee;
                 var fiat = deposit * exchange_rates[crypto]['rate'];
                 box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
                 box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
             }
+
             var balance = parseFloat(box.find('.crypto_balance').text());
-            if(deposit > balance || deposit == 0) {
+            if(deposit + (deposit_fee_satoshi / 1e8) > balance || deposit == 0) {
                 box.find(".exchange_amount").css({color: 'red'});
                 box.find(".submit_exchange").attr('disabled', 'disabled');
             } else {
@@ -547,19 +563,21 @@ $(function() {
 
         box.find(".submit_exchange").unbind('click').click(function() {
             var deposit_amount = parseFloat(box.find(".deposit.exchange_amount").val());
-            var withdraw_code = box.find(".withdraw_code").text();
+            var deposit_satoshi = parseInt(deposit_amount * 1e8);
+            var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
+            var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
             $.ajax({
-                url: "http://cors.shapeshift.io/shift",
+                url: "https://cors.shapeshift.io/shift",
                 type: 'post',
                 data: {
-                    withdraw: get_unused_change_address(withdraw_code),
+                    withdrawal: get_unused_change_address(withdraw_code),
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
             }).success(function(response) {
-                var tx = make_tx(crypto, [response.deposit, deposit_amount], optimal_fee_per_kb);
-                console.log(tx);
+                var tx = make_tx(crypto, [[response.deposit, deposit_satoshi]], optimal_fees[crypto]);
+                console.log(tx.toString());
                 //push_tx(crypto, tx, function(response) {
-                //    error_area.css({color: 'inherit'}).html("Sweep Completed!");
+                //    error_area.css({color: 'inherit'}).html("Exchange Completed!");
                 //}, function(error_msg) {
                 //    error_area.css({color: 'red'}).text(error_msg);
                 //});
@@ -611,8 +629,8 @@ $(function() {
     });
 
     $(".sending_fiat_amount, .sending_crypto_amount").keyup(function(event) {
-        if(event.keyCode == 9) {
-            return // tab key was pressed
+        if(event.keyCode < 0x20) {
+            return // non printable char pressed (tab, shift, etc)
         }
         var box = $(this).parent().parent().parent();
         var which = "fiat";
@@ -658,7 +676,8 @@ $(function() {
             box.find(".submit_send").removeAttr('disabled');
             box.find(".send_part .error_area").text("");
         }
-        update_actual_fee_estimation(crypto, sat, 1);
+        var tx_size = actual_tx_size_estimation(crypto, sat, 1);
+        fill_in_fee_radios(crypto, tx_size);
     });
 
     $(".fee_selector").change(function() {

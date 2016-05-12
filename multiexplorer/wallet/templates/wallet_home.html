@@ -69,15 +69,15 @@
         text-align: center;
     }
 
-    .crypto_box[data-currency=btc] {
+    .colors-btc {
         background: gold;
     }
 
-    .crypto_box[data-currency=ltc] {
+    .colors-ltc {
         background: silver;
     }
 
-    .crypto_box[data-currency=doge] {
+    .colors-doge {
         background: yellow;
         font-family: "Comic Sans MS"
     }
@@ -86,21 +86,21 @@
         font-family: "Comic Sans MS"
     }
 
-    .crypto_box[data-currency=vtc] {
+    .colors-vtc {
         background: #1B5C2E;
         color: white;
     }
 
-    .crypto_box[data-currency=rdd] {
+    .colors-rdd {
         background: #6B59FF;
         color: white;
     }
 
-    .crypto_box[data-currency=myr] {
+    .colors-myr {
         background: pink;
     }
 
-    .crypto_box[data-currency=dash] {
+    .colors-dash {
         background: #BFDDFF;
     }
 
@@ -232,7 +232,7 @@
 
 <div id="wallets">
     {% for data in crypto_data %}
-    <div class="crypto_box" data-currency="{{ data.code }}" style="display: none">
+    <div class="crypto_box colors-{{ data.code|lower }}" data-currency="{{ data.code }}" style="display: none">
         <h3>{{ data.name }} ({{ data.code|upper }})</h3>
         Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
         <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div></span> <span class="fiat_unit"></span>
@@ -315,8 +315,9 @@
             1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
 
             {{ data.name }} Amount:<br>
-            <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br><br>
-            <small>Including deposit fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
+            <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br>
+            <small>Including optimal fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
+            <br><br>
 
             <span class="fiat_unit"></span> Amount:<br>
             <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>

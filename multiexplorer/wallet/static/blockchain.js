@@ -87,7 +87,25 @@ function estimate_tx_size(in_count, out_count) {
     return out_count * 34 + 148 * in_count + 10
 }
 
+function actual_tx_size_estimation(crypto, satoshis_will_send, outs_length) {
+    var used_ins = [];
+    $.each(utxos[crypto], function(i, utxo) {
+        used_ins.push(utxo);
+        var added = used_ins.reduce(function(x, y) {return x+y.amount}, 0);
+        if(added >= satoshis_will_send) {
+            return false;
+        }
+    });
+    //console.log("this tx will have", used_ins.length, "inputs");
+    var est = estimate_tx_size(used_ins.length, outs_length)
+    //console.log("estimated tx size:", est);
+    return est
+}
+
 function make_tx(crypto, recipients, fee_per_kb) {
+    // recipients must be list of lists, first item is address, second item is
+    // satoshi amount to send to that address.
+
     var tx = new bitcore.Transaction()
 
     var total_outs = 0;
