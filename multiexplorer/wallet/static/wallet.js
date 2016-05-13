@@ -494,70 +494,99 @@ $(function() {
                     box.find(".withdraw_fee").text(pair.withdraw_fee);
                     box.find(".deposit.exchange_amount").val('');
                     box.find(".withdraw.exchange_amount").val('');
+                    box.find(".max_exchange").text(pair.max_amount);
+                    box.find(".min_exchange").text(pair.min_amount);
                     box.find(".fiat.exchange_amount").keyup();
+
                 }
             });
         });
 
         box.find(".exchange_amount").unbind('keyup').keyup(function(event) {
-            if(event.keyCode < 0x20 && event.keyCode != 8) {
-                return // non printable char pressed (let backspace through)
+            if(event.keyCode < 0x20 && event.keyCode != 8 && event.keyCode != 46) {
+                return // non printable char pressed (let backspace & del through)
             }
 
             var rate = parseFloat(box.find(".crypto_to_crypto_rate").text());
             var withdraw_fee = parseFloat(box.find(".withdraw_fee").text());
+            var max = parseFloat(box.find(".max_exchange").text());
+            var min = parseFloat(box.find(".min_exchange").text());
 
             if($(this).hasClass("fiat")) {
                 var fiat = parseFloat($(this).val());
                 if(!fiat) {
-                    return
+                    deposit = "";
+                    withdrawl = "";
+                    fiat = "";
+                } else {
+                    var deposit = fiat / exchange_rates[crypto]['rate'];
+                    var withdraw = ((deposit * rate) - withdraw_fee).toFixed(8);
+
+                    var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                    var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                    deposit = (deposit + (deposit_fee_satoshi / 1e8)).toFixed(8);
                 }
-                var deposit = fiat / exchange_rates[crypto]['rate'];
-                var withdraw = (deposit * rate) - withdraw_fee;
-
-                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
-                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
-                deposit += (deposit_fee_satoshi / 1e8);
-
-                box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
-                box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
+                box.find(".withdraw.exchange_amount").val(withdraw);
+                box.find(".deposit.exchange_amount").val(deposit);
             } else if($(this).hasClass("withdraw")) {
                 var withdraw = parseFloat($(this).val()) + withdraw_fee;
                 if(!withdraw) {
-                    return
+                    deposit = "";
+                    withdrawl = "";
+                    fiat = "";
+                } else {
+                    var deposit = withdraw / rate;
+                    var fiat = (deposit * exchange_rates[crypto]['rate']).toFixed(2);
+
+                    var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                    var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                    deposit = (deposit + (deposit_fee_satoshi / 1e8)).toFixed(8);
                 }
-                var deposit = withdraw / rate;
-                var fiat = deposit * exchange_rates[crypto]['rate'];
-
-                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
-                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
-                deposit += (deposit_fee_satoshi / 1e8)
-
-                box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
-                box.find(".deposit.exchange_amount").val(deposit.toFixed(8));
+                box.find(".fiat.exchange_amount").val(fiat);
+                box.find(".deposit.exchange_amount").val(deposit);
             } else if($(this).hasClass("deposit")) {
                 var deposit = parseFloat($(this).val());
                 if(!deposit) {
-                    return
+                    deposit = "";
+                    withdrawl = "";
+                    fiat = "";
+                } else {
+                    var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
+                    var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
+                    deposit -= (deposit_fee_satoshi / 1e8);
+
+                    var withdraw = ((deposit * rate) - withdraw_fee).toFixed(8);
+                    var fiat = (deposit * exchange_rates[crypto]['rate']).toFixed(2);
                 }
 
-                var tx_size = actual_tx_size_estimation(crypto, deposit, 2);
-                var deposit_fee_satoshi = fill_in_fee_radios(crypto, tx_size);
-                deposit -= (deposit_fee_satoshi / 1e8);
-
-                var withdraw = (deposit * rate) - withdraw_fee;
-                var fiat = deposit * exchange_rates[crypto]['rate'];
-                box.find(".withdraw.exchange_amount").val(withdraw.toFixed(8));
-                box.find(".fiat.exchange_amount").val(fiat.toFixed(2));
+                box.find(".withdraw.exchange_amount").val(withdraw);
+                box.find(".fiat.exchange_amount").val(fiat);
             }
 
             var balance = parseFloat(box.find('.crypto_balance').text());
-            if(deposit + (deposit_fee_satoshi / 1e8) > balance || deposit == 0) {
+
+            if(deposit == 0) {
+                box.find(".submit_exchange").attr('disabled', 'disabled');
+                return
+            }
+
+            if(deposit && deposit > balance) {
                 box.find(".exchange_amount").css({color: 'red'});
                 box.find(".submit_exchange").attr('disabled', 'disabled');
+                error_area.css({color: 'red'}).text("Wallet balance is not enough")
+            } else if (deposit && deposit > max) {
+                box.find(".exchange_amount").css({color: 'red'});
+                box.find(".submit_exchange").attr('disabled', 'disabled');
+                error_area.css({color: 'red'}).text("Deposit larger than maximum");
+            } else if(deposit && deposit < min) {
+                console.log("Deposit" + deposit + " lower than minimum of " + min);
+                box.find(".exchange_amount").css({color: 'red'});
+                box.find(".submit_exchange").attr('disabled', 'disabled');
+                error_area.css({color: 'red'}).text("Deposit lower than minimum");
             } else {
                 box.find(".exchange_amount").css({color: 'inherit'});
                 box.find(".submit_exchange").removeAttr('disabled');
+                error_area.css({color: 'inherit'}).text();
             }
         });
 
@@ -566,6 +595,9 @@ $(function() {
             var deposit_satoshi = parseInt(deposit_amount * 1e8);
             var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
             var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
+
+            error_area.html(text_spinner + " Calling Exchanage...");
+
             $.ajax({
                 url: "https://cors.shapeshift.io/shift",
                 type: 'post',
@@ -574,13 +606,15 @@ $(function() {
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
             }).success(function(response) {
-                var tx = make_tx(crypto, [[response.deposit, deposit_satoshi]], optimal_fees[crypto]);
+                var tx = make_tx(crypto, [[response.deposit, deposit_satoshi]], 1.0);
                 console.log(tx.toString());
-                //push_tx(crypto, tx, function(response) {
-                //    error_area.css({color: 'inherit'}).html("Exchange Completed!");
-                //}, function(error_msg) {
-                //    error_area.css({color: 'red'}).text(error_msg);
-                //});
+                error_area.html(text_spinner + " Pushing Transaction...");
+                push_tx(crypto, tx, function(response) {
+                    console.log("Exchange TXID:", response.txid);
+                    error_area.css({color: 'inherit'}).html("Exchange Completed!");
+                }, function(error_msg) {
+                    error_area.css({color: 'red'}).text(error_msg);
+                });
             });
         });
     });
@@ -598,8 +632,7 @@ $(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
             var fee_multiplier = parseFloat(box.find(".send_part .fee_selector:checked").val());
-            var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
-            var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_per_kb);
+            var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_multiplier);
 
             push_tx(crypto, tx, function(response) {
                 console.log("push tx successful!", response);
@@ -612,7 +645,7 @@ $(function() {
     // The below two functions get called whenever the user changes the fiat,
     // crypto amount, or address field in the sending section.
 
-    $(".sending_recipient_address").keyup(function(event) {
+    $(".sending_recipient_address").keydown(function(event) {
         var sending_address = $(this).val();
         var box = $(this).parent().parent().parent();
         var crypto = box.data('currency');
@@ -629,8 +662,8 @@ $(function() {
     });
 
     $(".sending_fiat_amount, .sending_crypto_amount").keyup(function(event) {
-        if(event.keyCode < 0x20) {
-            return // non printable char pressed (tab, shift, etc)
+        if(event.keyCode < 0x20 && event.keyCode != 8 && event.keyCode != 46) {
+            return // non printable char pressed (tab, shift, del, etc)
         }
         var box = $(this).parent().parent().parent();
         var which = "fiat";

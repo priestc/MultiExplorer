@@ -268,12 +268,12 @@
             <br><br>
 
             <label>Crypto Amount</label><br>
-            <input type="text" class="sending_crypto_amount"> {{ data.code|upper }}
+            <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
 
             <br><br>
 
             <label>Fiat Amount</label><br>
-            <input type="text" class="sending_fiat_amount"> <span class="fiat_unit"></span>
+            <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
 
             <br><br>
 
@@ -310,11 +310,14 @@
             <button class="cancel_button"> &larr; Cancel Exchange</button>
 
             <div class="exchange_options"></div>
+            Max Deposit: <span class="max_exchange"></span> {{ data.code|upper }}<br>
+            Min Deposit: <span class="min_exchange"></span> {{ data.code|upper }}
+            <br><br>
 
             Exchange Rate:<br>
             1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
 
-            {{ data.name }} Amount:<br>
+            {{ data.name }} Cost:<br>
             <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br>
             <small>Including optimal fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
             <br><br>

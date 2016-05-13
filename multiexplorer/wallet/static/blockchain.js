@@ -102,7 +102,7 @@ function actual_tx_size_estimation(crypto, satoshis_will_send, outs_length) {
     return est
 }
 
-function make_tx(crypto, recipients, fee_per_kb) {
+function make_tx(crypto, recipients, optimal_fee_multiplier) {
     // recipients must be list of lists, first item is address, second item is
     // satoshi amount to send to that address.
 
@@ -127,9 +127,11 @@ function make_tx(crypto, recipients, fee_per_kb) {
         }
     });
 
-    var estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length);
+    var fee_per_kb = optimal_fees[crypto] * optimal_fee_multiplier;
+    var estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length + 1); // +1 for change
     var estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
 
+    //console.log("using fee per kb:", fee_per_kb, "with multiplier of", optimal_fee_multiplier);
     //console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
     //console.log("adding inputs", inputs_to_add, "Fee per KB:", fee_per_kb);
 
