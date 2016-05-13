@@ -645,7 +645,7 @@ $(function() {
     // The below two functions get called whenever the user changes the fiat,
     // crypto amount, or address field in the sending section.
 
-    $(".sending_recipient_address").keydown(function(event) {
+    $(".sending_recipient_address").keyup(function(event) {
         var sending_address = $(this).val();
         var box = $(this).parent().parent().parent();
         var crypto = box.data('currency');
