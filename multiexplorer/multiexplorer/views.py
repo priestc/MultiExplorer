@@ -332,7 +332,9 @@ def address_disambiguation(request, address):
 
 def onchain_exchange_rates(request):
     """
-    Returns a list of
+    Returns a list of exchange pairs that are supported by all onchain exchange services.
+    (currently only shapeshift.io is supported). After a second onchain exchange is defined,
+    this code will be moved to moneywagon.
     """
     cache_key = 'shapeshift_marketinfo'
     hit = cache.get(cache_key)

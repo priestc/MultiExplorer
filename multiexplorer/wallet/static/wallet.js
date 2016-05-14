@@ -467,18 +467,26 @@ $(function() {
         }).success(function(response) {
             area.empty();
             $.each(response.pairs, function(i, pair) {
-                var to_code = pair.withdraw_currency.code;
-                var to_name = pair.withdraw_currency.name + " (" + to_code + ")";
-                if(show_wallet_list.indexOf(to_code.toLowerCase()) != -1) {
-                    var img_url = $(".crypto_box[data-currency=" + to_code.toLowerCase() + "] img").attr('src');
+                var to_code = pair.withdraw_currency.code.toLowerCase();
+                var to_name = pair.withdraw_currency.name + " (" + to_code.toUpperCase() + ")";
+                if(show_wallet_list.indexOf(to_code) != -1) {
+                    var img_url = $(".crypto_box[data-currency=" + to_code + "] img").attr('src');
                     var icon = "<img src='" + img_url + "' style='width: 30px; height: 30px'>";
+                    var css = "colors-" + to_code + " cancel-colors";
                     var radio = "<input type='radio' name='" + unique + "' value='" + to_code + "' class='exchange_radio'>";
-                    var table = "<table><tr><td>" + radio + "</td><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
+                    var table = "<table class='" + css + "'><tr><td>" + radio + "</td><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
                     var unique = crypto + "_exchange";
                     var label = "<label>" + table + "</label>";
                     area.append(label);
                     exchange_pairs[crypto].push(pair);
                 }
+            });
+            box.off('change', '.exchange_radio').on('change', '.exchange_radio', function() {
+                var container = $(this).parents("table");
+                var crypto = $(this).val();
+                var all_containers = container.parents(".subsection");
+                all_containers.find("table").addClass('cancel-colors');
+                container.removeClass("cancel-colors");
             });
             box.find(".exchange_radio").first().click();
         });

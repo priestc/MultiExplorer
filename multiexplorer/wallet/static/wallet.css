@@ -1,0 +1,190 @@
+body {
+    font-family: 'Times New Roman';
+}
+
+.center_box {
+    width: 250px;
+    margin: 20px auto 0 auto;
+    background: #dfdfdf;
+    padding: 10px;
+    border: 1px solid brown;
+    border-radius: 7px;
+}
+
+#wallets {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.deposit_address {
+    font-size: small;
+}
+
+.main_currency_logo {
+    width: 100px;
+    height: 100px
+}
+
+.crypto_box {
+    border: 1px solid gray;
+    padding: 10px;
+    margin: 10px;
+    text-align: center;
+}
+
+.colors-btc {
+    background: gold;
+}
+
+.colors-ltc {
+    background: silver;
+}
+
+.colors-doge {
+    background: yellow;
+    font-family: "Comic Sans MS"
+}
+
+.crypto_box[data-currency=doge] button {
+    font-family: "Comic Sans MS"
+}
+
+.colors-vtc {
+    background: #1B5C2E;
+    color: white;
+}
+
+.colors-rdd {
+    background: #6B59FF;
+    color: white;
+}
+
+.colors-myr {
+    background: pink;
+}
+
+.colors-dash {
+    background: #BFDDFF;
+}
+
+.qr {
+    width: 100px;
+    height: 100px;
+}
+button {
+    padding: 7px;
+    margin: 3px;
+    font-weight: bold;
+}
+.deposit_area {
+    background: white;
+    padding: 5px 3px 5px 3px;
+    color: black;
+    margin: 5px auto 5px auto;
+    width: 17em;
+    border: 1px solid #dfdfdf;
+}
+
+.send_btn {
+    background: #84FF8A;
+    padding: 5px;
+    margin: 5px;
+}
+
+#loading_screen {
+    display: none;
+    border: 1px solid green;
+    width: 250px;
+    margin: 0 auto 0 auto;
+    padding: 10px;
+    text-align: center;
+    background: #dfdfdf;
+}
+
+.qr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.arrow_button {
+    width: 9em;
+}
+
+#mnemonic_disp {
+    background: white;
+    padding: 5px;
+    width: calc(100% - 5px);
+    border: 1px solid gray
+}
+#wallet_settings_wrapper {
+    display: none;
+}
+
+.fee_rate_area {
+    font-size: x-small;
+    margin-bottom: 10px;
+}
+
+.optimal_fee_rate_per_byte {
+    font-weight: bold;
+}
+
+.fee_wrapper {
+    margin: 10px;
+    border-radius: 4px;
+}
+
+.error_area {
+    float: left;
+    text-align: center;
+    color: red;
+    max-width: 300px;
+    display: flex;
+    justify-content: center; /* align horizontal */
+    align-items: center; /* align vertical */
+    height: 35px;
+    width: 200px;
+}
+
+
+.subsection {
+    background: rgba(10, 10, 10, 0.15);
+    border: 1px solid rgba(3, 3, 3, 0.15);
+    padding: 3px;
+    display: none;
+    text-align: left;
+}
+
+.subsection .full_width {
+    width: -moz-calc(100% - 5px);
+    width: calc(100% - 5px);
+}
+
+.submit_button {
+    background: #AFFFB3;
+}
+
+.cancel_button {
+    background: #FFAEAE;
+    margin-bottom: 20px;
+}
+
+.submit_button:disabled {
+    background: #FEFEFE;
+}
+
+.exchange_options table {
+    margin-bottom: 2px;
+    border: 1px solid gray;
+}
+
+.cancel-colors {
+    background: transparent !important;
+    font-family: 'Times New Roman' !important;
+    color: inherit !important;
+    border: 0px !important;
+}

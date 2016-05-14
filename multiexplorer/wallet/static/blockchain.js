@@ -148,9 +148,9 @@ function push_tx(crypto, tx, success_callback, fail_callback) {
         type: "post",
         data: {currency: crypto, tx: tx.toString()}
     }).success(function(response){
-        success_callback(response)
+        success_callback(response);
     }).fail(function(jqXHR) {
-        fail_callback(jqXHR.responseJSON.error)
+        fail_callback(jqXHR.responseJSON.error);
     });
 }
 
