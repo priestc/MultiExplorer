@@ -61,6 +61,7 @@ function add_to_balance(crypto, addresses) {
         var exchange_rate = exchange_rates[crypto]['rate'];
         //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
+        update_total_fiat_balance();
     }).fail(function() {
         box.find(".fiat_balance").css({color: "red"}).text("Error getting balance.");
         box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
@@ -86,8 +87,6 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         i += 1;
     }
 
-    //console.log("making call with addresses:", addresses);
-
     var addresses_with_activity = [];
     if(addresses.length == 1) {
         var args = "?address=" + addresses[0] + "&currency=" + crypto;
@@ -105,13 +104,10 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
     }).success(function (response) {
-        //console.log("success getting response txs for:", addresses, blank_length);
         $.each(response['transactions'], function(i, tx) {
-            //console.log("found tx!", tx);
             var ins_and_outs = tx.inputs.concat(tx.outputs);
             $.each(ins_and_outs, function(i, in_or_out) {
                 var address = in_or_out['address'];
-                //console.log('trying address', address, all_my_addresses, addresses_with_activity);
                 var my_address = all_my_addresses.indexOf(address) >= 0;
                 var not_already_marked = addresses_with_activity.indexOf(address) == -1;
                 if(my_address && not_already_marked) {
@@ -122,24 +118,14 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
                 }
             });
         });
-        //console.log(crypto, 'activity found this round:', addresses_with_activity);
-        //console.log(crypto, "pre all_used", all_used);
 
         var all_tried = addresses.concat(already_tried_addresses);
         all_used = addresses_with_activity.concat(all_used);
 
-        //console.log("all tried", all_tried);
-        //console.log(crypto, "all used", all_used);
-
         var needs_to_go = addresses_with_activity.length;
-
-        //console.log("needs to go", needs_to_go);
 
         if(needs_to_go == 0) {
             // all results returned no activity
-
-            //console.log("=========== found too many blank addresses", all_tried, all_used)
-
             var i = 0;
             var unused_address_pool = [];
             while(unused_address_pool.length < 5) {
@@ -309,6 +295,16 @@ function switch_section(box, to_section) {
     box.find(".sweep_part").hide();
 
     box.find("." + to_section + "_part").show();
+}
+
+function update_total_fiat_balance() {
+    var bal = 0;
+    $(".fiat_balance").each(function(i, ele) {
+        var this_bal = parseFloat($(ele).text());
+        if(this_bal) bal += this_bal;
+    });
+    $("#total_fiat_balance_container").show();
+    $("#total_fiat_balance").text(bal.toFixed(2));
 }
 
 $(function() {
@@ -481,21 +477,15 @@ $(function() {
                     exchange_pairs[crypto].push(pair);
                 }
             });
-            box.off('change', '.exchange_radio').on('change', '.exchange_radio', function() {
-                var container = $(this).parents("table");
-                var crypto = $(this).val();
-                var all_containers = container.parents(".subsection");
-                all_containers.find("table").addClass('cancel-colors');
-                container.removeClass("cancel-colors");
-            });
             box.find(".exchange_radio").first().click();
         });
 
-        box.off('change', ".exchange_radio").on('change', ".exchange_radio", function() {
-            var selected_code = box.find(".exchange_radio:checked").val();
+        box.on('change', ".exchange_radio", function() {
+            var selected_code = box.find(".exchange_radio:checked").val().toLowerCase();
             console.log("exchange changed", crypto, "->", selected_code);
             $.each(exchange_pairs[crypto], function(i, pair) {
-                if(pair.withdraw_currency.code == selected_code) {
+                console.log(pair.withdraw_currency.code, selected_code);
+                if(pair.withdraw_currency.code.toLowerCase() == selected_code) {
                     box.find(".withdraw_unit").text(pair.withdraw_currency.name);
                     box.find(".withdraw_code").text(pair.withdraw_currency.code);
                     box.find(".crypto_to_crypto_rate").text(pair.rate);
@@ -505,9 +495,12 @@ $(function() {
                     box.find(".max_exchange").text(pair.max_amount);
                     box.find(".min_exchange").text(pair.min_amount);
                     box.find(".fiat.exchange_amount").keyup();
-
                 }
             });
+            var container = $(this).parents("table");
+            var all_containers = container.parents(".subsection");
+            all_containers.find("table").addClass('cancel-colors');
+            container.removeClass("cancel-colors");
         });
 
         box.find(".exchange_amount").unbind('keyup').keyup(function(event) {
@@ -594,7 +587,7 @@ $(function() {
             } else {
                 box.find(".exchange_amount").css({color: 'inherit'});
                 box.find(".submit_exchange").removeAttr('disabled');
-                error_area.css({color: 'inherit'}).text();
+                error_area.css({color: 'inherit'}).text('');
             }
         });
 
@@ -604,13 +597,13 @@ $(function() {
             var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
             var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
 
-            error_area.html(text_spinner + " Calling Exchanage...");
+            error_area.html(text_spinner + " Calling Exchange...");
 
             $.ajax({
                 url: "https://cors.shapeshift.io/shift",
                 type: 'post',
                 data: {
-                    withdrawal: get_unused_change_address(withdraw_code),
+                    withdrawal: unused_deposit_addresses[withdraw_code][0],
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
             }).success(function(response) {

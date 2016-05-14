@@ -48,6 +48,10 @@
     </div>
 </div>
 
+<div id="total_fiat_balance_container">
+    <span class="fiat_symbol"></span><span id="total_fiat_balance"></span> <span class="fiat_unit"></span>
+</div>
+
 <div id="wallets">
     {% for data in crypto_data %}
     <div class="crypto_box colors-{{ data.code|lower }}" data-currency="{{ data.code }}" style="display: none">

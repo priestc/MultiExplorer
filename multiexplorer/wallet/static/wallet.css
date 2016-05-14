@@ -184,7 +184,18 @@ button {
 
 .cancel-colors {
     background: transparent !important;
-    font-family: 'Times New Roman' !important;
+    font-family: inherit !important;
     color: inherit !important;
     border: 0px !important;
+}
+
+#total_fiat_balance_container {
+    width: 120px;
+    margin: 0 auto 0 auto;
+    padding: 20px;
+    background: #E1E1E1;
+    border: 3px double gray;
+    border-radius: 7px;
+    display: none;
+    text-align: center;
 }

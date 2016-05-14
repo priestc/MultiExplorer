@@ -106,6 +106,7 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
     // recipients must be list of lists, first item is address, second item is
     // satoshi amount to send to that address.
 
+    var fee_per_kb = optimal_fees[crypto] * optimal_fee_multiplier;
     var tx = new bitcore.Transaction()
 
     var total_outs = 0;
@@ -117,23 +118,26 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
         total_outs += amount / 1e8;
     });
 
+    var estimated_fee = 0;
+    var estimated_size = 0;
     var total_added = 0;
     var inputs_to_add = [];
     $.each(utxos[crypto], function(i, utxo) {
         inputs_to_add.push(utxo);
         total_added += utxo.amount;
-        if(total_added >= total_outs) {
+        
+        estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length + 1); // +1 for change
+        estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
+
+        if(total_added >= total_outs + estimated_fee) {
             return false;
         }
     });
 
-    var fee_per_kb = optimal_fees[crypto] * optimal_fee_multiplier;
-    var estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length + 1); // +1 for change
-    var estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
-
-    //console.log("using fee per kb:", fee_per_kb, "with multiplier of", optimal_fee_multiplier);
-    //console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
-    //console.log("adding inputs", inputs_to_add, "Fee per KB:", fee_per_kb);
+    console.log("total inputs amount:", total_added);
+    console.log("using fee per kb:", fee_per_kb, "with multiplier of", optimal_fee_multiplier);
+    console.log("estimated fee", estimated_fee, "estimated size", estimated_size);
+    console.log("adding inputs", inputs_to_add, "Fee per KB:", fee_per_kb);
 
     tx = tx.from(inputs_to_add);
     tx = tx.change(get_unused_change_address(crypto));
