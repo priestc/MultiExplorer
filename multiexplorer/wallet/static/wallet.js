@@ -148,20 +148,17 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
             } else if (chain == 'change') {
                 unused_change_addresses[crypto] = unused_address_pool;
             }
-
-            //console.log(crypto, 'finished fetch!:', addresses, chain, all_used);
             callback(all_used);
         } else {
-            //console.log(crypto, 'recursing:', 'needs to go: 'needs_to_go, 'all tried:', all_tried, 'all_used', all_used);
             fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
         }
     }).fail(function(jqXHR) {
         var box = $(".crypto_box[data-currency=" + crypto + "]");
         box.find(".fiat_balance").css({color: 'red'}).text("Network error getting balance.");
         box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
-        box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
-        box.find(".switch_to_exchange").hide(); //attr('disabled', 'disabled');
-        box.find(".switch_to_history").hide(); //attr('disabled', 'disabled');
+        box.find(".switch_to_send").hide();
+        box.find(".switch_to_exchange").hide();
+        box.find(".switch_to_history").hide();
     })
 }
 
@@ -464,7 +461,7 @@ $(function() {
                 var to_code = pair.withdraw_currency.code.toLowerCase();
                 var to_name = pair.withdraw_currency.name + " (" + to_code.toUpperCase() + ")";
                 if(show_wallet_list.indexOf(to_code) != -1) {
-                    var img_url = $(".crypto_box[data-currency=" + to_code + "] img").attr('src');
+                    var img_url = $(".crypto_box[data-currency=" + to_code + "] .main_currency_logo").attr('src');
                     var icon = "<img src='" + img_url + "' style='width: 30px; height: 30px'>";
                     var css = "colors-" + to_code + " cancel-colors";
                     var radio = "<input type='radio' name='" + unique + "' value='" + to_code + "' class='exchange_radio'>";
@@ -480,9 +477,7 @@ $(function() {
 
         box.on('change', ".exchange_radio", function() {
             var selected_code = box.find(".exchange_radio:checked").val().toLowerCase();
-            console.log("exchange changed", crypto, "->", selected_code);
             $.each(exchange_pairs[crypto], function(i, pair) {
-                console.log(pair.withdraw_currency.code, selected_code);
                 if(pair.withdraw_currency.code.toLowerCase() == selected_code) {
                     box.find(".withdraw_unit").text(pair.withdraw_currency.name);
                     box.find(".withdraw_code").text(pair.withdraw_currency.code);
@@ -611,9 +606,10 @@ $(function() {
                 push_tx(crypto, tx, function(response) {
                     console.log("Exchange TXID:", response.txid);
                     error_area.css({color: 'inherit'}).html("Exchange Completed!");
+                    switch_section('receive');
                 }, function(error_msg) {
                     error_area.css({color: 'red'}).text(error_msg);
-                });
+                }, deposit_amount);
             });
         });
     });
@@ -634,10 +630,10 @@ $(function() {
             var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_multiplier);
 
             push_tx(crypto, tx, function(response) {
-                console.log("push tx successful!", response);
+                switch_section('receive');
             }, function(error_msg) {
                 box.find(".send_part .error_area").text(error_msg);
-            });
+            }, sending_amount);
         });
     });
 

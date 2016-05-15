@@ -63,6 +63,7 @@ def perform_lookup(request, service_mode, service_id):
     addresses = request.GET.get('addresses', [])
     xpub = request.GET.get('xpub', None)
     fiat = request.GET.get('fiat', None)
+    txid = request.GET.get('txid', None)
 
     block_args = {
         'latest': request.GET.get('latest', ''),
@@ -116,7 +117,7 @@ def perform_lookup(request, service_mode, service_id):
 
 def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
     currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
-    extended_fetch=False, **k):
+    extended_fetch=False, txid=None, **k):
 
     if not block_args:
         block_args = {}
@@ -145,7 +146,14 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
             'currency': [currency, currency_name]
         })
 
-        cache.set(cache_key, response_dict)
+        skip_cache = False
+        if service_mode == 'single_transaction':
+            confirmations = response_dict['transaction']['confirmations']
+            if confirmations < 6:
+                skip_cache = True
+
+        if not skip_cache:
+            cache.set(cache_key, response_dict)
 
     if not include_raw:
         response_dict.pop('raw_response', None)
@@ -160,9 +168,9 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, fiat=None, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, fiat=None, txid=None, **k):
     if Service:
-        if currency not in Service.supported_cryptos:
+        if Service.supported_cryptos and currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
                 currency_name, service_mode, Service.name
             ))
@@ -201,6 +209,9 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
     elif service_mode == 'historical_transactions':
         used_services, txs = get_historical_transactions(currency, **modes)
         ret = {'transactions': sorted(txs, key=lambda x: x['txid'])}
+    elif service_mode == 'single_transaction':
+        used_services, tx = get_single_transaction(currency, txid, **modes)
+        ret = {'transaction': tx}
     elif service_mode == 'get_block':
         modes.update(block_args)
         used_services, block_data = get_block(currency, **modes)
@@ -381,3 +392,10 @@ def onchain_exchange_rates(request):
 def logout(request):
     dj_logout(request)
     return http.HttpResponseRedirect("/")
+
+def onchain_status(request):
+    deposit_crypto = request.GET['deposit_crypto']
+    address = request.GET['address']
+
+    response = requests.get("https://shapeshift.io/txStat/" + address).json()
+    return http.JsonResponse(response)

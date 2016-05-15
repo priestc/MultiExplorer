@@ -146,17 +146,55 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
     return tx;
 }
 
-function push_tx(crypto, tx, success_callback, fail_callback) {
+function push_tx(crypto, tx, success_callback, fail_callback, amount_transacted) {
     $.ajax({
         url: "/api/push_tx/fallback",
         type: "post",
         data: {currency: crypto, tx: tx.toString()}
     }).success(function(response){
-        follow_unconfirmed(crypto, response.txid);
+        follow_unconfirmed(crypto, response.txid, amount_transacted);
         success_callback(response);
     }).fail(function(jqXHR) {
         fail_callback(jqXHR.responseJSON.error);
     });
+}
+
+function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto, withdraw_amount, deposit_address) {
+    var deposit_exchange_area = $(".crypto_box[data-currency=" + deposit_crypto + "] .outgoing_exchange_in_progress");
+    var withdraw_exchange_area = $(".crypto_box[data-currency=" + withdraw_crypto + "] .incoming_exchange_in_progress");
+
+    deposit_exchange_area.find(".withdraw_currency").text(withdraw_crypto);
+    deposit_exchange_area.find(".withdraw_amount").text(withdraw_amount.toFixed(8));
+    deposit_exchange_area.find(".deposit_amount").text(deposit_amount.toFixed(8));
+
+    withdraw_exchange_area.find(".deposit_currency").text(deposit_crypto);
+    withdraw_exchange_area.find(".withdraw_amount").text(withdraw_amount.toFixed(8));
+    withdraw_exchange_area.find(".deposit_amount").text(deposit_amount.toFixed(8));
+
+    deposit_exchange_area.show();
+    withdraw_exchange_area.show();
+
+    setTimeout(function() {
+        $.ajax({
+            url: "/api/onchain_exchange_status",
+            data: {
+                "deposit_currency": deposit_crypto,
+                "address": deposit_address
+            }
+        }).success(function() {
+            if(response.status == 'no_deposits') {
+                follow_onchain_exchange(
+                    deposit_crypto, deposit_amount, withdraw_crypto,
+                    withdraw_amount, deposit_address
+                );
+            } else if(response.status == 'complete') {
+                var txid = response.transaction;
+                follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
+                deposit_exchange_area.hide();
+                withdraw_exchange_area.hide();
+            }
+        });
+    }, 5000);
 }
 
 function follow_unconfirmed(crypto, txid, amount) {
@@ -168,10 +206,12 @@ function follow_unconfirmed(crypto, txid, amount) {
     area.find(".txid").text(txid);
     setTimeout(function() {
         $.ajax({
-            url: "/api/get_single_transaction?currency=" + crypto + "&txid=" + txid
-        }).success(function(){
+            url: "/api/single_transaction?currency=" + crypto + "&txid=" + txid
+        }).success(function(response) {
+            console.log("response from unconfirmed fetch", response);
             if(response.confirmations < 1) {
                 var bal = box.find(".crypto_balance");
+                var amount = my_amount_for_tx(response.transaction);
                 var existing = parseFloat(bal.text());
                 var new_balance = existing + amount;
                 bal.text(new_balance.toFixed(8));
@@ -181,7 +221,7 @@ function follow_unconfirmed(crypto, txid, amount) {
                 follow_unconfirmed(crypto, txid, amount);
             }
         });
-    }, 60);
+    }, 5000);
 }
 
 function get_optimal_fee(crypto, area) {
@@ -231,4 +271,8 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
             utxos[crypto] = rewritten;
         }
     });
+}
+
+function my_amount_for_tx(tx) {
+    return 99.9;
 }

@@ -216,3 +216,10 @@ button {
 #mnemonic_disp {
     width: calc(100% - 10px)
 }
+
+
+.exchange_in_progress {
+    display: none;
+    background: #dfdfdf;
+    font-weight: bold;
+}
