@@ -8,7 +8,6 @@
 {% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'jquery-ui.min.css' %}">
 <link rel="stylesheet" href="{% static 'spinner.css' %}">
 <link rel="stylesheet" href="{% static 'wallet.css' %}">
 <script src="{% static 'jquery-ui.min.js' %}"></script>
@@ -48,151 +47,161 @@
     </div>
 </div>
 
-<div id="total_fiat_balance_container">
-    <span class="fiat_symbol"></span><span id="total_fiat_balance"></span> <span class="fiat_unit"></span>
-</div>
-
-<div id="wallets">
-    {% for data in crypto_data %}
-    <div class="crypto_box colors-{{ data.code|lower }}" data-currency="{{ data.code }}" style="display: none">
-        <h3>{{ data.name }} ({{ data.code|upper }})</h3>
-        Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-        <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div></span> <span class="fiat_unit"></span>
-        <span class="balance_fiat"></span>
-        <table style="width: 100%">
-            <tr>
-                <td style="width: 50%">
-                    <img src="{% static data.logo %}" class="main_currency_logo">
-                </td>
-                <td style="width: 50%">
-                    <div class="qr"></div>
-                </td>
-            </tr>
-        </table>
-        <div class="receive_part">
-            <div class="deposit_area">
-                <span class="deposit_address"></span>
-            </div>
-            <button class="deposit_shift_up arrow_button">&larr;</button>
-            <button class="deposit_shift_down arrow_button">&rarr;</button>
-            <br>
-            <button class="switch_to_send">Send</button>
-            <button class="switch_to_exchange">Exchange</button>
-            <button class="switch_to_history">History</button>
-            <button class="switch_to_sweep">{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
-        </div>
-        <div class="send_part subsection">
-            <button class="cancel_button"> &larr; Cancel Send</button>
-            <br>
-            <lable>Address</label><br>
-            <input type="text" class="sending_recipient_address full_width">
-
-            <br><br>
-
-            <label>Crypto Amount</label><br>
-            <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
-
-            <br><br>
-
-            <label>Fiat Amount</label><br>
-            <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
-
-            <br><br>
-
-            <div class="fee_rate_area">
-                Optimal transaction fee based on current<br>
-                network conditions:
-                <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
-            </div>
-
-            {% include "fee_chooser.html" with crypto=data.code which='send' %}
-
-            <hr>
-            <div class="sending_bottom_area" style="overflow: hidden">
-                <button class="submit_send submit_button" style="float: left" disabled>Send</button>
-                <div class="send_error_area"></div>
-            </div>
-        </div>
-        <div class="sweep_part subsection">
-            <button class="cancel_button"> &larr; Cancel {% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
-            <br>
-            <lable>Private Key (WIF)</label><br>
-            <input type="text" class="sweeping_key full_width">
-            <br>
-
-            {% include "fee_chooser.html" with crypto=data.code which='sweep' %}
-
-            <hr>
-            <div class="sending_bottom_area" style="overflow: hidden">
-                <button class="submit_sweep submit_button" style="float: left" disabled>{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
-                <div class="error_area"></div>
-            </div>
-        </div>
-        <div class="exchange_part subsection">
-            <button class="cancel_button"> &larr; Cancel Exchange</button>
-
-            <div class="exchange_options"></div>
-            Max Deposit: <span class="max_exchange"></span> {{ data.code|upper }}<br>
-            Min Deposit: <span class="min_exchange"></span> {{ data.code|upper }}
-            <br><br>
-
-            Exchange Rate:<br>
-            1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
-
-            {{ data.name }} Cost:<br>
-            <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br>
-            <small>Including optimal fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
-            <br><br>
-
-            <span class="fiat_unit"></span> Amount:<br>
-            <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>
-
-            <span class="withdraw_unit"></span> Amount:<br>
-            <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br>
-            <small>Including withdraw miner fee of <span class="withdraw_fee"></span> <span class="withdraw_code"></span></small>
-
-            <hr>
-            <div class="sending_bottom_area" style="overflow: hidden">
-                <button class="submit_exchange submit_button" style="float: left">Exchange</button>
-                <div class="error_area"></div>
-            </div>
-        </div>
-        <div class="history_part subsection">
-            <button class="cancel_button"> &larr; Go Back</button>
-            <br>History...
-        </div>
+<div id="money_part">
+    <div id="total_fiat_balance_container">
+        <span class="fiat_symbol"></span><span id="total_fiat_balance"></span> <span class="fiat_unit"></span>
     </div>
-    {% endfor %}
+
+    <div id="wallets">
+        {% for data in crypto_data %}
+        <div class="crypto_box colors-{{ data.code|lower }}" data-currency="{{ data.code }}" style="display: none">
+            <h3>{{ data.name }} ({{ data.code|upper }})</h3>
+            Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
+            <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div></span> <span class="fiat_unit"></span>
+            <span class="balance_fiat"></span>
+            <div class="unconfirmed_area">
+                <hr>
+                <h4>Unconfirmed Transaction</h4>
+                <span class="amount"></span> {{ data.code|upper }}
+            </div>
+            <table style="width: 100%">
+                <tr>
+                    <td style="width: 50%">
+                        <img src="{% static data.logo %}" class="main_currency_logo">
+                    </td>
+                    <td style="width: 50%">
+                        <div class="qr"></div>
+                    </td>
+                </tr>
+            </table>
+            <div class="receive_part">
+                <div class="deposit_area">
+                    <span class="deposit_address"></span>
+                </div>
+                <button class="deposit_shift_up arrow_button">&larr;</button>
+                <button class="deposit_shift_down arrow_button">&rarr;</button>
+                <br>
+                <button class="switch_to_send">Send</button>
+                <button class="switch_to_exchange">Exchange</button>
+                <button class="switch_to_history">History</button>
+                <button class="switch_to_sweep">{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
+            </div>
+            <div class="send_part subsection">
+                <button class="cancel_button"> &larr; Cancel Send</button>
+                <br>
+                <lable>Address</label><br>
+                <input type="text" class="sending_recipient_address full_width">
+
+                <br><br>
+
+                <label>Crypto Amount</label><br>
+                <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
+
+                <br><br>
+
+                <label>Fiat Amount</label><br>
+                <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
+
+                <br><br>
+
+                <div class="fee_rate_area">
+                    Optimal transaction fee based on current<br>
+                    network conditions:
+                    <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
+                </div>
+
+                {% include "fee_chooser.html" with crypto=data.code which='send' %}
+
+                <hr>
+                <div class="sending_bottom_area" style="overflow: hidden">
+                    <button class="submit_send submit_button" style="float: left" disabled>Send</button>
+                    <div class="send_error_area"></div>
+                </div>
+            </div>
+            <div class="sweep_part subsection">
+                <button class="cancel_button"> &larr; Cancel {% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
+                <br>
+                <lable>Private Key (WIF)</label><br>
+                <input type="text" class="sweeping_key full_width">
+                <br>
+
+                {% include "fee_chooser.html" with crypto=data.code which='sweep' %}
+
+                <hr>
+                <div class="sending_bottom_area" style="overflow: hidden">
+                    <button class="submit_sweep submit_button" style="float: left" disabled>{% if data.code == 'doge' %}Scoop{% else %}Sweep{% endif %}</button>
+                    <div class="error_area"></div>
+                </div>
+            </div>
+            <div class="exchange_part subsection">
+                <button class="cancel_button"> &larr; Cancel Exchange</button>
+
+                <div class="exchange_options"></div>
+                Max Deposit: <span class="max_exchange"></span> {{ data.code|upper }}<br>
+                Min Deposit: <span class="min_exchange"></span> {{ data.code|upper }}
+                <br><br>
+
+                Exchange Rate:<br>
+                1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
+
+                {{ data.name }} Cost:<br>
+                <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br>
+                <small>Including optimal fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
+                <br><br>
+
+                <span class="fiat_unit"></span> Amount:<br>
+                <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>
+
+                <span class="withdraw_unit"></span> Amount:<br>
+                <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br>
+                <small>Including withdraw miner fee of <span class="withdraw_fee"></span> <span class="withdraw_code"></span></small>
+
+                <hr>
+                <div class="sending_bottom_area" style="overflow: hidden">
+                    <button class="submit_exchange submit_button" style="float: left">Exchange</button>
+                    <div class="error_area"></div>
+                </div>
+            </div>
+            <div class="history_part subsection">
+                <button class="cancel_button"> &larr; Go Back</button>
+                <br>History...
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
-<div style="display: none">
-    <div id="settings_modal">
-        <form id="settings_form">
-            Display Local Currency:<br>
-            <select name="display_fiat">
-                {% for fiat in supported_fiats %}
-                <option value="{{ fiat }}">{{ fiat|upper }}</option>
-                {% endfor %}
-            </select>
-            <br><br>
-            Display Crypto wallets:<br>
-            {% for data in crypto_data %}
-                <label><input type="checkbox" value="{{ data.code }}" class="supported_crypto">
-                {{ data.code|upper }} - {{ data.name }}</label><br>
+<div id="settings_part" style="display: none">
+    <form id="settings_form">
+        Display Local Currency:<br>
+        <select name="display_fiat">
+            {% for fiat in supported_fiats %}
+            <option value="{{ fiat }}">{{ fiat|upper }}</option>
             {% endfor %}
-            <br>
-            Automatically log out after...<br>
-            <select name="auto_logout">
-                {% for ch in autologout_choices %}
-                <option value="{{ ch.0 }}">{{ ch.1 }}</option>
-                {% endfor %}
-            </select>
-        </form>
+        </select>
         <br><br>
-        Wallet Backup Mnemonic:
-        <div id="mnemonic_disp">
-        </div>
-
-    </div>
+        Display Crypto wallets:<br>
+        {% for data in crypto_data %}
+            <label><input type="checkbox" value="{{ data.code }}" class="supported_crypto">
+            {{ data.code|upper }} - {{ data.name }}</label><br>
+        {% endfor %}
+        <br>
+        Automatically log out after...<br>
+        <select name="auto_logout">
+            {% for ch in autologout_choices %}
+            <option value="{{ ch.0 }}">{{ ch.1 }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    <br><br>
+    Wallet Backup Mnemonic:
+    <div id="mnemonic_disp">
+    </div><br>
+    All addresses for all currencies are derived from these seed words.<br>
+    Copy+Paste these words into another wallet that supports BIP39+BIP44<br>
+    to import all addresses. Backup these words in case you lose access <br>
+    to your multiexplorer account.
+    <br><br>
+    <button id="save_settings_button">Save Settings</button>
 </div>
 {% endblock %}

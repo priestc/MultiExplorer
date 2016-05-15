@@ -125,7 +125,7 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
     $.each(utxos[crypto], function(i, utxo) {
         inputs_to_add.push(utxo);
         total_added += utxo.amount;
-        
+
         estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length + 1); // +1 for change
         estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
 
@@ -152,12 +152,37 @@ function push_tx(crypto, tx, success_callback, fail_callback) {
         type: "post",
         data: {currency: crypto, tx: tx.toString()}
     }).success(function(response){
+        follow_unconfirmed(crypto, response.txid);
         success_callback(response);
     }).fail(function(jqXHR) {
         fail_callback(jqXHR.responseJSON.error);
     });
 }
 
+function follow_unconfirmed(crypto, txid, amount) {
+    // Takes care of hiding and showing the "unconfirmed" box at the top.
+
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    var area = box.find(".unconfirmed_area").show();
+    area.find(".amount").text(amount.toFixed(8));
+    area.find(".txid").text(txid);
+    setTimeout(function() {
+        $.ajax({
+            url: "/api/get_single_transaction?currency=" + crypto + "&txid=" + txid
+        }).success(function(){
+            if(response.confirmations < 1) {
+                var bal = box.find(".crypto_balance");
+                var existing = parseFloat(bal.text());
+                var new_balance = existing + amount;
+                bal.text(new_balance.toFixed(8));
+                area.hide();
+                return
+            } else {
+                follow_unconfirmed(crypto, txid, amount);
+            }
+        });
+    }, 60);
+}
 
 function get_optimal_fee(crypto, area) {
     $.ajax({

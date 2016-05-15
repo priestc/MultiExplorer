@@ -311,37 +311,35 @@ $(function() {
     $("#wallet_settings").click(function(event) {
         event.preventDefault();
         $("#mnemonic_disp").text(raw_mnemonic);
-        $("#settings_modal").dialog({
-            title: "Wallet Settings",
-            buttons: [{
-                text: "Save Settings",
-                click: function() {
-                    var form = $("#settings_form");
-                    var swl = [];
-                    form.find(".supported_crypto:checked").each(function(i, crypto) {
-                        var c = $(crypto);
-                        swl.push(c.val())
-                    });
-                    var settings = {
-                        auto_logout: form.find("select[name=auto_logout]").val(),
-                        display_fiat: form.find("select[name=display_fiat]").val(),
-                        show_wallet_list: swl.join(','),
-                    }
-                    $.ajax({
-                        url: '/wallet/save_settings',
-                        type: 'post',
-                        data: settings,
-                    }).success(function(response) {
-                        settings.show_wallet_list = swl; // replace comma seperated string with list
-                        fill_in_settings(response.settings);
-                        if(response.exchange_rates) {
-                            exchange_rates = response.exchange_rates;
-                            refresh_fiat();
-                        }
-                        $("#settings_modal").dialog('close');
-                    });
-                }
-            }]
+        $("#settings_part").show();
+        $("#money_part").hide();
+    });
+
+    $("#save_settings_button").click(function() {
+        var form = $("#settings_form");
+        var swl = [];
+        form.find(".supported_crypto:checked").each(function(i, crypto) {
+            var c = $(crypto);
+            swl.push(c.val())
+        });
+        var settings = {
+            auto_logout: form.find("select[name=auto_logout]").val(),
+            display_fiat: form.find("select[name=display_fiat]").val(),
+            show_wallet_list: swl.join(','),
+        }
+        $.ajax({
+            url: '/wallet/save_settings',
+            type: 'post',
+            data: settings,
+        }).success(function(response) {
+            settings.show_wallet_list = swl; // replace comma seperated string with list
+            fill_in_settings(response.settings);
+            if(response.exchange_rates) {
+                exchange_rates = response.exchange_rates;
+                refresh_fiat();
+            }
+            $("#settings_part").hide();
+            $("#money_part").show();
         });
     });
 

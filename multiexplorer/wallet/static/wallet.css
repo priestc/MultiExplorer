@@ -199,3 +199,20 @@ button {
     display: none;
     text-align: center;
 }
+
+.unconfirmed_area {
+    display: none;
+    backgound: gray;
+    font-weight: bold;
+}
+
+#settings_part {
+    width: 280px;
+    background: #efefef;
+    padding: 10px;
+    margin: 0 auto 0 auto;
+}
+
+#mnemonic_disp {
+    width: calc(100% - 10px)
+}
