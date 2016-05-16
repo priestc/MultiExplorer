@@ -55,7 +55,11 @@ function add_to_balance(crypto, addresses) {
         //console.log("balance returned", response);
         var bal = box.find(".crypto_balance");
         var existing = parseFloat(bal.text());
-        var new_balance = existing + (response.balance.total || response.balance);
+        var this_balance = response.balance.total;
+        if (typeof this_balance == 'undefined') {
+            this_balance = response.balance;
+        }
+        var new_balance = existing + this_balance;
         bal.text(new_balance.toFixed(8));
 
         var exchange_rate = exchange_rates[crypto]['rate'];
@@ -606,7 +610,7 @@ $(function() {
                 push_tx(crypto, tx, function(response) {
                     console.log("Exchange TXID:", response.txid);
                     error_area.css({color: 'inherit'}).html("Exchange Completed!");
-                    switch_section('receive');
+                    switch_section(box, 'receive');
                 }, function(error_msg) {
                     error_area.css({color: 'red'}).text(error_msg);
                 }, deposit_amount);
@@ -630,7 +634,7 @@ $(function() {
             var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_multiplier);
 
             push_tx(crypto, tx, function(response) {
-                switch_section('receive');
+                switch_section(box, 'receive');
             }, function(error_msg) {
                 box.find(".send_part .error_area").text(error_msg);
             }, sending_amount);

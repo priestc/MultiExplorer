@@ -206,7 +206,7 @@ function follow_unconfirmed(crypto, txid, amount) {
     area.find(".txid").text(txid);
     setTimeout(function() {
         $.ajax({
-            url: "/api/single_transaction?currency=" + crypto + "&txid=" + txid
+            url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
             console.log("response from unconfirmed fetch", response);
             if(response.confirmations < 1) {
