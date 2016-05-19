@@ -36,15 +36,18 @@ body {
 
 .colors-btc {
     background: gold;
+    color: black;
 }
 
 .colors-ltc {
     background: silver;
+    color: black;
 }
 
 .colors-doge {
     background: yellow;
-    font-family: "Comic Sans MS"
+    font-family: "Comic Sans MS";
+    color: black;
 }
 
 .crypto_box[data-currency=doge] button {
@@ -63,10 +66,12 @@ body {
 
 .colors-myr {
     background: pink;
+    color: black;
 }
 
 .colors-dash {
     background: #BFDDFF;
+    color: black
 }
 
 .qr {
@@ -217,9 +222,14 @@ button {
     width: calc(100% - 10px)
 }
 
-
 .exchange_in_progress {
     display: none;
     background: #dfdfdf;
     font-weight: bold;
+    color: black;
+    padding: 5px;
+}
+
+.exchange_amount {
+    color: black !important;
 }

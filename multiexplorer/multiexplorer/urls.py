@@ -33,14 +33,16 @@ urlpatterns = [
 
 
 from django.conf import settings
-from django.core.handlers.base import BaseHandler
 
-handle_uncaught_exception = BaseHandler.handle_uncaught_exception
+if settings.DEBUG:
+    from django.core.handlers.base import BaseHandler
 
-def _handle_uncaught_exception_monkey_patch(self, request, resolver, exc_info):
-    if settings.DEBUG:
-        request.is_ajax = lambda: False
+    handle_uncaught_exception = BaseHandler.handle_uncaught_exception
 
-    return handle_uncaught_exception(self, request, resolver, exc_info)
+    def _handle_uncaught_exception_monkey_patch(self, request, resolver, exc_info):
+        if settings.DEBUG:
+            request.is_ajax = lambda: False
 
-BaseHandler.handle_uncaught_exception = _handle_uncaught_exception_monkey_patch
+        return handle_uncaught_exception(self, request, resolver, exc_info)
+
+    BaseHandler.handle_uncaught_exception = _handle_uncaught_exception_monkey_patch

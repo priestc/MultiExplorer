@@ -136,7 +136,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
         #try:
         response_dict = _make_moneywagon_fetch(**locals())
         if extended_fetch:
-            response_dict = _do_extended_fetch(currency, response_dict)
+            response_dict = _do_extended_fetch(currency, response_dict['transactions'])
 
         #except Exception as exc:
         #    return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
@@ -239,9 +239,9 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
 
     return ret
 
-def _do_extended_fetch(crypto, response):
+def _do_extended_fetch(crypto, transactions):
     txs = []
-    for tx in response['transactions']:
+    for tx in transactions:
         full_tx = CachedTransaction.fetch_full_tx(crypto, txid=tx['txid'])
         txs.append(full_tx)
 
@@ -394,7 +394,7 @@ def logout(request):
     return http.HttpResponseRedirect("/")
 
 def onchain_status(request):
-    deposit_crypto = request.GET['deposit_crypto']
+    deposit_crypto = request.GET['deposit_currency']
     address = request.GET['address']
 
     response = requests.get("https://shapeshift.io/txStat/" + address).json()

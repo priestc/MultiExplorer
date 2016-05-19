@@ -113,7 +113,6 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
     $.each(recipients, function(i, recip) {
         var address = recip[0];
         var amount = recip[1];
-        //console.log("adding amount", amount);
         tx = tx.to(address, amount);
         total_outs += amount / 1e8;
     });
@@ -133,6 +132,10 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
             return false;
         }
     });
+
+    if (crypto == 'rdd') {
+        tx.version = 2;
+    }
 
     console.log("total inputs amount:", total_added);
     console.log("using fee per kb:", fee_per_kb, "with multiplier of", optimal_fee_multiplier);
@@ -176,11 +179,7 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
 
     setTimeout(function() {
         $.ajax({
-            url: "/api/onchain_exchange_status",
-            data: {
-                "deposit_currency": deposit_crypto,
-                "address": deposit_address
-            }
+            url: "/api/onchain_exchange_status?deposit_currency=" + deposit_crypto + "&address=" + deposit_address,
         }).success(function() {
             if(response.status == 'no_deposits') {
                 follow_onchain_exchange(
@@ -200,8 +199,18 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
 function follow_unconfirmed(crypto, txid, amount) {
     // Takes care of hiding and showing the "unconfirmed" box at the top.
 
+    console.log("unconfirmed with amount:", amount);
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var area = box.find(".unconfirmed_area").show();
+
+    if(amount > 0) {
+        area.find(".amount_sign").text("+");
+        area.find(".amount_color").css({color: "green"});
+    } else {
+        area.find(".amount_sign").text("");
+        area.find(".amount_color").css({color: "red"});
+    }
+
     area.find(".amount").text(amount.toFixed(8));
     area.find(".txid").text(txid);
     setTimeout(function() {
@@ -209,7 +218,8 @@ function follow_unconfirmed(crypto, txid, amount) {
             url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
             console.log("response from unconfirmed fetch", response);
-            if(response.confirmations < 1) {
+            if(response.confirmations >= 1) {
+                console.log("got a confirmation!");
                 var bal = box.find(".crypto_balance");
                 var amount = my_amount_for_tx(response.transaction);
                 var existing = parseFloat(bal.text());
@@ -218,10 +228,11 @@ function follow_unconfirmed(crypto, txid, amount) {
                 area.hide();
                 return
             } else {
+                console.log("still unconfirmed, iterating", amount);
                 follow_unconfirmed(crypto, txid, amount);
             }
         });
-    }, 5000);
+    }, 30000);
 }
 
 function get_optimal_fee(crypto, area) {

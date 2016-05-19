@@ -412,7 +412,7 @@ $(function() {
                     error_area.css({color: 'inherit'}).html("Sweep Completed!");
                 }, function(error_msg) {
                     error_area.css({color: 'red'}).text(error_msg);
-                });
+                }, minus_fee / 1e8 * -1);
             });
         });
     });
@@ -593,6 +593,7 @@ $(function() {
             var deposit_satoshi = parseInt(deposit_amount * 1e8);
             var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
             var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
+            var withdraw_amount = parseFloat(box.find(".withdraw.exchange_amount").val());
 
             error_area.html(text_spinner + " Calling Exchange...");
 
@@ -604,16 +605,19 @@ $(function() {
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
             }).success(function(response) {
+                var deposit_address = response.deposit;
                 var tx = make_tx(crypto, [[response.deposit, deposit_satoshi]], 1.0);
                 console.log(tx.toString());
                 error_area.html(text_spinner + " Pushing Transaction...");
                 push_tx(crypto, tx, function(response) {
                     console.log("Exchange TXID:", response.txid);
                     error_area.css({color: 'inherit'}).html("Exchange Completed!");
+                    console.log("about to all exchange follower:", crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address);
+                    follow_onchain_exchange(crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address)
                     switch_section(box, 'receive');
                 }, function(error_msg) {
                     error_area.css({color: 'red'}).text(error_msg);
-                }, deposit_amount);
+                }, deposit_amount * -1); // negative because of send.
             });
         });
     });
@@ -637,7 +641,7 @@ $(function() {
                 switch_section(box, 'receive');
             }, function(error_msg) {
                 box.find(".send_part .error_area").text(error_msg);
-            }, sending_amount);
+            }, sending_amount * -1);
         });
     });
 

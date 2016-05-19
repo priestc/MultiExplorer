@@ -39,6 +39,7 @@ $("#login_form").submit(function(event) {
     }).fail(function(jqXHR) {
         $("#login_error").text(jqXHR.responseText);
         $("#register_box, #login_box").show();
+        $("#loading_screen").hide();
     });
 
 });
