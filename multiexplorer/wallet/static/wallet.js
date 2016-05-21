@@ -606,13 +606,13 @@ $(function() {
                 }
             }).success(function(response) {
                 var deposit_address = response.deposit;
-                var tx = make_tx(crypto, [[response.deposit, deposit_satoshi]], 1.0);
+                var tx = make_tx(crypto, [[deposit_address, deposit_satoshi]], 1.0);
                 console.log(tx.toString());
                 error_area.html(text_spinner + " Pushing Transaction...");
                 push_tx(crypto, tx, function(response) {
                     console.log("Exchange TXID:", response.txid);
                     error_area.css({color: 'inherit'}).html("Exchange Completed!");
-                    console.log("about to all exchange follower:", crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address);
+                    console.log("about to call exchange follower:", crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address);
                     follow_onchain_exchange(crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address)
                     switch_section(box, 'receive');
                 }, function(error_msg) {

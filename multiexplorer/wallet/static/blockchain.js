@@ -180,7 +180,7 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
     setTimeout(function() {
         $.ajax({
             url: "/api/onchain_exchange_status?deposit_currency=" + deposit_crypto + "&address=" + deposit_address,
-        }).success(function() {
+        }).success(function(response) {
             if(response.status == 'no_deposits') {
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
@@ -188,20 +188,21 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
                 );
             } else if(response.status == 'complete') {
                 var txid = response.transaction;
-                follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
                 deposit_exchange_area.hide();
                 withdraw_exchange_area.hide();
+                follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
             }
         });
-    }, 5000);
+    }, 10000);
 }
 
 function follow_unconfirmed(crypto, txid, amount) {
     // Takes care of hiding and showing the "unconfirmed" box at the top.
 
-    console.log("unconfirmed with amount:", amount);
+    console.log("following unconfirmed with amount:", amount, crypto);
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var area = box.find(".unconfirmed_area").show();
+    var local_amount = amount;
 
     if(amount > 0) {
         area.find(".amount_sign").text("+");
@@ -228,8 +229,8 @@ function follow_unconfirmed(crypto, txid, amount) {
                 area.hide();
                 return
             } else {
-                console.log("still unconfirmed, iterating", amount);
-                follow_unconfirmed(crypto, txid, amount);
+                console.log("still unconfirmed, iterating", local_amount);
+                follow_unconfirmed(crypto, txid, local_amount);
             }
         });
     }, 30000);
