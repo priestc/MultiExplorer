@@ -173,6 +173,7 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
     withdraw_exchange_area.find(".deposit_currency").text(deposit_crypto);
     withdraw_exchange_area.find(".withdraw_amount").text(withdraw_amount.toFixed(8));
     withdraw_exchange_area.find(".deposit_amount").text(deposit_amount.toFixed(8));
+    deposit_exchange_area.find(".current_status").css({color: "gray"}).text("Unacknowledged");
 
     deposit_exchange_area.show();
     withdraw_exchange_area.show();
@@ -181,7 +182,14 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
         $.ajax({
             url: "/api/onchain_exchange_status?deposit_currency=" + deposit_crypto + "&address=" + deposit_address,
         }).success(function(response) {
-            if(response.status == 'no_deposits') {
+            if(response.status == 'received') {
+                deposit_exchange_area.find(".current_status").css({color: "green"}).text("Received");
+                follow_onchain_exchange(
+                    deposit_crypto, deposit_amount, withdraw_crypto,
+                    withdraw_amount, deposit_address
+                );
+            } else if(response.status == 'no_deposits') {
+                deposit_exchange_area.find(".current_status").text("Unacknowledged");
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
                     withdraw_amount, deposit_address
@@ -207,10 +215,14 @@ function follow_unconfirmed(crypto, txid, amount) {
     if(amount > 0) {
         area.find(".amount_sign").text("+");
         area.find(".amount_color").css({color: "green"});
+        area.css({border: "1px dotted green"});
     } else {
         area.find(".amount_sign").text("");
         area.find(".amount_color").css({color: "red"});
+        area.css({border: "1px dotted red"});
     }
+    var er = exchange_rates[crypto]['rate']
+    area.find(".unconfirmed_fiat").text((amount * er).toFixed(2));
 
     area.find(".amount").text(amount.toFixed(8));
     area.find(".txid").text(txid);
@@ -219,14 +231,16 @@ function follow_unconfirmed(crypto, txid, amount) {
             url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
             console.log("response from unconfirmed fetch", response);
-            if(response.confirmations >= 1) {
+            if(response.transaction.confirmations >= 1) {
                 console.log("got a confirmation!");
                 var bal = box.find(".crypto_balance");
-                var amount = my_amount_for_tx(response.transaction);
+                var amount = my_amount_for_tx(crypto, response.transaction);
                 var existing = parseFloat(bal.text());
                 var new_balance = existing + amount;
                 bal.text(new_balance.toFixed(8));
                 area.hide();
+                box.find(".fiat_balance").css({color: "inherit"}).text((er * new_balance).toFixed(2));
+                update_total_fiat_balance();
                 return
             } else {
                 console.log("still unconfirmed, iterating", local_amount);
@@ -285,6 +299,21 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
     });
 }
 
-function my_amount_for_tx(tx) {
-    return 99.9;
+function my_amount_for_tx(crypto, tx) {
+    var my_addresses = used_addresses[crypto];
+    var my_amount = 0;
+    $.each(tx.inputs, function(i, input) {
+        if(my_addresses.indexOf(input.address) != -1) {
+            console.log("subtracting input of", input.address, input.amount);
+            my_amount -= input.amount;
+        }
+    });
+    $.each(tx.outputs, function(i, output) {
+        if(my_addresses.indexOf(output.address) != -1) {
+            console.log("adding output of", output.address, output.amount);
+            my_amount += output.amount;
+        }
+    });
+
+    return my_amount
 }

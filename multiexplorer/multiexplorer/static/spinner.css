@@ -1,3 +1,17 @@
+.slow-spinner {
+  margin: 0px auto 0 auto;
+  position: relative;
+  -webkit-animation: rotation .8s infinite linear;
+  -moz-animation: rotation .8s infinite linear;
+  -o-animation: rotation .8s infinite linear;
+  animation: rotation .8s infinite linear;
+  border-left: 16px solid rgba(200, 174, 174, 0.15);
+  border-right: 16px solid rgba(200, 174, 174, 0.15);
+  border-bottom: 16px solid rgba(200, 174, 174, 0.15);
+  border-top: 16px solid rgba(200, 174, 174, 0.6);
+  border-radius: 100%;
+}
+
 .thick-spinner {
   margin: 0px auto 0 auto;
   position: relative;

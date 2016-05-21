@@ -63,7 +63,6 @@ function add_to_balance(crypto, addresses) {
         bal.text(new_balance.toFixed(8));
 
         var exchange_rate = exchange_rates[crypto]['rate'];
-        //console.log("using fiat exchange rate", exchange_rate, (exchange_rate * new_balance).toFixed(2));
         box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
         update_total_fiat_balance();
     }).fail(function() {

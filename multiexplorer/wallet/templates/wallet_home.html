@@ -60,6 +60,8 @@
             <span class="balance_fiat"></span>
             <div class="outgoing_exchange_in_progress exchange_in_progress">
                 <h4>Outgoing Exchange in progress</h4>
+                <span class="current_status"></span><br>
+                <div class="slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="deposit_amount"></span> {{ data.code|upper }}<br>
                 To <span class="withdraw_amount"></span> <span class="withdraw_currency"></span><br>
                 <img class="exchange_logo">
@@ -67,6 +69,8 @@
 
             <div class="incoming_exchange_in_progress exchange_in_progress">
                 <h4>Incoming Exchange in progress</h4>
+                <span class="current_status"></span><br>
+                <div class="slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="withdraw_amount"></span> {{ data.code|upper }}<br>
                 From <span class="deposit_amount"></span> <span class="deposit_currency"></span><br>
                 <img class="exchange_logo">
@@ -75,7 +79,8 @@
             <div class="unconfirmed_area">
                 <h4>Unconfirmed Transaction</h4>
                 <span class="amount_color">
-                    <span class="amount_sign"></span><span class="amount"></span> {{ data.code|upper }}
+                    <span class="amount_sign"></span><span class="amount"></span> {{ data.code|upper }}<br>
+                    <span class="amount_sign"></span><span class="fiat_symbol"></span><span class="unconfirmed_fiat"></span> <span class="fiat_unit"></span>
                 </span>
             </div>
 
