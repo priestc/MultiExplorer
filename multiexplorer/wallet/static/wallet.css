@@ -247,3 +247,7 @@ button {
 .exchange_amount {
     color: black !important;
 }
+
+.exchange_logo {
+    width: 150px;
+}

@@ -64,7 +64,8 @@
                 <div class="slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="deposit_amount"></span> {{ data.code|upper }}<br>
                 To <span class="withdraw_amount"></span> <span class="withdraw_currency"></span><br>
-                <img class="exchange_logo">
+                <small>Exchange service provided by:</small><br>
+                <img class="exchange_logo" src="{% static 'logos/shapeshift-logo.png' %}">
             </div>
 
             <div class="incoming_exchange_in_progress exchange_in_progress">
@@ -73,7 +74,8 @@
                 <div class="slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="withdraw_amount"></span> {{ data.code|upper }}<br>
                 From <span class="deposit_amount"></span> <span class="deposit_currency"></span><br>
-                <img class="exchange_logo">
+                <small>Exchange service provided by:</small><br>
+                <img class="exchange_logo" src="{% static 'logos/shapeshift-logo.png' %}">
             </div>
 
             <div class="unconfirmed_area">

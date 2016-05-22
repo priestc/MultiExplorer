@@ -22,7 +22,7 @@ class WalletMasterKeys(models.Model):
 
     auto_logout = models.IntegerField(choices=AUTO_LOGOUT_CHOICES, default=0)
     display_fiat = models.CharField(max_length=5, default='usd')
-    show_wallet_list = models.TextField(default='btc,ltc,doge') # comma seperated
+    show_wallet_list = models.TextField(default='btc,ltc,doge,dash') # comma seperated
 
     def __unicode__(self):
         return self.user.username
