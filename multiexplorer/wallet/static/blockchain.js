@@ -185,9 +185,10 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
             deposit_exchange_area.find(".error_area").text("");
             console.log("Got status response from onchain status:", response.status);
             if(response.status == 'received') {
-                console.log("received!! before:", deposit_exchange_area.find(".current_status").text());
-                deposit_exchange_area.find(".current_status").css({color: "green"}).text("Received");
-                console.log("received!! after:", deposit_exchange_area.find(".current_status").text());
+                var sign = deposit_exchange_area.find(".current_status");
+                console.log("received!! before:", sign.text());
+                sign.css({color: "green"}).text("Received");
+                console.log("received!! after:", sign.text());
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
                     withdraw_amount, deposit_address

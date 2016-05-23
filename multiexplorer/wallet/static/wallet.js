@@ -409,9 +409,10 @@ $(function() {
 
                 push_tx(crypto, tx, function(response) {
                     error_area.css({color: 'inherit'}).html("Sweep Completed!");
+                    switch_section(box, 'receive');
                 }, function(error_msg) {
                     error_area.css({color: 'red'}).text(error_msg);
-                }, minus_fee / 1e8 * -1);
+                }, minus_fee / 1e8);
             });
         });
     });
