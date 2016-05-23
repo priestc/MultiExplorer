@@ -464,12 +464,12 @@ $(function() {
                 var to_code = pair.withdraw_currency.code.toLowerCase();
                 var to_name = pair.withdraw_currency.name + " (" + to_code.toUpperCase() + ")";
                 if(show_wallet_list.indexOf(to_code) != -1) {
+                    var unique = crypto + "_exchange";
                     var img_url = $(".crypto_box[data-currency=" + to_code + "] .main_currency_logo").attr('src');
                     var icon = "<img src='" + img_url + "' style='width: 30px; height: 30px'>";
                     var css = "colors-" + to_code + " cancel-colors";
                     var radio = "<input type='radio' name='" + unique + "' value='" + to_code + "' class='exchange_radio'>";
                     var table = "<table class='" + css + "'><tr><td>" + radio + "</td><td>" + icon + "</td><td>" + to_name + "</td></tr></table>";
-                    var unique = crypto + "_exchange";
                     var label = "<label>" + table + "</label>";
                     area.append(label);
                     exchange_pairs[crypto].push(pair);
@@ -593,6 +593,7 @@ $(function() {
             var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
             var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
             var withdraw_amount = parseFloat(box.find(".withdraw.exchange_amount").val());
+            var withdraw_address = unused_deposit_addresses[withdraw_code][0];
 
             error_area.html(text_spinner + " Calling Exchange...");
 
@@ -600,12 +601,13 @@ $(function() {
                 url: "https://cors.shapeshift.io/shift",
                 type: 'post',
                 data: {
-                    withdrawal: unused_deposit_addresses[withdraw_code][0],
+                    withdrawal: withdraw_address,
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
             }).success(function(response) {
                 var deposit_address = response.deposit;
                 var tx = make_tx(crypto, [[deposit_address, deposit_satoshi]], 1.0);
+                used_addresses[withdraw_code].push(withdraw_address);
                 console.log(tx.toString());
                 error_area.html(text_spinner + " Pushing Transaction...");
                 push_tx(crypto, tx, function(response) {

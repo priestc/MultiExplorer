@@ -97,8 +97,7 @@ function actual_tx_size_estimation(crypto, satoshis_will_send, outs_length) {
         }
     });
     //console.log("this tx will have", used_ins.length, "inputs");
-    var est = estimate_tx_size(used_ins.length, outs_length)
-    //console.log("estimated tx size:", est);
+    var est = estimate_tx_size(used_ins.length, outs_length);
     return est
 }
 
@@ -215,11 +214,11 @@ function follow_unconfirmed(crypto, txid, amount) {
     if(amount > 0) {
         area.find(".amount_sign").text("+");
         area.find(".amount_color").css({color: "green"});
-        area.css({border: "1px dotted green"});
+        area.css({border: "2px dotted green"});
     } else {
         area.find(".amount_sign").text("");
         area.find(".amount_color").css({color: "red"});
-        area.css({border: "1px dotted red"});
+        area.css({border: "2px dotted red"});
     }
     var er = exchange_rates[crypto]['rate']
     area.find(".unconfirmed_fiat").text((amount * er).toFixed(2));
@@ -231,10 +230,16 @@ function follow_unconfirmed(crypto, txid, amount) {
             url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
             console.log("response from unconfirmed fetch", response);
+
+            var from_response_amount = my_amount_for_tx(crypto, response.transaction);
+            if(from_response_amount.toFixed(8) != local_amount.toFixed(8)) {
+                console.log("Transaction amount is different than expected:", from_response_amount, local_amount);
+            }
+            local_amount = from_response_amount;
+
             if(response.transaction.confirmations >= 1) {
                 console.log("got a confirmation!");
                 var bal = box.find(".crypto_balance");
-                var amount = my_amount_for_tx(crypto, response.transaction);
                 var existing = parseFloat(bal.text());
                 var new_balance = existing + amount;
                 bal.text(new_balance.toFixed(8));
@@ -304,16 +309,16 @@ function my_amount_for_tx(crypto, tx) {
     var my_amount = 0;
     $.each(tx.inputs, function(i, input) {
         if(my_addresses.indexOf(input.address) != -1) {
-            console.log("subtracting input of", input.address, input.amount);
-            my_amount -= input.amount;
+            console.log("subtracting input of", input.address, input.amount / 1e8);
+            my_amount -= input.amount / 1e8;
         }
     });
     $.each(tx.outputs, function(i, output) {
         if(my_addresses.indexOf(output.address) != -1) {
-            console.log("adding output of", output.address, output.amount);
-            my_amount += output.amount;
+            console.log("adding output of", output.address, output.amount / 1e8);
+            my_amount += output.amount / 1e8;
         }
     });
-
+    console.log("found:", my_amount, "from tx:", tx);
     return my_amount
 }

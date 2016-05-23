@@ -111,17 +111,17 @@
             <div class="send_part subsection">
                 <button class="cancel_button"> &larr; Cancel Send</button>
                 <br>
-                <lable>Address</label><br>
+                <strong>Send to Address:</strong><br>
                 <input type="text" class="sending_recipient_address full_width">
 
                 <br><br>
 
-                <label>Crypto Amount</label><br>
+                <strong>Crypto Amount:</strong><br>
                 <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
 
                 <br><br>
 
-                <label>Fiat Amount</label><br>
+                <strong>Fiat Amount:</strong><br>
                 <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
 
                 <br><br>
@@ -157,24 +157,30 @@
             </div>
             <div class="exchange_part subsection">
                 <button class="cancel_button"> &larr; Cancel Exchange</button>
+                <br>
+                <strong>Exchange {{ data.name }} for:</strong><br><br>
 
                 <div class="exchange_options"></div>
+
+                <div class="exchange_limits" style="display: none">
                 Max Deposit: <span class="max_exchange"></span> {{ data.code|upper }}<br>
                 Min Deposit: <span class="min_exchange"></span> {{ data.code|upper }}
+                </div>
+                <br>
+                <strong>Exchange Rate:</strong><br>
+                1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br>
+                <small>Service provided by Shapeshift.io</small>
                 <br><br>
 
-                Exchange Rate:<br>
-                1 {{ data.code|upper }} = <span class="crypto_to_crypto_rate"></span> <span class="withdraw_code"></span><br><br>
-
-                {{ data.name }} Cost:<br>
+                <strong>{{ data.name }} Cost:</strong><br>
                 <input type="number" name="deposit_exchange_amount" class="exchange_amount deposit"><br>
                 <small>Including optimal fee of <span class="optimal_fee"></span> {{ data.code|upper }}</small>
                 <br><br>
 
-                <span class="fiat_unit"></span> Amount:<br>
+                <strong><span class="fiat_unit"></span> Amount:</strong><br>
                 <input type="number" name="fiat_exchange_amount" class="exchange_amount fiat"><br><br>
 
-                <span class="withdraw_unit"></span> Amount:<br>
+                <strong><span class="withdraw_unit"></span> Amount:</strong><br>
                 <input type="number" name="withdraw_exchange_amount" class="exchange_amount withdraw"><br>
                 <small>Including withdraw miner fee of <span class="withdraw_fee"></span> <span class="withdraw_code"></span></small>
 
