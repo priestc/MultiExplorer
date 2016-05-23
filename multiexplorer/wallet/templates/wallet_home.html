@@ -66,6 +66,8 @@
                 To <span class="withdraw_amount"></span> <span class="withdraw_currency"></span><br>
                 <small>Exchange service provided by:</small><br>
                 <img class="exchange_logo" src="{% static 'logos/shapeshift-logo.png' %}">
+                <br>
+                <div class="error_area"></div>
             </div>
 
             <div class="incoming_exchange_in_progress exchange_in_progress">
@@ -84,6 +86,8 @@
                     <span class="amount_sign"></span><span class="amount"></span> {{ data.code|upper }}<br>
                     <span class="amount_sign"></span><span class="fiat_symbol"></span><span class="unconfirmed_fiat"></span> <span class="fiat_unit"></span>
                 </span>
+                <br>
+                <div class="error_area"></div>
             </div>
 
             <table style="width: 100%">

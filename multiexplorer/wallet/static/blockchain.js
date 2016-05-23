@@ -154,6 +154,7 @@ function push_tx(crypto, tx, success_callback, fail_callback, amount_transacted)
         type: "post",
         data: {currency: crypto, tx: tx.toString()}
     }).success(function(response){
+        used_addresses[crypto].push(get_unused_change_address(crypto));
         follow_unconfirmed(crypto, response.txid, amount_transacted);
         success_callback(response);
     }).fail(function(jqXHR) {
@@ -181,7 +182,10 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
         $.ajax({
             url: "/api/onchain_exchange_status?deposit_currency=" + deposit_crypto + "&address=" + deposit_address,
         }).success(function(response) {
+            deposit_exchange_area.find(".error_area").text("");
+            console.log("Got status response from onchain status:", response.status);
             if(response.status == 'received') {
+                console.log("received!! status achieved!!");
                 deposit_exchange_area.find(".current_status").css({color: "green"}).text("Received");
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
@@ -199,6 +203,12 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
                 withdraw_exchange_area.hide();
                 follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
             }
+        }).fail(function(jqXHR) {
+            deposit_exchange_area.find(".error_area").text(jqXHR.responseJSON.error);
+            follow_onchain_exchange(
+                deposit_crypto, deposit_amount, withdraw_crypto,
+                withdraw_amount, deposit_address
+            );
         });
     }, 10000);
 }
@@ -230,6 +240,7 @@ function follow_unconfirmed(crypto, txid, amount) {
             url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
             console.log("response from unconfirmed fetch", response);
+            area.find(".error_area").text("");
 
             var from_response_amount = my_amount_for_tx(crypto, response.transaction);
             if(from_response_amount.toFixed(8) != local_amount.toFixed(8)) {
@@ -251,6 +262,9 @@ function follow_unconfirmed(crypto, txid, amount) {
                 console.log("still unconfirmed, iterating", local_amount);
                 follow_unconfirmed(crypto, txid, local_amount);
             }
+        }).fail(function(jqXHR) {
+            area.find(".error_area").text(jqXHR.responseJSON.error)
+            follow_unconfirmed(crypto, txid, local_amount);
         });
     }, 30000);
 }
