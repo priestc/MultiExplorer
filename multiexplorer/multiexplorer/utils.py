@@ -91,7 +91,8 @@ def get_wallet_currencies():
         unspent = services.get("unspent_outputs", [])
 
         sc = settings.WALLET_SUPPORTED_CRYPTOS
-        is_supported = (not sc) or (currency.lower() in sc)
+        ignored = currency.lower() in settings.IGNORE_WALLET_CRYPTOS
+        is_supported = (not ignored) and ((not sc) or (currency.lower() in sc))
 
         if pushtx and unspent and bip44 and priv_byte and is_supported:
             ret.append({

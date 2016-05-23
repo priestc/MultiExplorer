@@ -95,6 +95,6 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = "static/"
 
-TEST_ADDRESS = ''
+IGNORE_WALLET_CRYPTOS = ['rdd']
 
 from .local_settings import *

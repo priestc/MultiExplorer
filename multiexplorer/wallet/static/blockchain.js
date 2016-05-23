@@ -185,8 +185,9 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
             deposit_exchange_area.find(".error_area").text("");
             console.log("Got status response from onchain status:", response.status);
             if(response.status == 'received') {
-                console.log("received!! status achieved!!");
+                console.log("received!! before:", deposit_exchange_area.find(".current_status").text());
                 deposit_exchange_area.find(".current_status").css({color: "green"}).text("Received");
+                console.log("received!! after:", deposit_exchange_area.find(".current_status").text());
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
                     withdraw_amount, deposit_address
@@ -204,7 +205,11 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
                 follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
             }
         }).fail(function(jqXHR) {
-            deposit_exchange_area.find(".error_area").text(jqXHR.responseJSON.error);
+            if(jqXHR.responseJSON) {
+                deposit_exchange_area.find(".error_area").text(jqXHR.responseJSON.error);
+            } else {
+                deposit_exchange_area.find(".error_area").text("Network Error");
+            }
             follow_onchain_exchange(
                 deposit_crypto, deposit_amount, withdraw_crypto,
                 withdraw_amount, deposit_address
@@ -263,7 +268,12 @@ function follow_unconfirmed(crypto, txid, amount) {
                 follow_unconfirmed(crypto, txid, local_amount);
             }
         }).fail(function(jqXHR) {
-            area.find(".error_area").text(jqXHR.responseJSON.error)
+            if(jqXHR.responseJSON) {
+                area.find(".error_area").text(jqXHR.responseJSON.error);
+            } else {
+                area.find(".error_area").text("Network Error");
+            }
+
             follow_unconfirmed(crypto, txid, local_amount);
         });
     }, 30000);
@@ -323,13 +333,13 @@ function my_amount_for_tx(crypto, tx) {
     var my_amount = 0;
     $.each(tx.inputs, function(i, input) {
         if(my_addresses.indexOf(input.address) != -1) {
-            console.log("subtracting input of", input.address, input.amount / 1e8);
+            //console.log("subtracting input of", input.address, input.amount / 1e8);
             my_amount -= input.amount / 1e8;
         }
     });
     $.each(tx.outputs, function(i, output) {
         if(my_addresses.indexOf(output.address) != -1) {
-            console.log("adding output of", output.address, output.amount / 1e8);
+            //console.log("adding output of", output.address, output.amount / 1e8);
             my_amount += output.amount / 1e8;
         }
     });
