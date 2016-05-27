@@ -28,6 +28,7 @@
     var utxos = {};
     var show_wallet_list = [];
     var exchange_pairs = {};
+    var tx_history = {};
 </script>
 <script src="{% static 'blockchain.js' %}"></script>
 <script src="{% static 'wallet.js' %}"></script>
@@ -42,7 +43,7 @@
 <div style="width: 100%;">
     <div id="loading_screen">
         Deriving Wallet Addresses and Generating QR codes...<br><br>
-        <div class="thick-spinner spinner" style="height: 60px; width: 60px;"></div>
+        <div class="thick-spinner fast-spinner" style="height: 60px; width: 60px;"></div>
     </div>
 </div>
 
@@ -56,12 +57,13 @@
         <div class="crypto_box colors-{{ data.code|lower }}" data-currency="{{ data.code }}" style="display: none">
             <h3>{{ data.name }} ({{ data.code|upper }})</h3>
             Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-            <span class="fiat_symbol"></span><span class="fiat_balance"><div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div></span> <span class="fiat_unit"></span>
+            <div class="spinner slow-spinner {% if data.code == 'vtc' %}thin-inverted-spinner{% else %}thin-spinner{% endif %}" style="height: 10px; width: 10px;"></div>
+            <span class="fiat_symbol"></span><span class="fiat_balance"></span> <span class="fiat_unit"></span>
             <span class="balance_fiat"></span>
             <div class="outgoing_exchange_in_progress exchange_in_progress">
                 <h4>Outgoing Exchange in progress</h4>
-                <span class="current_status"></span><br>
-                <div class="red-slow-spinner" style="height: 25px; width: 25px;"></div><br>
+                <span class="current_status" style="color: gray">Unacknowledged</span><br>
+                <div class="red-spinner slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="deposit_amount"></span> {{ data.code|upper }}<br>
                 To <span class="withdraw_amount"></span> <span class="withdraw_currency"></span><br>
                 <small>Exchange service provided by:</small><br>
@@ -73,7 +75,7 @@
             <div class="incoming_exchange_in_progress exchange_in_progress">
                 <h4>Incoming Exchange in progress</h4>
                 <span class="current_status"></span><br>
-                <div class="green-slow-spinner" style="height: 25px; width: 25px;"></div><br>
+                <div class="green-spinner slow-spinner" style="height: 25px; width: 25px;"></div><br>
                 <span class="withdraw_amount"></span> {{ data.code|upper }}<br>
                 From <span class="deposit_amount"></span> <span class="deposit_currency"></span><br>
                 <small>Exchange service provided by:</small><br>
@@ -196,7 +198,7 @@
             </div>
             <div class="history_part subsection">
                 <button class="cancel_button"> &larr; Go Back</button>
-                <br>History...
+                <br><div class="history_section"></div>
             </div>
         </div>
         {% endfor %}

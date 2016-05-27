@@ -173,7 +173,6 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
     withdraw_exchange_area.find(".deposit_currency").text(deposit_crypto);
     withdraw_exchange_area.find(".withdraw_amount").text(withdraw_amount.toFixed(8));
     withdraw_exchange_area.find(".deposit_amount").text(deposit_amount.toFixed(8));
-    deposit_exchange_area.find(".current_status").css({color: "gray"}).text("Unacknowledged");
 
     deposit_exchange_area.show();
     withdraw_exchange_area.show();
@@ -183,18 +182,15 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
             url: "/api/onchain_exchange_status?deposit_currency=" + deposit_crypto + "&address=" + deposit_address,
         }).success(function(response) {
             deposit_exchange_area.find(".error_area").text("");
-            console.log("Got status response from onchain status:", response.status);
+            var sign = deposit_exchange_area.find(".current_status");
             if(response.status == 'received') {
-                var sign = deposit_exchange_area.find(".current_status");
-                console.log("received!! before:", sign.text());
                 sign.css({color: "green"}).text("Received");
-                console.log("received!! after:", sign.text());
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
                     withdraw_amount, deposit_address
                 );
             } else if(response.status == 'no_deposits') {
-                deposit_exchange_area.find(".current_status").text("Unacknowledged");
+                sign.css({color: 'gray'}).text("Unacknowledged");
                 follow_onchain_exchange(
                     deposit_crypto, deposit_amount, withdraw_crypto,
                     withdraw_amount, deposit_address
@@ -243,9 +239,8 @@ function follow_unconfirmed(crypto, txid, amount) {
     area.find(".txid").text(txid);
     setTimeout(function() {
         $.ajax({
-            url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
+            url: "/api/single_transaction/random?currency=" + crypto + "&txid=" + txid
         }).success(function(response) {
-            console.log("response from unconfirmed fetch", response);
             area.find(".error_area").text("");
 
             var from_response_amount = my_amount_for_tx(crypto, response.transaction);
@@ -255,7 +250,7 @@ function follow_unconfirmed(crypto, txid, amount) {
             local_amount = from_response_amount;
 
             if(response.transaction.confirmations >= 1) {
-                console.log("got a confirmation!");
+                console.log(crypto, "got a confirmation!");
                 var bal = box.find(".crypto_balance");
                 var existing = parseFloat(bal.text());
                 var new_balance = existing + amount;
@@ -265,7 +260,7 @@ function follow_unconfirmed(crypto, txid, amount) {
                 update_total_fiat_balance();
                 return
             } else {
-                console.log("still unconfirmed, iterating", local_amount);
+                console.log("still unconfirmed, iterating", local_amount, crypto);
                 follow_unconfirmed(crypto, txid, local_amount);
             }
         }).fail(function(jqXHR) {
@@ -344,6 +339,6 @@ function my_amount_for_tx(crypto, tx) {
             my_amount += output.amount / 1e8;
         }
     });
-    console.log("found:", my_amount, "from tx:", tx);
+    //console.log("found:", my_amount, "from tx:", tx);
     return my_amount
 }

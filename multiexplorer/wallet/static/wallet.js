@@ -92,14 +92,14 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
 
     var addresses_with_activity = [];
     if(addresses.length == 1) {
-        var args = "?address=" + addresses[0] + "&currency=" + crypto;
+        var args = "?address=" + addresses[0];
         var mode = "fallback";
     } else {
-        var args = "?addresses=" + addresses.join(",") + "&currency=" + crypto;
+        var args = "?addresses=" + addresses.join(",");
         var mode = "private5";
     }
 
-    args += "&extended_fetch=true";
+    args += "&extended_fetch=true&currency=" + crypto;
 
     var all_my_addresses = already_tried_addresses.concat(addresses);
 
@@ -107,7 +107,9 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
     }).success(function (response) {
-        $.each(response['transactions'], function(i, tx) {
+        var txs = response['transactions'];
+        tx_history[crypto] = tx_history[crypto].concat(txs);
+        $.each(txs, function(i, tx) {
             var ins_and_outs = tx.inputs.concat(tx.outputs);
             $.each(ins_and_outs, function(i, in_or_out) {
                 var address = in_or_out['address'];
@@ -189,6 +191,7 @@ function open_wallet(show_wallet_list) {
         box.show();
 
         used_addresses[crypto] = [];
+        tx_history[crypto] = [];
 
         fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
             used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
@@ -287,6 +290,25 @@ function fill_in_fee_radios(crypto, tx_size) {
     return satoshi_fee_this_tx;
 }
 
+function generate_history(crypto) {
+    var history = tx_history[crypto].sort(function(a, b){
+        return new Date(b.time) - new Date(a.time);
+    });
+
+    var history_section = $(".crypto_box[data-currency=" + crypto + "] .history_section");
+
+    $.each(history, function(i, tx) {
+        var my_amount = my_amount_for_tx(crypto, tx);
+        console.log(tx.time, my_amount.toFixed(8));
+        if (my_amount > 0) {
+            var formatted_amount = " <span style='color: green'>+" + Math.abs(my_amount).toFixed(8) + "</span>";
+        } else {
+            var formatted_amount = " <span style='color: red'>-" + Math.abs(my_amount).toFixed(8) + "</span>";
+        }
+        history_section.append(tx.time + formatted_amount + "<br>");
+    });
+}
+
 function switch_section(box, to_section) {
     box.find(".send_part").hide();
     box.find(".receive_part").hide();
@@ -353,19 +375,21 @@ $(function() {
         var crypto = box.data('currency');
 
         switch_section(box, "history");
+        generate_history(crypto);
     });
 
     $(".switch_to_sweep").click(function() {
         var box = $(this).parent().parent();
         var error_area = box.find(".sweep_part .error_area");
         var crypto = box.data('currency');
+        var spinner_classes = box.find(".spinner").first().attr('class');
 
         switch_section(box, "sweep");
 
         get_optimal_fee(crypto, box.find(".optimal_fee_rate_per_byte"));
 
         box.find(".submit_sweep").unbind('click').click(function() {
-            box.find(".sweep_part .error_area").html(text_spinner);
+            box.find(".sweep_part .error_area").html(spinner);
             var priv = box.find(".sweeping_key").val();
             var fee_multiplier = parseFloat(box.find(".sweep_part .fee_selector:checked").val());
             var fee_per_kb = optimal_fees[crypto] * fee_multiplier;
@@ -442,6 +466,11 @@ $(function() {
 
     $(".switch_to_exchange").click(function() {
         var box = $(this).parent().parent();
+        var spinner_classes = box.find(".spinner").first().attr('class');
+        var spinner = "<div class='" + spinner_classes + "' style='width: 12px; height: 12px'></div>";
+
+        console.log("spinner classes", spinner_classes, spinner);
+
         var crypto = box.data('currency');
         var error_area = box.find(".exchange_part .error_area");
         exchange_pairs[crypto] = [];
@@ -454,7 +483,7 @@ $(function() {
         switch_section(box, "exchange");
 
         var area = box.find(".exchange_options");
-        area.append(text_spinner);
+        area.append(spinner + " Fetcing supported exchange pairs...");
 
         $.ajax({
             type: 'get',
@@ -596,7 +625,7 @@ $(function() {
             var withdraw_amount = parseFloat(box.find(".withdraw.exchange_amount").val());
             var withdraw_address = unused_deposit_addresses[withdraw_code][0];
 
-            error_area.html(text_spinner + " Calling Exchange...");
+            error_area.html(spinner + " Calling Exchange...");
 
             $.ajax({
                 url: "https://cors.shapeshift.io/shift",
@@ -610,7 +639,7 @@ $(function() {
                 var tx = make_tx(crypto, [[deposit_address, deposit_satoshi]], 1.0);
                 used_addresses[withdraw_code].push(withdraw_address);
                 console.log(tx.toString());
-                error_area.html(text_spinner + " Pushing Transaction...");
+                error_area.html(spinner + " Pushing Transaction...");
                 push_tx(crypto, tx, function(response) {
                     error_area.css({color: 'inherit'}).html("Exchange Completed!");
                     console.log("about to call exchange follower:", crypto, deposit_amount, withdraw_code, withdraw_amount, deposit_address);
@@ -625,7 +654,12 @@ $(function() {
 
     $(".switch_to_send").click(function() {
         var box = $(this).parent().parent();
+        var spinner_classes = box.find(".spinner").first().attr('class');
+        var spinner = "<div class='" + spinner_classes + "'></div>";
+
         var crypto = box.data('currency');
+
+        box.find(".fee_wrapper .spinner").attr('class', spinner_classes);
 
         switch_section(box, "send");
 
