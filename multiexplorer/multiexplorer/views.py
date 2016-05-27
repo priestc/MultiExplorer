@@ -400,3 +400,11 @@ def onchain_status(request):
 
     response = requests.get("https://shapeshift.io/txStat/" + address).json()
     return http.JsonResponse(response)
+
+def single_tx(request, crypto, txid):
+    full_tx = CachedTransaction.fetch_full_tx(crypto, txid=txid)
+    return TemplateResponse(request, "single_transaction.html", {
+        'tx': full_tx,
+        'crypto': crypto,
+        'crypto_name': crypto_data[crypto]['name']
+    })

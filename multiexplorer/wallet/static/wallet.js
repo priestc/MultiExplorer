@@ -35,40 +35,33 @@ function add_to_balance(crypto, addresses) {
     // these addresses will make up the balance. (plus the change addresses
     // which will be made in another concurrent thread)
 
-    //console.log("calculate balances with:", addresses);
-
+    //console.log("balance returned", response);
     var box = $(".crypto_box[data-currency=" + crypto + "]");
-    box.find(".fiat_balance").html(text_spinner);
+    var bal = box.find(".crypto_balance");
+    var existing = parseFloat(bal.text());
+    var calculated_balance = generate_history(crypto)
+    var new_balance = existing + calculated_balance;
+    bal.text(new_balance.toFixed(8));
 
-    if(addresses.length == 1) {
-        var a = "?address=" + addresses[0];
-        var mode = "fallback";
+    var exchange_rate = exchange_rates[crypto]['rate'];
+    box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
+    update_total_fiat_balance();
+}
+
+function update_outstanding_ajax(crypto, value) {
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    var count = box.find(".outstanding_ajax_counter");
+    var existing = parseInt(count.text());
+    count.text(existing + value);
+
+    console.log(crypto, "ajax counter changed", count.text());
+
+    if(count.text() == 0) {
+        box.find(".spinner").first().hide();
+        console.log("hide spinner!", crypto);
     } else {
-        var a = "?addresses=" + addresses.join(",");
-        var mode = "private5";
+        box.find(".spinner").first().show();
     }
-
-    $.ajax({
-        'url': "/api/address_balance/" + mode + a + "&currency=" + crypto,
-        'type': 'get',
-    }).success(function (response) {
-        //console.log("balance returned", response);
-        var bal = box.find(".crypto_balance");
-        var existing = parseFloat(bal.text());
-        var this_balance = response.balance.total;
-        if (typeof this_balance == 'undefined') {
-            this_balance = response.balance;
-        }
-        var new_balance = existing + this_balance;
-        bal.text(new_balance.toFixed(8));
-
-        var exchange_rate = exchange_rates[crypto]['rate'];
-        box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
-        update_total_fiat_balance();
-    }).fail(function() {
-        box.find(".fiat_balance").css({color: "red"}).text("Error getting balance.");
-        box.find(".switch_to_send").hide(); //attr('disabled', 'disabled');
-    });
 }
 
 function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
@@ -103,6 +96,7 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
 
     var all_my_addresses = already_tried_addresses.concat(addresses);
 
+    update_outstanding_ajax(crypto, 1);
     $.ajax({
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
@@ -164,6 +158,9 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         box.find(".switch_to_send").hide();
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
+    }).done(function() {
+        console.log("ajax finished", crypto);
+        update_outstanding_ajax(crypto, -1);
     })
 }
 
@@ -296,17 +293,30 @@ function generate_history(crypto) {
     });
 
     var history_section = $(".crypto_box[data-currency=" + crypto + "] .history_section");
+    history_section.empty();
+    var running_total = 0;
 
+    var all_txids = [];
     $.each(history, function(i, tx) {
-        var my_amount = my_amount_for_tx(crypto, tx);
-        console.log(tx.time, my_amount.toFixed(8));
-        if (my_amount > 0) {
-            var formatted_amount = " <span style='color: green'>+" + Math.abs(my_amount).toFixed(8) + "</span>";
-        } else {
-            var formatted_amount = " <span style='color: red'>-" + Math.abs(my_amount).toFixed(8) + "</span>";
+        if(all_txids.indexOf(tx.txid) != -1) {
+            return // duplicate, don't make part of history...
         }
-        history_section.append(tx.time + formatted_amount + "<br>");
+
+        var my_amount = my_amount_for_tx(crypto, tx);
+        running_total += my_amount;
+        var disp = Math.abs(my_amount).toFixed(8)
+        //console.log(tx.time, my_amount.toFixed(8));
+        if (my_amount > 0) {
+            var formatted_amount = " <span style='color: green'>+" + disp + "</span>";
+        } else {
+            var formatted_amount = " <span style='color: red'>-" + disp + "</span>";
+        }
+        var explorer_link = "<a target='_blank'  href='/tx/" + crypto + "/" + tx.txid + "'>" + tx.txid.substr(0, 8) + "...</a>";
+        history_section.append(explorer_link + "<br>" + tx.time + formatted_amount + "<hr>");
+        all_txids.push(tx.txid);
     });
+
+    return running_total;
 }
 
 function switch_section(box, to_section) {
@@ -375,7 +385,6 @@ $(function() {
         var crypto = box.data('currency');
 
         switch_section(box, "history");
-        generate_history(crypto);
     });
 
     $(".switch_to_sweep").click(function() {

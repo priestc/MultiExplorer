@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
-    onchain_exchange_rates, onchain_status, logout
+    onchain_exchange_rates, onchain_status, logout, single_tx
 )
 
 urlpatterns = [
@@ -17,6 +17,7 @@ urlpatterns = [
 
     url(r'^address/(?P<address>\w+)/$', single_address, name="single_address"),
     url(r'^block', block_lookup, name="block_lookup"),
+    url(r'^tx/(?P<crypto>\w{3,5})/(?P<txid>\w+)', single_tx, name="single_tx"),
 
     url(r'^api$', api_docs, name="api_docs"),
     url(r'^api/onchain_exchange_rates', onchain_exchange_rates, name="onchain_exchange_rates"),
