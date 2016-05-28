@@ -39,7 +39,7 @@ function update_balance(crypto) {
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var bal = box.find(".crypto_balance");
     var existing = parseFloat(bal.text());
-    var calculated_balance = generate_history(crypto)
+    var calculated_balance = generate_history(crypto);
     bal.text(calculated_balance.toFixed(8));
 
     var exchange_rate = exchange_rates[crypto]['rate'];
@@ -234,6 +234,7 @@ function refresh_fiat() {
         var crypto_balance = parseFloat(box.find('.crypto_balance').text());
         var new_fiat = crypto_balance * exchange_rates[crypto]['rate'];
         box.find('.fiat_balance').text(new_fiat.toFixed(2));
+        generate_history(crypto);
     });
 }
 
@@ -281,6 +282,9 @@ function generate_history(crypto) {
         return new Date(b.time) - new Date(a.time);
     });
 
+    var fiat_symbol = $(".fiat_symbol").first().text();
+    var fiat_unit = $(".fiat_unit").first().text();
+
     var history_section = $(".crypto_box[data-currency=" + crypto + "] .history_section");
     history_section.empty();
     var running_total = 0;
@@ -300,7 +304,8 @@ function generate_history(crypto) {
         } else {
             var color_and_sign = "red'>-";
         }
-        var fiat = " ($" + (disp * er).toFixed(2) + " USD)";
+
+        var fiat = " (" + fiat_symbol + (disp * er).toFixed(2) + " " + fiat_unit + ")";
         var formatted_amount = " <span style='color: " + color_and_sign + disp + " " + crypto.toUpperCase() + fiat + "</span>";
 
         var time = moment(tx.time).fromNow();
@@ -341,7 +346,8 @@ $(function() {
         $("#money_part").hide();
     });
 
-    $("#save_settings_button").click(function() {
+    $("#save_settings_button").click(function(event) {
+        event.preventDefault();
         var form = $("#settings_form");
         var swl = [];
         form.find(".supported_crypto:checked").each(function(i, crypto) {
@@ -353,19 +359,24 @@ $(function() {
             display_fiat: form.find("select[name=display_fiat]").val(),
             show_wallet_list: swl.join(','),
         }
+
+        form.find(".spinner").show();
+
         $.ajax({
             url: '/wallet/save_settings',
             type: 'post',
             data: settings,
         }).success(function(response) {
+            $("#money_part").show();
             settings.show_wallet_list = swl; // replace comma seperated string with list
             fill_in_settings(response.settings);
             if(response.exchange_rates) {
-                exchange_rates = response.exchange_rates;
+                exchange_rates = response.exchange_rates[0];
                 refresh_fiat();
             }
             $("#settings_part").hide();
-            $("#money_part").show();
+        }).done(function() {
+            form.find(".spinner").hide();
         });
     });
 
@@ -471,8 +482,6 @@ $(function() {
         var box = $(this).parent().parent();
         var spinner_classes = box.find(".spinner").first().attr('class');
         var spinner = "<div class='" + spinner_classes + "' style='width: 12px; height: 12px'></div>";
-
-        console.log("spinner classes", spinner_classes, spinner);
 
         var crypto = box.data('currency');
         var error_area = box.find(".exchange_part .error_area");

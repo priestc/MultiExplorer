@@ -227,16 +227,19 @@
             <option value="{{ ch.0 }}">{{ ch.1 }}</option>
             {% endfor %}
         </select>
+        <br><br>
+        Wallet Backup Mnemonic:
+        <div id="mnemonic_disp">
+        </div><br>
+        All addresses for all currencies are derived from these seed words.<br>
+        Copy+Paste these words into another wallet that supports BIP39+BIP44<br>
+        to import all addresses. Backup these words in case you lose access <br>
+        to your multiexplorer account.
+        <br><br>
+        <div class="sending_bottom_area" style="overflow: hidden">
+            <button id="save_settings_button" class="submit_exchange submit_button" style="float: left">Save Settings</button>
+            <div class="error_area"><div class="spinner thin-spinner fast-spinner" style="display: none; height: 20px; width: 20px;"></div></div>
+        </div>
     </form>
-    <br><br>
-    Wallet Backup Mnemonic:
-    <div id="mnemonic_disp">
-    </div><br>
-    All addresses for all currencies are derived from these seed words.<br>
-    Copy+Paste these words into another wallet that supports BIP39+BIP44<br>
-    to import all addresses. Backup these words in case you lose access <br>
-    to your multiexplorer account.
-    <br><br>
-    <button id="save_settings_button">Save Settings</button>
 </div>
 {% endblock %}
