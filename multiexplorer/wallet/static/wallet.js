@@ -236,6 +236,7 @@ function refresh_fiat() {
         box.find('.fiat_balance').text(new_fiat.toFixed(2));
         generate_history(crypto);
     });
+    update_total_fiat_balance();
 }
 
 function fill_in_settings(settings) {
@@ -375,6 +376,13 @@ $(function() {
                 refresh_fiat();
             }
             $("#settings_part").hide();
+        }).fail(function(jqXHR) {
+            if(jqXHR.responseJSON) {
+                var error_text = jqXHR.responseJSON.error
+            } else {
+                var error_text = "error"
+            }
+            form.find(".error_area").css({color: 'red'}).text(error_text);
         }).done(function() {
             form.find(".spinner").hide();
         });
