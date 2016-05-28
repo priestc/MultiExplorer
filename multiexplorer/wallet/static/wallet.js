@@ -40,11 +40,10 @@ function add_to_balance(crypto, addresses) {
     var bal = box.find(".crypto_balance");
     var existing = parseFloat(bal.text());
     var calculated_balance = generate_history(crypto)
-    var new_balance = existing + calculated_balance;
-    bal.text(new_balance.toFixed(8));
+    bal.text(calculated_balance.toFixed(8));
 
     var exchange_rate = exchange_rates[crypto]['rate'];
-    box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * new_balance).toFixed(2));
+    box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * calculated_balance).toFixed(2));
     update_total_fiat_balance();
 }
 
