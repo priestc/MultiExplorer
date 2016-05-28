@@ -240,7 +240,7 @@ function follow_unconfirmed(crypto, txid, amount) {
     setTimeout(function() {
         $.ajax({
             url: "/api/single_transaction/random?currency=" + crypto + "&txid=" + txid
-        }).success(function(response) {
+        }).done(function(response) {
             area.find(".error_area").text("");
 
             var from_response_amount = my_amount_for_tx(crypto, response.transaction);
@@ -278,7 +278,7 @@ function follow_unconfirmed(crypto, txid, amount) {
 function get_optimal_fee(crypto, area) {
     $.ajax({
         url: "/api/optimal_fee/average3?currency=" + crypto,
-    }).success(function(response) {
+    }).done(function(response) {
         var fee_per_kb = parseFloat(response.optimal_fee_per_KiB);
         optimal_fees[crypto] = fee_per_kb;
         if(area) {
@@ -302,7 +302,7 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
     }
     $.ajax({
         url: "/api/unspent_outputs/fallback?" + addrs + "&currency=" + crypto,
-    }).success(function(response) {
+    }).done(function(response) {
         // sort so highest value utxo is the first element.
         var sorted = response.utxos.sort(function(x,y){return y.amount-x.amount});
         var rewritten = [];

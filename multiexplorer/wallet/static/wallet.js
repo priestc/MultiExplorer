@@ -96,7 +96,7 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
     $.ajax({
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
-    }).success(function (response) {
+    }).done(function (response) {
         var txs = response['transactions'];
         tx_history[crypto] = tx_history[crypto].concat(txs);
         $.each(txs, function(i, tx) {
@@ -156,7 +156,7 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         box.find(".switch_to_send").hide();
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
-    }).done(function() {
+    }).always(function() {
         update_outstanding_ajax(crypto, -1);
     })
 }
@@ -367,7 +367,7 @@ $(function() {
             url: '/wallet/save_settings',
             type: 'post',
             data: settings,
-        }).success(function(response) {
+        }).done(function(response) {
             $("#money_part").show();
             settings.show_wallet_list = swl; // replace comma seperated string with list
             fill_in_settings(response.settings);
@@ -383,7 +383,7 @@ $(function() {
                 var error_text = "error"
             }
             form.find(".error_area").css({color: 'red'}).text(error_text);
-        }).done(function() {
+        }).always(function() {
             form.find(".spinner").hide();
         });
     });
@@ -508,7 +508,7 @@ $(function() {
         $.ajax({
             type: 'get',
             url: '/api/onchain_exchange_rates?deposit_currency=' + crypto,
-        }).success(function(response) {
+        }).done(function(response) {
             area.empty();
             $.each(response.pairs, function(i, pair) {
                 var to_code = pair.withdraw_currency.code.toLowerCase();
@@ -654,7 +654,7 @@ $(function() {
                     withdrawal: withdraw_address,
                     pair: (crypto + "_" + withdraw_code).toLowerCase()
                 }
-            }).success(function(response) {
+            }).done(function(response) {
                 var deposit_address = response.deposit;
                 var tx = make_tx(crypto, [[deposit_address, deposit_satoshi]], 1.0);
                 used_addresses[withdraw_code].push(withdraw_address);
