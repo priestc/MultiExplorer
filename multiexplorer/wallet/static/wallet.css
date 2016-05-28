@@ -251,3 +251,9 @@ button {
 .exchange_logo {
     width: 150px;
 }
+
+.history_section {
+    background-color: rgba(256, 256, 256, 0.8);
+    color: black;
+    padding: 3px;
+}

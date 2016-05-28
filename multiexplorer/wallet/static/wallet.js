@@ -30,7 +30,7 @@ function validate_address(crypto, address) {
     return false
 }
 
-function add_to_balance(crypto, addresses) {
+function update_balance(crypto) {
     // active_deposit_addresses == list of dposit addresses that have acivity
     // these addresses will make up the balance. (plus the change addresses
     // which will be made in another concurrent thread)
@@ -53,11 +53,8 @@ function update_outstanding_ajax(crypto, value) {
     var existing = parseInt(count.text());
     count.text(existing + value);
 
-    console.log(crypto, "ajax counter changed", count.text());
-
     if(count.text() == 0) {
         box.find(".spinner").first().hide();
-        console.log("hide spinner!", crypto);
     } else {
         box.find(".spinner").first().show();
     }
@@ -146,6 +143,8 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
             } else if (chain == 'change') {
                 unused_change_addresses[crypto] = unused_address_pool;
             }
+            used_addresses[crypto] = used_addresses[crypto].concat(all_used);
+            update_balance(crypto)
             callback(all_used);
         } else {
             fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
@@ -158,7 +157,6 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
     }).done(function() {
-        console.log("ajax finished", crypto);
         update_outstanding_ajax(crypto, -1);
     })
 }
@@ -190,8 +188,6 @@ function open_wallet(show_wallet_list) {
         tx_history[crypto] = [];
 
         fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
-            used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
-
             var address = unused_deposit_addresses[crypto][0];
             box.find(".deposit_address").text(address);
             box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
@@ -205,7 +201,6 @@ function open_wallet(show_wallet_list) {
                 box.find(".switch_to_exchange").hide();
                 box.find(".switch_to_history").hide();
             } else {
-                add_to_balance(crypto, found_used_addresses);
                 box.find(".switch_to_send").show();
                 box.find(".switch_to_exchange").show();
                 box.find(".switch_to_history").show();
@@ -213,11 +208,6 @@ function open_wallet(show_wallet_list) {
         }, 10, [], []);
 
         fetch_used_addresses(crypto, 'change', function(found_used_addresses) {
-            used_addresses[crypto] = used_addresses[crypto].concat(found_used_addresses);
-
-            if(found_used_addresses.length > 0) {
-                add_to_balance(crypto, found_used_addresses);
-            }
             box.show();
             $("#loading_screen").hide();
         }, 10, [], []);
@@ -294,7 +284,7 @@ function generate_history(crypto) {
     var history_section = $(".crypto_box[data-currency=" + crypto + "] .history_section");
     history_section.empty();
     var running_total = 0;
-
+    var er = exchange_rates[crypto]['rate'];
     var all_txids = [];
     $.each(history, function(i, tx) {
         if(all_txids.indexOf(tx.txid) != -1) {
@@ -306,12 +296,17 @@ function generate_history(crypto) {
         var disp = Math.abs(my_amount).toFixed(8)
         //console.log(tx.time, my_amount.toFixed(8));
         if (my_amount > 0) {
-            var formatted_amount = " <span style='color: green'>+" + disp + "</span>";
+            var color_and_sign = "green'>+";
         } else {
-            var formatted_amount = " <span style='color: red'>-" + disp + "</span>";
+            var color_and_sign = "red'>-";
         }
+        var fiat = " ($" + (disp * er).toFixed(2) + " USD)";
+        var formatted_amount = " <span style='color: " + color_and_sign + disp + " " + crypto.toUpperCase() + fiat + "</span>";
+
+        var time = moment(tx.time).fromNow();
+
         var explorer_link = "<a target='_blank'  href='/tx/" + crypto + "/" + tx.txid + "'>" + tx.txid.substr(0, 8) + "...</a>";
-        history_section.append(explorer_link + "<br>" + tx.time + formatted_amount + "<hr>");
+        history_section.append(explorer_link + " " + time + "<br>" + formatted_amount + "<hr>");
         all_txids.push(tx.txid);
     });
 
