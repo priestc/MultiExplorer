@@ -300,6 +300,7 @@ function generate_history(crypto) {
 
     var history_section = $(".crypto_box[data-currency=" + crypto + "] .history_section");
     history_section.empty();
+
     var running_total = 0;
     var er = exchange_rates[crypto]['rate'];
     var all_txids = [];
@@ -393,11 +394,11 @@ $(function() {
                 refresh_fiat();
             }
             $("#settings_part").hide();
-        }).fail(function(jqXHR) {
+        }).fail(function(jqXHR, errorText) {
             if(jqXHR.responseJSON) {
                 var error_text = jqXHR.responseJSON.error
             } else {
-                var error_text = "error"
+                var error_text = errorText;
             }
             form.find(".error_area").css({color: 'red'}).text(error_text);
         }).always(function() {

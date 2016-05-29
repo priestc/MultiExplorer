@@ -239,7 +239,7 @@ function follow_unconfirmed(crypto, txid, amount) {
     area.find(".txid").text(txid);
     setTimeout(function() {
         $.ajax({
-            url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
+            url: "/api/single_transaction/random?currency=" + crypto + "&txid=" + txid
         }).done(function(response) {
             area.find(".error_area").text("");
 
