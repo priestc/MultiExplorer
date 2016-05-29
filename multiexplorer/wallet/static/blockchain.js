@@ -80,7 +80,7 @@ function get_privkeys_from_inputs(crypto, inputs) {
     $.each(inputs, function(i, input) {
         privkeys.push(get_privkey(crypto, input.address))
     });
-    return privkeys
+    return privkeys;
 }
 
 function estimate_tx_size(in_count, out_count) {
@@ -98,7 +98,7 @@ function actual_tx_size_estimation(crypto, satoshis_will_send, outs_length) {
     });
     //console.log("this tx will have", used_ins.length, "inputs");
     var est = estimate_tx_size(used_ins.length, outs_length);
-    return est
+    return est;
 }
 
 function make_tx(crypto, recipients, optimal_fee_multiplier) {
@@ -239,7 +239,7 @@ function follow_unconfirmed(crypto, txid, amount) {
     area.find(".txid").text(txid);
     setTimeout(function() {
         $.ajax({
-            url: "/api/single_transaction/random?currency=" + crypto + "&txid=" + txid
+            url: "/api/single_transaction/fallback?currency=" + crypto + "&txid=" + txid
         }).done(function(response) {
             area.find(".error_area").text("");
 
@@ -263,11 +263,11 @@ function follow_unconfirmed(crypto, txid, amount) {
                 console.log("still unconfirmed, iterating", local_amount, crypto);
                 follow_unconfirmed(crypto, txid, local_amount);
             }
-        }).fail(function(jqXHR) {
+        }).fail(function(jqXHR, textStatus) {
             if(jqXHR.responseJSON) {
                 area.find(".error_area").text(jqXHR.responseJSON.error);
             } else {
-                area.find(".error_area").text("Network Error");
+                area.find(".error_area").text(textStatus);
             }
 
             follow_unconfirmed(crypto, txid, local_amount);

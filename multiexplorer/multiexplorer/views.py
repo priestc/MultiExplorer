@@ -48,6 +48,11 @@ def perform_lookup(request, service_mode, service_id):
     paranoid = service_id.startswith("paranoid")
     average_mode = service_id.startswith("average")
     private_mode = service_id.startswith("private")
+    random_mode = False
+
+    if service_id == "random":
+        service_id = "fallback"
+        random_mode = True
 
     if service_id == "fallback" or paranoid or average_mode or private_mode:
         Service = None
@@ -117,7 +122,7 @@ def perform_lookup(request, service_mode, service_id):
 
 def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
     currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
-    extended_fetch=False, txid=None, **k):
+    extended_fetch=False, txid=None, random_mode=False, **k):
 
     if not block_args:
         block_args = {}
@@ -169,7 +174,9 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses, xpub, currency, currency_name, block_args, fiat=None, txid=None, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses,
+    xpub, currency, currency_name, block_args, fiat=None, txid=None, random_mode=False, **k):
+
     if Service:
         if Service.supported_cryptos and currency not in Service.supported_cryptos:
             raise Exception("%s not supported for %s with %s" % (
@@ -182,6 +189,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
     modes = dict(
         report_services=True,
         services=services,
+        random=random_mode,
     )
 
     if service_id.startswith("paranoid"):

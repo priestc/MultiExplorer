@@ -31,14 +31,8 @@ function validate_address(crypto, address) {
 }
 
 function update_balance(crypto) {
-    // active_deposit_addresses == list of dposit addresses that have acivity
-    // these addresses will make up the balance. (plus the change addresses
-    // which will be made in another concurrent thread)
-
-    //console.log("balance returned", response);
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var bal = box.find(".crypto_balance");
-    var existing = parseFloat(bal.text());
     var calculated_balance = generate_history(crypto);
     bal.text(calculated_balance.toFixed(8));
 
@@ -48,16 +42,23 @@ function update_balance(crypto) {
 }
 
 function update_outstanding_ajax(crypto, value) {
+    // this keeps track of how many ajax calls are outstanding for each crypto.
+    // it is needed because there are always two simoutaneously occuring chains
+    // of addresses to check for activity. When both deposit and change chains are finished,
+    // the spinner will stop. `value` should be either +1 or -1.
+
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var count = box.find(".outstanding_ajax_counter");
     var existing = parseInt(count.text());
-    count.text(existing + value);
+    var new_ = existing + value;
+    count.text(new_);
 
-    if(count.text() == 0) {
+    if(new_ == 0) {
         box.find(".spinner").first().hide();
     } else {
         box.find(".spinner").first().show();
     }
+    return new_
 }
 
 function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
@@ -120,7 +121,7 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         var needs_to_go = addresses_with_activity.length;
 
         if(needs_to_go == 0) {
-            // all results returned no activity
+            // all results for this iteration returned no activity
             var i = 0;
             var unused_address_pool = [];
             while(unused_address_pool.length < 5) {
@@ -144,7 +145,6 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
                 unused_change_addresses[crypto] = unused_address_pool;
             }
             used_addresses[crypto] = used_addresses[crypto].concat(all_used);
-            update_balance(crypto)
             callback(all_used);
         } else {
             fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
@@ -157,7 +157,18 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
     }).always(function() {
-        update_outstanding_ajax(crypto, -1);
+        var outstanding = update_outstanding_ajax(crypto, -1);
+        if (outstanding == 0) {
+            update_balance(crypto);
+            console.log(crypto, "finished getting history for both chains");
+            $.each(tx_history[crypto], function(i, tx) {
+                if (tx.confirmations == 0) {
+                    console.log("unconfirmed found!");
+                    var amount = my_amount_for_tx(crypto, tx);
+                    follow_unconfirmed(crypto, tx.txid, amount);
+                }
+            });
+        }
     })
 }
 
@@ -227,7 +238,8 @@ function open_wallet(show_wallet_list) {
 
 function refresh_fiat() {
     // after new fiat exchanage rates come in, this function gets called which
-    // recalculates balances from new rates.
+    // recalculates balances from new rates. Also regenerates the history sections
+    // to show balances in new currency.
     $(".crypto_box:visible").each(function(i, dom_box){
         var box = $(dom_box);
         var crypto = box.data('currency');
@@ -297,7 +309,12 @@ function generate_history(crypto) {
         }
 
         var my_amount = my_amount_for_tx(crypto, tx);
-        running_total += my_amount;
+        if(tx.confirmations >= 1) {
+            running_total += my_amount;
+        } else {
+            console.log("not counting", tx);
+        }
+
         var disp = Math.abs(my_amount).toFixed(8)
         //console.log(tx.time, my_amount.toFixed(8));
         if (my_amount > 0) {
