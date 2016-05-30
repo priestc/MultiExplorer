@@ -151,20 +151,28 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
         } else {
             fetch_used_addresses(crypto, chain, needs_to_go, all_tried, all_used);
         }
-    }).fail(function(jqXHR, errorText) {
-        box.find(".fiat_balance").css({color: 'red'}).text(errorText);
-        box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        var error = "Network Error";
+        if(jqXHR.responseJSON) {
+            error = jqXHR.responseJSON.error
+        }
+
+        box.find(".internal_error").text(error);
         box.find(".switch_to_send").hide();
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
+        box.find(".receive_part").hide();
+        box.find(".qr").empty();
+
     }).always(function() {
         var outstanding = update_outstanding_ajax(crypto, -1);
-        if (outstanding == 0) {
+        if (outstanding == 0 && !box.find(".internal_error").text()) {
             $("#loading_screen").hide();
             update_balance(crypto);
             console.log(crypto, "finished getting history for both chains");
 
             var address = unused_deposit_addresses[crypto][0];
+            box.find(".receive_part").show();
             box.find(".deposit_address").text(address);
             box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
 

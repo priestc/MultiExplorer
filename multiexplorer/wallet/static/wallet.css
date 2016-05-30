@@ -266,3 +266,9 @@ button {
     background: #dfdfdf;
     padding: 20px;
 }
+
+.internal_error {
+    background-color: white;
+    color: red;
+    padding: 20px;
+}

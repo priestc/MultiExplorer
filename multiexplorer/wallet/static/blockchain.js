@@ -264,11 +264,11 @@ function follow_unconfirmed(crypto, txid, amount) {
                 console.log("still unconfirmed, iterating", local_amount, crypto);
                 follow_unconfirmed(crypto, txid, local_amount);
             }
-        }).fail(function(jqXHR, textStatus) {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
             if(jqXHR.responseJSON) {
                 area.find(".error_area").text(jqXHR.responseJSON.error);
             } else {
-                area.find(".error_area").text(textStatus);
+                area.find(".error_area").text(errorThrown);
             }
 
             follow_unconfirmed(crypto, txid, local_amount);
