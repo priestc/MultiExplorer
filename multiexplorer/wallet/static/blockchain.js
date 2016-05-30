@@ -201,11 +201,11 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
                 withdraw_exchange_area.hide();
                 follow_unconfirmed(withdraw_crypto, txid, withdraw_amount);
             }
-        }).fail(function(jqXHR) {
+        }).fail(function(jqXHR, responseText) {
             if(jqXHR.responseJSON) {
                 deposit_exchange_area.find(".error_area").text(jqXHR.responseJSON.error);
             } else {
-                deposit_exchange_area.find(".error_area").text("Network Error");
+                deposit_exchange_area.find(".error_area").text(responseText);
             }
             follow_onchain_exchange(
                 deposit_crypto, deposit_amount, withdraw_crypto,
@@ -218,7 +218,6 @@ function follow_onchain_exchange(deposit_crypto, deposit_amount, withdraw_crypto
 function follow_unconfirmed(crypto, txid, amount) {
     // Takes care of hiding and showing the "unconfirmed" box at the top.
 
-    console.log("following unconfirmed with amount:", amount, crypto);
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     var area = box.find(".unconfirmed_area").show();
     var local_amount = amount;

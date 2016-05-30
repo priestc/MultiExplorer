@@ -1,15 +1,62 @@
-<div class="center_box" id="login_box">
-    <form id="login_form" method="post">
-        <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout">Log Out</a>{% endif %}</h3>
-        <span id="login_error" style="color: red"></span><br>
-        <div {% if user.is_authenticated %}style="display: none"{% endif %}>
-        Username: <input type="text" name="username" value="{{ username }}"></div><br>
-        Password: <input type="password" name="password" id="password"><br>
-        <br><br>
-        <input type="submit" value="login">
+{% load staticfiles %}
 
-    </form>
+<div id="wallet_front_screen">
+    <div class="center_box" id="login_box">
+        <form id="login_form" method="post">
+            <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout">Log Out</a>{% endif %}</h3>
+            <span id="login_error" style="color: red"></span><br>
+            <div {% if user.is_authenticated %}style="display: none"{% endif %}>
+            Username: <input type="text" name="username" value="{{ username }}"></div><br>
+            Password: <input type="password" name="password" id="password"><br>
+            <br><br>
+            <input type="submit" value="login">
+        </form>
+
+    </div>
+
+    <div id="landing_page">
+        <h2>Multiexplorer Wallet.</h2>
+
+        features include:
+        <ul>
+            <li>Utilizes Moneywagon Private Mode to avoid
+                blockchain api service log analysis de-anonymization.
+            </li>
+            <li>
+                Private Key is not stored by the service. Similar to the wallet
+                provided by Blockchain.info. If hackers get ahold of a database
+                dump containing all multiexplorer user data,
+                those hackers will not be able to move any customer funds.
+                Users do not have to trust the server operators of multiexplorer wallet.
+            </li>
+            <li>
+                All addresses are derived from a single deterministic seed. Backing up and restoring
+                from a backup happens from a single 12 word mnemonic phrase.
+            </li>
+            <li>
+                Each transaction multiexplorer wallet makes uses a unique address for the change
+                address, making this walet suitable as a general purpose wallet that preserves
+                user privacy.
+            </li>
+            <li>
+                Calculates optimal fee, so all transactions made by multiexplorer wallet will
+                confirm quickly, regardless of an occuring capacity spike.
+            </li>
+            <li>
+                Shapeshift.io support for built in conversion between any supported currency.
+            </li>
+            <li>
+                Full sendind/sweeping/receiving support for the following currencies:
+                <ul>
+                    {% for data in crypto_data %}
+                    <li><img src="{% static data.logo %}" style="width: 35px; height: 35px"> {{ data.code|upper }} - {{data.name }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+    </div>
 </div>
+
 <script>
 var raw_password = undefined;
 var raw_mnemonic = undefined;
@@ -18,7 +65,7 @@ $("#login_form").submit(function(event) {
     var username = $(this).find("input[name=username]").val();
     raw_password = $(this).find("input[name=password]").val();
 
-    $("#register_box, #login_box").hide();
+    $("#register_box, #wallet_front_screen").hide();
     $("#loading_screen").show();
 
     $.ajax({
@@ -38,7 +85,7 @@ $("#login_form").submit(function(event) {
         fill_in_settings(response.wallet_settings);
     }).fail(function(jqXHR) {
         $("#login_error").text(jqXHR.responseText);
-        $("#register_box, #login_box").show();
+        $("#register_box, #wallet_front_screen").show();
         $("#loading_screen").hide();
     });
 

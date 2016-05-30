@@ -257,3 +257,12 @@ button {
     color: black;
     padding: 3px;
 }
+
+#landing_page {
+    max-width: 80%;
+    min-width: 250px;
+    margin: 10px auto 10px auto;
+    text-align: left;
+    background: #dfdfdf;
+    padding: 20px;
+}
