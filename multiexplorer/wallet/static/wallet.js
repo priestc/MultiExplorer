@@ -61,7 +61,7 @@ function update_outstanding_ajax(crypto, value) {
     return new_
 }
 
-function fetch_used_addresses(crypto, chain, callback, blank_length, already_tried_addresses, all_used_arg) {
+function fetch_used_addresses(crypto, chain, blank_length, already_tried_addresses, all_used_arg) {
     // iterates through the deposit chain until it finds `blank_length` blank addresses.
     // the last two args are used in iteration, and shoud be passed in empty lists
     // to initialize.
@@ -92,6 +92,8 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
     args += "&extended_fetch=true&currency=" + crypto;
 
     var all_my_addresses = already_tried_addresses.concat(addresses);
+
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
 
     update_outstanding_ajax(crypto, 1);
     $.ajax({
@@ -145,13 +147,12 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
                 unused_change_addresses[crypto] = unused_address_pool;
             }
             used_addresses[crypto] = used_addresses[crypto].concat(all_used);
-            callback(all_used);
+            return // stop iteration
         } else {
-            fetch_used_addresses(crypto, chain, callback, needs_to_go, all_tried, all_used);
+            fetch_used_addresses(crypto, chain, needs_to_go, all_tried, all_used);
         }
-    }).fail(function(jqXHR) {
-        var box = $(".crypto_box[data-currency=" + crypto + "]");
-        box.find(".fiat_balance").css({color: 'red'}).text("Network error getting balance.");
+    }).fail(function(jqXHR, errorText) {
+        box.find(".fiat_balance").css({color: 'red'}).text(errorText);
         box.find(".deposit_address").css({color: 'red'}).text(jqXHR.responseJSON.error);
         box.find(".switch_to_send").hide();
         box.find(".switch_to_exchange").hide();
@@ -159,11 +160,29 @@ function fetch_used_addresses(crypto, chain, callback, blank_length, already_tri
     }).always(function() {
         var outstanding = update_outstanding_ajax(crypto, -1);
         if (outstanding == 0) {
+            $("#loading_screen").hide();
             update_balance(crypto);
             console.log(crypto, "finished getting history for both chains");
+
+            var address = unused_deposit_addresses[crypto][0];
+            box.find(".deposit_address").text(address);
+            box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
+
+            if(used_addresses[crypto].length == 0) {
+                box.find(".crypto_balance").text("0.0");
+                box.find(".fiat_balance").text("0.0");
+                box.find(".switch_to_send").hide();
+                box.find(".switch_to_exchange").hide();
+                box.find(".switch_to_history").hide();
+            } else {
+                box.find(".switch_to_send").show();
+                box.find(".switch_to_exchange").show();
+                box.find(".switch_to_history").show();
+            }
+
             $.each(tx_history[crypto], function(i, tx) {
                 if (tx.confirmations == 0) {
-                    console.log("unconfirmed found!");
+                    console.log("unconfirmed found in history!");
                     var amount = my_amount_for_tx(crypto, tx);
                     follow_unconfirmed(crypto, tx.txid, amount);
                 }
@@ -176,6 +195,18 @@ function rotate_deposit(crypto, up) {
     var pool = unused_deposit_addresses[crypto];
     unused_deposit_addresses[crypto] = arrayRotate(pool, up);
     return pool[0];
+}
+
+function load_crypto(crypto) {
+    used_addresses[crypto] = [];
+    tx_history[crypto] = [];
+
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    box.find(".crypto_balance").text("0.0");
+    box.find(".fiat_balance").text("0.0");
+
+    fetch_used_addresses(crypto, 'deposit', 10, [], []);
+    fetch_used_addresses(crypto, 'change', 10, [], []);
 }
 
 function open_wallet(show_wallet_list) {
@@ -195,33 +226,7 @@ function open_wallet(show_wallet_list) {
 
         box.show();
 
-        used_addresses[crypto] = [];
-        tx_history[crypto] = [];
-
-        fetch_used_addresses(crypto, 'deposit', function(found_used_addresses) {
-            var address = unused_deposit_addresses[crypto][0];
-            box.find(".deposit_address").text(address);
-            box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
-
-            if(found_used_addresses.length == 0) {
-                // if the external chain has no activity, then the internal chain
-                // must have none either. Don't bother calculating balance.
-                box.find(".crypto_balance").text("0.0");
-                box.find(".fiat_balance").text("0.0");
-                box.find(".switch_to_send").hide();
-                box.find(".switch_to_exchange").hide();
-                box.find(".switch_to_history").hide();
-            } else {
-                box.find(".switch_to_send").show();
-                box.find(".switch_to_exchange").show();
-                box.find(".switch_to_history").show();
-            }
-        }, 10, [], []);
-
-        fetch_used_addresses(crypto, 'change', function(found_used_addresses) {
-            box.show();
-            $("#loading_screen").hide();
-        }, 10, [], []);
+        load_crypto(crypto);
 
         box.find(".deposit_shift_down, .deposit_shift_up").click(function() {
             var which = $(this).hasClass('deposit_shift_up');
@@ -249,25 +254,6 @@ function refresh_fiat() {
         generate_history(crypto);
     });
     update_total_fiat_balance();
-}
-
-function fill_in_settings(settings) {
-    // this function gets called every time the settings are changed, and
-    // also once when the app first loads.
-
-    var form = $("#settings_form");
-
-    form.find("select[name=display_fiat]").val(settings.display_fiat_unit);
-    $(".fiat_unit").text(settings.display_fiat_unit.toUpperCase());
-    $(".fiat_symbol").text(settings.display_fiat_symbol);
-
-    form.find("select[name=auto_logout]").val(settings.auto_logout);
-
-    $.each(settings.show_wallet_list, function(i, crypto) {
-        form.find("input[value=" + crypto + "]").attr("checked", "checked");
-        show_wallet_list.push(crypto);
-    });
-    open_wallet(settings.show_wallet_list);
 }
 
 function fill_in_fee_radios(crypto, tx_size) {
@@ -314,6 +300,7 @@ function generate_history(crypto) {
             running_total += my_amount;
         } else {
             console.log("not counting", tx);
+            return // don't print 0 confirm to history section.
         }
 
         var disp = Math.abs(my_amount).toFixed(8)
@@ -358,59 +345,6 @@ function update_total_fiat_balance() {
 }
 
 $(function() {
-    $("#wallet_settings").click(function(event) {
-        event.preventDefault();
-        $("#mnemonic_disp").text(raw_mnemonic);
-        $("#settings_part").show();
-        $("#money_part").hide();
-    });
-
-    $("#cancel_settings").click(function() {
-        $("#money_part").show();
-        $("#settings_part").hide();
-    });
-
-    $("#save_settings_button").click(function(event) {
-        event.preventDefault();
-        var form = $("#settings_form");
-        var swl = [];
-        form.find(".supported_crypto:checked").each(function(i, crypto) {
-            var c = $(crypto);
-            swl.push(c.val())
-        });
-        var settings = {
-            auto_logout: form.find("select[name=auto_logout]").val(),
-            display_fiat: form.find("select[name=display_fiat]").val(),
-            show_wallet_list: swl.join(','),
-        }
-
-        form.find(".spinner").show();
-
-        $.ajax({
-            url: '/wallet/save_settings',
-            type: 'post',
-            data: settings,
-        }).done(function(response) {
-            $("#money_part").show();
-            settings.show_wallet_list = swl; // replace comma seperated string with list
-            fill_in_settings(response.settings);
-            if(response.exchange_rates) {
-                exchange_rates = response.exchange_rates[0];
-                refresh_fiat();
-            }
-            $("#settings_part").hide();
-        }).fail(function(jqXHR, errorText) {
-            if(jqXHR.responseJSON) {
-                var error_text = jqXHR.responseJSON.error
-            } else {
-                var error_text = errorText;
-            }
-            form.find(".error_area").css({color: 'red'}).text(error_text);
-        }).always(function() {
-            form.find(".spinner").hide();
-        });
-    });
-
     $(".cancel_button").click(function() {
         var box = $(this).parent().parent();
         switch_section(box, "receive");

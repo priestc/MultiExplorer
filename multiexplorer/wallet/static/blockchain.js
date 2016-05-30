@@ -241,14 +241,14 @@ function follow_unconfirmed(crypto, txid, amount) {
             url: "/api/single_transaction/random?currency=" + crypto + "&txid=" + txid
         }).done(function(response) {
             area.find(".error_area").text("");
-
-            var from_response_amount = my_amount_for_tx(crypto, response.transaction);
+            var tx = response.transaction;
+            var from_response_amount = my_amount_for_tx(crypto, tx);
             if(from_response_amount.toFixed(8) != local_amount.toFixed(8)) {
                 console.log("Transaction amount is different than expected:", from_response_amount, local_amount);
             }
             local_amount = from_response_amount;
 
-            if(response.transaction.confirmations >= 1) {
+            if(tx.confirmations >= 1) {
                 console.log(crypto, "got a confirmation!");
                 var bal = box.find(".crypto_balance");
                 var existing = parseFloat(bal.text());
@@ -257,6 +257,8 @@ function follow_unconfirmed(crypto, txid, amount) {
                 area.hide();
                 box.find(".fiat_balance").css({color: "inherit"}).text((er * new_balance).toFixed(2));
                 update_total_fiat_balance();
+                tx_history[crypto].push(tx);
+                generate_history(crypto);
                 return
             } else {
                 console.log("still unconfirmed, iterating", local_amount, crypto);
