@@ -365,6 +365,11 @@ $(function() {
         $("#money_part").hide();
     });
 
+    $("#cancel_settings").click(function() {
+        $("#money_part").show();
+        $("#settings_part").hide();
+    });
+
     $("#save_settings_button").click(function(event) {
         event.preventDefault();
         var form = $("#settings_form");
