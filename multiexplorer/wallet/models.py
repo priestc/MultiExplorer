@@ -31,7 +31,7 @@ class WalletMasterKeys(models.Model):
         return self.show_wallet_list.split(",")
 
     def get_settings(self):
-        if self.display_fiat == 'usd':
+        if self.display_fiat in ['cad', 'usd']:
             symbol = '$'
         elif self.display_fiat == 'eur':
             symbol = '€'

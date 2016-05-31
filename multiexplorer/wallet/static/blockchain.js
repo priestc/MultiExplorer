@@ -265,12 +265,11 @@ function follow_unconfirmed(crypto, txid, amount) {
                 follow_unconfirmed(crypto, txid, local_amount);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
+            var error = "Network Error";
             if(jqXHR.responseJSON) {
-                area.find(".error_area").text(jqXHR.responseJSON.error);
-            } else {
-                area.find(".error_area").text(errorThrown);
+                error = jqXHR.responseJSON.error;
             }
-
+            area.find(".error_area").text(error);
             follow_unconfirmed(crypto, txid, local_amount);
         });
     }, 30000);

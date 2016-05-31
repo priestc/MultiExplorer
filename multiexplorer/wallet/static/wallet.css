@@ -116,7 +116,7 @@ button {
 }
 
 .arrow_button {
-    width: 9em;
+    width: 6em;
 }
 
 #mnemonic_disp {
@@ -271,4 +271,5 @@ button {
     background-color: white;
     color: red;
     padding: 20px;
+    display: none;
 }

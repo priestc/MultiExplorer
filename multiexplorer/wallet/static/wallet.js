@@ -100,6 +100,10 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
         'url': "/api/historical_transactions/" + mode + "/" + args,
         'type': 'get',
     }).done(function (response) {
+        box.find(".internal_error").text("");
+        box.find(".arrow_button").show();
+        box.find(".deposit_area").show();
+
         var txs = response['transactions'];
         tx_history[crypto] = tx_history[crypto].concat(txs);
         $.each(txs, function(i, tx) {
@@ -152,21 +156,24 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
             fetch_used_addresses(crypto, chain, needs_to_go, all_tried, all_used);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var error = "Network Error";
+        var error = errorThrown || "Network Error";
         if(jqXHR.responseJSON) {
             error = jqXHR.responseJSON.error
         }
 
-        box.find(".internal_error").text(error);
+        box.find(".internal_error").text(error).show();
         box.find(".switch_to_send").hide();
         box.find(".switch_to_exchange").hide();
         box.find(".switch_to_history").hide();
-        box.find(".receive_part").hide();
+        box.find(".switch_to_sweep").hide();
+        box.find(".arrow_button").hide();
+        box.find(".deposit_area").hide();
         box.find(".qr").empty();
 
     }).always(function() {
         var outstanding = update_outstanding_ajax(crypto, -1);
         if (outstanding == 0 && !box.find(".internal_error").text()) {
+            box.find(".internal_error").hide();
             $("#loading_screen").hide();
             update_balance(crypto);
             console.log(crypto, "finished getting history for both chains");
@@ -190,7 +197,7 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
 
             $.each(tx_history[crypto], function(i, tx) {
                 if (tx.confirmations == 0) {
-                    console.log("unconfirmed found in history!");
+                    //console.log("unconfirmed found in history!", crypto);
                     var amount = my_amount_for_tx(crypto, tx);
                     follow_unconfirmed(crypto, tx.txid, amount);
                 }
@@ -233,7 +240,6 @@ function open_wallet(show_wallet_list) {
         }
 
         box.show();
-
         load_crypto(crypto);
 
         box.find(".deposit_shift_down, .deposit_shift_up").click(function() {
@@ -363,6 +369,11 @@ $(function() {
         var crypto = box.data('currency');
 
         switch_section(box, "history");
+    });
+
+    $(".refresh_crypto").click(function() {
+        var crypto = $(this).parent().parent().data('currency');
+        load_crypto(crypto);
     });
 
     $(".switch_to_sweep").click(function() {
