@@ -180,6 +180,7 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
 
             var address = unused_deposit_addresses[crypto][0];
             box.find(".receive_part").show();
+            box.find(".switch_to_sweep").show();
             box.find(".deposit_address").text(address);
             box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
 
