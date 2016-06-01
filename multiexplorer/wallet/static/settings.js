@@ -1,3 +1,20 @@
+ var last_activity_time = new Date().getTime();
+ $(document.body).bind("mousemove keypress", function(e) {
+    last_activity_time = new Date().getTime();
+ });
+
+var refresh_seconds = null;
+var refresh_timer_id = null;
+function check_refresh() {
+    if(!refresh_seconds) {
+        return
+    }
+    if(new Date().getTime() - last_activity_time >= refresh_seconds * 1000)
+        window.location.reload(true);
+    else
+        refresh_timer_id = setTimeout(check_refresh, 10000);
+}
+
 function fill_in_settings(settings) {
     // this function gets called every time the settings are changed, and
     // also once when the app first loads.
@@ -10,6 +27,13 @@ function fill_in_settings(settings) {
 
     form.find("select[name=auto_logout]").val(settings.auto_logout);
 
+    if(settings.auto_logout > 0) {
+        clearTimeout(refresh_timer_id);
+        refresh_seconds = settings.auto_logout * 60
+        refresh_timer_id = setTimeout(check_refresh, 10000);
+    } else {
+        refresh_seconds = null;
+    }
     $.each(settings.show_wallet_list, function(i, crypto) {
         form.find("input[value=" + crypto + "]").attr("checked", "checked");
         show_wallet_list.push(crypto);

@@ -259,8 +259,8 @@ button {
 }
 
 #landing_page {
-    max-width: 80%;
     min-width: 250px;
+    max-width: 80%;
     margin: 10px auto 10px auto;
     text-align: left;
     background: #dfdfdf;
@@ -272,4 +272,5 @@ button {
     color: red;
     padding: 20px;
     display: none;
+    max-width: 250px;
 }

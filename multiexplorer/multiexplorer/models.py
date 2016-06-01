@@ -11,11 +11,12 @@ class CachedTransaction(models.Model):
     def fetch_full_tx(cls, crypto, txid):
         try:
             tx = cls.objects.get(txid=txid)
+            if not tx.content:
+                return None
             return json.loads(tx.content)
         except cls.DoesNotExist:
+            cache = cls.objects.create(txid=txid, content="")
             tx = get_single_transaction(crypto, txid, random=True)
-            cls.objects.create(
-                txid=txid,
-                content=json.dumps(tx, default=datetime_to_iso),
-            )
+            cache.content = json.dumps(tx, default=datetime_to_iso)
+            cache.save()
             return tx

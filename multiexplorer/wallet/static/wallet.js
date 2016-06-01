@@ -220,6 +220,7 @@ function load_crypto(crypto) {
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     box.find(".crypto_balance").text("0.0");
     box.find(".fiat_balance").text("0.0");
+    box.find(".internal_error").text("").hide();
 
     fetch_used_addresses(crypto, 'deposit', 10, [], []);
     fetch_used_addresses(crypto, 'change', 10, [], []);
