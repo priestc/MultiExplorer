@@ -249,9 +249,16 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
     return ret
 
 def _do_extended_fetch(crypto, transactions):
+    """
+    `transactions` is a list of transactions that comes from get_historical_transactions
+    Sometimes there will be a confirmations attribute, sometimes not (depending on which
+    service was used).
+    """
     txs = []
     for tx in transactions:
-        full_tx = CachedTransaction.fetch_full_tx(crypto, txid=tx['txid'])
+        full_tx = CachedTransaction.fetch_full_tx(
+            crypto, txid=tx['txid'], confirmations=tx.get('confirmations', None)
+        )
         if full_tx:
             # if fetch_full_tx returns None, it means another thread is in the process
             # of getting that txid, so ignore here.
@@ -264,7 +271,6 @@ def home(request):
     return TemplateResponse(request, "home.html", {
         'supported_currencies': get_balance_currencies,
         'block_info_currencies': block_info_currencies,
-        'TEST_ADDRESS': settings.TEST_ADDRESS,
     })
 
 
