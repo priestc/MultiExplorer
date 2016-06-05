@@ -88,6 +88,10 @@ def register_new_wallet_user(request):
 
 
 def login(request):
+    """
+    Authenticate the user. On failed attempts, record the event, and limit
+    5 failed attempts every 15 minutes.
+    """
     username = request.POST['username']
     password = request.POST['password']
 
@@ -109,9 +113,9 @@ def login(request):
             })
         else:
             FailedLogin.objects.create(username=username)
-            try_count += 1
             tries_left = 5 - try_count
             return http.JsonResponse({"tries_left": tries_left}, status=401)
 
-    minutes_to_wait = (timezone.now() - tries.latest().time).total_seconds() / 60.0
+    time_of_next_try = tries.latest().time + datetime.timedelta(minutes=15)
+    minutes_to_wait = (time_of_next_try - timezone.now()).total_seconds() / 60.0
     return http.JsonResponse({"login_timeout": "Try again in %.1f minutes." % minutes_to_wait}, status=401)
