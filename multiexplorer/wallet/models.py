@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import json
 from django.db import models
 from moneywagon import get_single_transaction
@@ -48,3 +49,10 @@ class WalletMasterKeys(models.Model):
             'display_fiat_symbol': symbol,
             'auto_logout': self.auto_logout
         }
+
+class FailedLogin(models.Model):
+    username = models.CharField(max_length=64, db_index=True)
+    time = models.DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        get_latest_by = 'time'

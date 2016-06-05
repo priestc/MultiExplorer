@@ -6,7 +6,7 @@
             <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout">Log Out</a>{% endif %}</h3>
             <span id="login_error" style="color: red"></span><br>
             <div {% if user.is_authenticated %}style="display: none"{% endif %}>
-            Username: <input type="text" name="username" value="{{ username }}"></div><br>
+            Username: <input type="text" name="username" value="{{ user.username }}"></div><br>
             Password: <input type="password" name="password" id="password"><br>
             <br><br>
             <input type="submit" value="login">
@@ -84,7 +84,12 @@ $("#login_form").submit(function(event) {
         exchange_rates = response.exchange_rates;
         fill_in_settings(response.wallet_settings);
     }).fail(function(jqXHR) {
-        $("#login_error").text(jqXHR.responseText);
+        if (jqXHR.responseJSON.tries_left) {
+            $("#login_error").text("Failed Login! " + jqXHR.responseJSON.tries_left + " tries left");
+        } else if (jqXHR.responseJSON.login_timeout) {
+            $("#login_error").text("Too many login attempts! " + jqXHR.responseJSON.login_timeout);
+        }
+
         $("#register_box, #wallet_front_screen").show();
         $("#loading_screen").hide();
     });

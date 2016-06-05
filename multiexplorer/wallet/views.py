@@ -1,12 +1,14 @@
+import datetime
 import json
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.contrib.auth import authenticate, login as init_login
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils import timezone
 from django.template.response import TemplateResponse
 from django import http
 
-from .models import WalletMasterKeys, AUTO_LOGOUT_CHOICES
+from .models import WalletMasterKeys, FailedLogin, AUTO_LOGOUT_CHOICES
 from multiexplorer.utils import get_wallet_currencies
 
 crypto_data = get_wallet_currencies()
@@ -89,16 +91,27 @@ def login(request):
     username = request.POST['username']
     password = request.POST['password']
 
-    user = authenticate(username=username, password=password)
+    fithteen_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=15)
+    tries = FailedLogin.objects.filter(username=username, time__gt=fithteen_minutes_ago)
+    try_count = tries.count()
 
-    if user and user.is_authenticated():
-        init_login(request, user)
-        wal = WalletMasterKeys.objects.get(user=request.user)
+    if try_count < 5:
+        user = authenticate(username=username, password=password)
 
-        return http.JsonResponse({
-            'encrypted_mnemonic': wal.encrypted_mnemonic,
-            'wallet_settings': wal.get_settings(),
-            'exchange_rates': get_rates(wal.display_fiat),
-        })
+        if user and user.is_authenticated():
+            init_login(request, user)
+            wal = WalletMasterKeys.objects.get(user=request.user)
 
-    return http.HttpResponse("Invalid Login", status=403)
+            return http.JsonResponse({
+                'encrypted_mnemonic': wal.encrypted_mnemonic,
+                'wallet_settings': wal.get_settings(),
+                'exchange_rates': get_rates(wal.display_fiat),
+            })
+        else:
+            FailedLogin.objects.create(username=username)
+            try_count += 1
+            tries_left = 5 - try_count
+            return http.JsonResponse({"tries_left": tries_left}, status=401)
+
+    minutes_to_wait = (timezone.now() - tries.latest().time).total_seconds() / 60.0
+    return http.JsonResponse({"login_timeout": "Try again in %.1f minutes." % minutes_to_wait}, status=401)
