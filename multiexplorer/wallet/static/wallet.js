@@ -350,6 +350,7 @@ function switch_section(box, to_section) {
     box.find("." + to_section + "_part").show();
 }
 
+var total_fiat_balance = 0;
 function update_total_fiat_balance() {
     var bal = 0;
     $(".fiat_balance").each(function(i, ele) {
@@ -357,7 +358,29 @@ function update_total_fiat_balance() {
         if(this_bal) bal += this_bal;
     });
     $("#total_fiat_balance_container").show();
-    $("#total_fiat_balance").text(bal.toFixed(2));
+    var new_balance = bal.toFixed(2);
+    //console.log("updating balance from",  total_fiat_balance, "to", new_balance);
+
+    var decimal_places = 2;
+    var decimal_factor = decimal_places === 0 ? 1 : Math.pow(10, decimal_places);
+    $("#total_fiat_balance").prop('number', total_fiat_balance).animateNumber({
+        number: new_balance * decimal_factor,
+        numberStep: function(now, tween) {
+            var floored_number = Math.floor(now) / decimal_factor,
+                target = $(tween.elem);
+
+            if (decimal_places > 0) {
+                // force decimal places even if they are 0
+                floored_number = floored_number.toFixed(decimal_places);
+
+                // replace '.' separator with ','
+                //floored_number = floored_number.toString().replace('.', ',');
+            }
+
+            target.text(floored_number);
+        }
+    },200);
+    total_fiat_balance = new_balance;
 }
 
 $(function() {
