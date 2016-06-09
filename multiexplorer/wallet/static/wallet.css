@@ -203,6 +203,7 @@ button {
     border-radius: 7px;
     display: none;
     text-align: center;
+    font-size: large;
 }
 
 .unconfirmed_area {

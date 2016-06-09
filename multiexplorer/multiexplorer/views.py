@@ -89,7 +89,7 @@ def perform_lookup(request, service_mode, service_id):
         if len(guess_currency_result) == 1:
             currency, currency_name = guess_currency_result[0]
         else:
-            msg = "Address may be one of %s, please specify which one by using the crypto parameter" % (
+            msg = "Address may be one of %s, please specify which one by using the `currency` parameter" % (
                 ', '.join([x[0] for x in guess_currency_result])
             )
             return http.JsonResponse({'error': msg}, status=400)
