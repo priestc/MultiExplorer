@@ -64,4 +64,4 @@ To update the code, move to the MultiExplorer folder and run:
     git pull
 
 If you see a message telling you to run `./manage.py migrate`, then navigate to
-the `MultiExplorer/multiexplorer/multiexplorer` folder and run that command.
+the `MultiExplorer/multiexplorer` folder and run that command.
