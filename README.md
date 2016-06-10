@@ -19,7 +19,7 @@ Now to run
 
 To update the code, move to the MultiExplorer folder and run:
 
-   git pull
+    git pull
 
 It you see a message telling you to run ./mnage.py migrate, then navigate to
 the multiexplorer folder (inside the `MultiExplorer` folder) and run that command.
