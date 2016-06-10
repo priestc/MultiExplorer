@@ -1,0 +1,3 @@
+django
+moneywagon
+django-extensions==1.6.1
