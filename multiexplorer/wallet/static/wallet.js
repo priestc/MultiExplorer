@@ -691,7 +691,8 @@ $(function() {
             var sending_address = box.find(".sending_recipient_address").val();
             var sending_amount = parseFloat(box.find(".sending_crypto_amount").val());
             var fee_multiplier = parseFloat(box.find(".send_part .fee_selector:checked").val());
-            var tx = make_tx(crypto, [[sending_address, sending_amount * 1e8]], fee_multiplier);
+
+            var tx = make_tx(crypto, [[sending_address, parseInt(sending_amount * 1e8)]], fee_multiplier);
 
             push_tx(crypto, tx, function(response) {
                 switch_section(box, 'receive');
@@ -724,11 +725,12 @@ $(function() {
         if(event.keyCode < 0x20 && event.keyCode != 8 && event.keyCode != 46) {
             return // non printable char pressed (tab, shift, del, etc)
         }
-        var box = $(this).parent().parent().parent();
+        var box = $(this).parent().parent();
         var which = "fiat";
         if($(this).hasClass("sending_crypto_amount")) {
             which = "crypto";
         }
+
         var crypto = box.data('currency');
         var value_entered = parseFloat($(this).val());
 
