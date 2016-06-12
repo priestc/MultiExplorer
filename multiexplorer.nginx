@@ -4,12 +4,24 @@ upstream wsgicluster_multiexplorer {
 }
 
 server {
-    listen 80;
+    listen         80;
+    server_name    www.multiexplorer.com multiexplorer.com;
+    rewrite        ^ https://multiexplorer.com$request_uri? permanent;
+}
+
+server {
+    listen 443;
     server_name multiexplorer.com;
     error_log /var/log/nginx/multiexplorer-error.log;
     access_log /var/log/nginx/multiexplorer-access.log;
     sendfile        on;
     client_max_body_size 25M;
+    
+    ssl on;
+    ssl_certificate     /etc/letsencrypt/live/multiexplorer.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/multiexplorer.com/privkey.pem; # this file never changes (even if cert is expired)
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
     location / {
         include uwsgi_params;
         uwsgi_pass wsgicluster_multiexplorer;
