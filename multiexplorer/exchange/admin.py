@@ -34,6 +34,10 @@ class ExchangeCurrencyAdmin(admin.ModelAdmin):
     deposit.allow_tags = True
 
     def deposit_qrcodes(self, currency):
+        if not currency.code:
+            # currency will have a blank code when on the "create new" page.
+            return ''
+
         master_key = ExchangeMasterKey.objects.latest()
         addresses = master_key.get_unused_deposit_addresses(currency, 5)
         return '<br>'.join(

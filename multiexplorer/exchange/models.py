@@ -33,7 +33,7 @@ class ExchangeMasterKey(models.Model):
     def cached_balance(self, currency):
         if not self.utxos:
             return 0
-        
+
         try:
             utxos = json.loads(self.utxos)[currency]
         except KeyError:
@@ -63,6 +63,9 @@ class ExchangeCurrency(models.Model):
     code = models.CharField(max_length=5, null=True, blank=True)
     max_fiat_deposit = models.FloatField(default=10)
     max_fiat_currency = models.CharField(max_length=4, choices=FIAT_CHOICES, default='usd')
+
+    def __unicode__(self):
+        return "%s" % self.code
 
     def save(self, *args, **kwargs):
         if not self.code:
