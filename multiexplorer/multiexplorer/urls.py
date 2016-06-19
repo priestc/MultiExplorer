@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^api$', api_docs, name="api_docs"),
     url(r'^api/onchain_exchange_rates', onchain_exchange_rates, name="onchain_exchange_rates"),
     url(r'^api/onchain_exchange_status', onchain_status, name="onchain_status"),
+
     url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
