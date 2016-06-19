@@ -7,6 +7,8 @@ from views import (
     onchain_exchange_rates, onchain_status, logout, single_tx
 )
 
+admin.site.site_header = 'MultiExplorer Administration'
+
 urlpatterns = [
     # Examples:
     # url(r'^$', 'multiexplorer.views.home', name='home'),
