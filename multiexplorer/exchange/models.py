@@ -3,7 +3,8 @@ import json
 import os
 
 from django.db import models
-from bitcoin import bip32_ckd, bip32_master_key
+from django.conf import settings
+from bitcoin import bip32_ckd, bip32_master_key, bip32_extract_key, privtoaddr
 from moneywagon.tx import Transaction
 from moneywagon import get_unspent_outputs, get_current_price
 from multiexplorer.utils import get_wallet_currencies
@@ -29,13 +30,39 @@ class ExchangeMasterKey(models.Model):
 
         return super(ExchangeMasterKey, self).save(*args, **kwargs)
 
+    def cached_balance(self, currency):
+        if not self.utxos:
+            return 0
+        
+        try:
+            utxos = json.loads(self.utxos)[currency]
+        except KeyError:
+            return 0
+
+        balance = 0
+        for utxo in utxos:
+            balance += utxo['amount']
+
+        return balance / 1e8 # convert satoshis to currency units
+
+    def get_unused_deposit_addresses(self, currency, length=5):
+        i = 0
+        addresses = []
+        while len(addresses) < length:
+            address, priv_key = currency.derive_deposit_address(i, self)
+            if not ManualDeposit.objects.filter(address=address, currency=currency).exists():
+                addresses.append(address)
+            i += 1
+        return addresses
+
+FIAT_CHOICES = [(x, x.upper()) for x in settings.WALLET_SUPPORTED_FIATS]
 
 class ExchangeCurrency(models.Model):
-    currency = models.IntegerField(choices=SUPPORTED_CURRENCIES)
-    deposit_skip = models.IntegerField(default=0)
-    change_skip = models.IntegerField(default=0)
+    currency = models.IntegerField(choices=SUPPORTED_CURRENCIES, primary_key=True)
     fee_percentage = models.FloatField(default=0.01)
     code = models.CharField(max_length=5, null=True, blank=True)
+    max_fiat_deposit = models.FloatField(default=10)
+    max_fiat_currency = models.CharField(max_length=4, choices=FIAT_CHOICES, default='usd')
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -49,6 +76,13 @@ class ExchangeCurrency(models.Model):
         for currency in get_wallet_currencies():
             if currency['bip44'] == self.currency:
                 return currency['address_byte']
+
+    def balance(self):
+        balance = 0
+        for master_key in ExchangeMasterKey.objects.order_by('created'):
+            balance += master_key.cached_balance(self.code)
+
+        return balance
 
     def get_bip44_master(self, master_key):
         return bip32_ckd(bip32_ckd(master_key.xpriv, 44), self.currency)
@@ -102,6 +136,13 @@ class ExchangeCurrency(models.Model):
         self.save()
 
         return popped
+
+
+class ManualDeposit(models.Model):
+    currency = models.ForeignKey(ExchangeCurrency)
+    address = models.CharField(max_length=50)
+    master_key = models.ForeignKey(ExchangeMasterKey)
+
 
 class ExchangeAddress(models.Model):
     created = models.DateTimeField(default=datetime.datetime.now)
