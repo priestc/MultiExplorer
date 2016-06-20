@@ -1,4 +1,11 @@
 var text_spinner = '<div class="thin-spinner spinner" style="height: 10px; width: 10px;"></div>';
+
+function get_crypto_balance(crypto) {
+    return parseFloat(
+        $(".crypto_box[data-currency=" + crypto.toLowerCase() + "]").find('.crypto_balance').text()
+    )
+}
+
 var bip44_coin_types = {};
 $.each(crypto_data, function(i, data) {
 
@@ -13,12 +20,6 @@ $.each(crypto_data, function(i, data) {
         bitcore.Networks.add(network);
     }
 });
-
-function get_crypto_balance(crypto) {
-    return parseFloat(
-        $(".crypto_box[data-currency=" + crypto.toLowerCase() + "]").find('.crypto_balance').text()
-    )
-}
 
 function validate_address(crypto, address) {
     if(crypto == 'btc') {

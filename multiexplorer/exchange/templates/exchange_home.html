@@ -1,5 +1,153 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 
 {% block content %}
-coming soon
+<style>
+    #withdraw_address {
+        width: 28em;
+    }
+
+    .accepted_deposit_logo {
+        width: 50px;
+        height: 50px;
+    }
+    .deposit_currency_choice {
+        display: none;
+    }
+
+    .grayed {
+        -webkit-filter: grayscale(100%); /* Chrome, Safari, Opera */
+        filter: grayscale(100%);
+    }
+</style>
+<section>
+    <h2>Deposit Cryptocurrency</h2>
+    <select id="deposit_crypto">
+        {% for currency in supported_cryptos %}
+        <option value="{{ currency.code }}">{{ currency.code|upper }} - {{ currency.name }}</option>
+        {% endfor %}
+    </select>
+
+    <h2>Withdraw Address</h2>
+    <input id="withdraw_address" type="text">
+    <br>
+    Supported Deposit Currencies:<br>
+    {% for currency in supported_cryptos %}
+        <div class="currency_container">
+            <label>
+            <img src="{% static currency.logo %}" class="accepted_deposit_logo" data-code="{{ currency.code }}"><br>
+            <input type="radio" value="{{ currency.code }}" class="deposit_currency_choice" name="exchange_currency">
+            </label>
+        </div>
+    {% endfor %}
+
+    <button id="start_exchange" disabled>Start Exchange!</button>
+
+    <div id="deposit_address_section" style="display: none">
+        <h2>Deposit Address</h2>
+        <span id="deposit_address"></span><br>
+        <span id="qr"></span>
+    </div>
+
+</section>
+
+<script src="{% static 'bitcore-lib.min.js' %}"></script>
+
+<script>
+    var bitcore = require('bitcore-lib');
+    var crypto_data = {{ crypto_data|safe }};
+
+    $.each(crypto_data, function(i, data) {
+        var network = {};
+        network.alias = data['code'];
+        network.name = data['name'];
+        network.pubkeyhash = data['address_byte'];
+        network.privatekey = data['private_key_prefix'];
+
+        if(data['code'] != 'btc') {
+            bitcore.Networks.add(network);
+        }
+    });
+
+    function validate_address(crypto, address) {
+        if(crypto == 'btc') {
+            crypto = 'livenet'
+        }
+        return bitcore.Address.isValid(address, bitcore.Networks.get(crypto));
+    }
+
+    $("#start_exchange").click(function(){
+        var deposit_crypto = $("#deposit_crypto").val();
+        var address = $("#withdraw_address").val();
+        var matches = find_currency_matches(address);
+
+        if(matches.length == 1) {
+            withdraw_code = matches[0];
+        } else {
+            withdraw_code = $(".deposit_currency_choice:checked").val();
+        }
+
+        $.ajax({
+            type: "post",
+            url: "{% url 'make_exchange' %}",
+            data: {
+                deposit_code: deposit_crypto,
+                withdraw_address: address,
+                withdraw_code: withdraw_code
+            }
+        }).done(function(response) {
+            console.log("response from create", response);
+            $("#deposit_address_section").show();
+            $("#deposit_address").text(response.deposit_address);
+            $("#qr").qrcode({text: response.deposit_address});
+        });
+    });
+
+    function find_currency_matches(address) {
+        var matches = [];
+        $.each(crypto_data, function(i, crypto) {
+            if(validate_address(crypto.code, address)) {
+                matches.push(crypto.code);
+            }
+        });
+        return matches
+    }
+
+    $("#deposit_crypto").change(function(){
+        var selected = $(this).val();
+        $(".accepted_deposit_logo[data-code=" + selected + "]").addClass('grayed');
+        $(".accepted_deposit_logo[data-code!=" + selected + "]").removeClass('grayed');
+    });
+
+    $("#withdraw_address").keyup(function(){
+        var address = $("#withdraw_address").val();
+        var matches = find_currency_matches(address);
+
+        $(".accepted_deposit_logo").show();
+        $(".accepted_deposit_logo").addClass('grayed');
+
+        if(matches.length == 0) {
+            $('#start_exchange').attr('disabled', 'disabled');
+            return
+        } else if(matches.length >= 1) {
+            // hide all except for ones that match
+            $(".accepted_deposit_logo").each(function(i, ele) {
+                var code = $(ele).data('code');
+                if(code.indexOf(matches) == -1) {
+                    $(ele).hide();
+                    console.log("hiding", code);
+                } else {
+                    $(".deposit_currency_choice[value=" + code + "]").show();
+                    $(".accepted_deposit_logo").removeClass('grayed');
+                }
+            });
+        }
+
+        if (matches.length == 1) {
+            // hide choice box when there is only one choice.
+            $(".deposit_currency_choice").hide();
+            $('#start_exchange').removeAttr('disabled');
+        }
+    });
+</script>
 {% endblock %}

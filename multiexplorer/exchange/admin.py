@@ -1,6 +1,6 @@
 import json
 from django.contrib import admin
-from .models import ExchangeCurrency, ExchangeMasterKey
+from .models import ExchangeCurrency, ExchangeMasterKey, ExchangeAddress
 
 class ExchangeMasterKeyAdmin(admin.ModelAdmin):
     list_display = ("created", 'notes', 'balances')
@@ -45,6 +45,9 @@ class ExchangeCurrencyAdmin(admin.ModelAdmin):
         )
     deposit_qrcodes.allow_tags = True
 
+class ExchangeAddressAdmin(admin.ModelAdmin):
+    list_display = ('deposit_currency', 'withdraw_address')
 
 admin.site.register(ExchangeCurrency, ExchangeCurrencyAdmin)
 admin.site.register(ExchangeMasterKey, ExchangeMasterKeyAdmin)
+admin.site.register(ExchangeAddress, ExchangeAddressAdmin)
