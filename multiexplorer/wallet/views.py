@@ -38,7 +38,8 @@ def home(request):
         'crypto_data_json': crypto_data_json,
         'crypto_data': crypto_data,
         'supported_fiats': settings.WALLET_SUPPORTED_FIATS,
-        'autologout_choices': AUTO_LOGOUT_CHOICES
+        'autologout_choices': AUTO_LOGOUT_CHOICES,
+        'use_inverted_colors': ['vtc', 'uno'], # makes spinner white
     })
 
 

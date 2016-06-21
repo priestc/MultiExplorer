@@ -51,8 +51,12 @@ class ExchangeMasterKey(models.Model):
         addresses = []
         while len(addresses) < length:
             address, priv_key = currency.derive_deposit_address(i, self)
-            if not ManualDeposit.objects.filter(address=address, currency=currency).exists():
+            is_used1 = ManualDeposit.objects.filter(address=address, currency=currency).exists()
+            is_used2 = ExchangeAddress.objects.filter(deposit_address=address, deposit_currency__code=currency).exists()
+
+            if not is_used1 and not is_used2:
                 addresses.append(address)
+
             i += 1
         return addresses
 
@@ -68,7 +72,7 @@ class ExchangeCurrency(models.Model):
     @classmethod
     def get_active(cls, code):
         obj = cls.objects.get(code=code)
-        if obj.balance < 0:
+        if obj.balance == 0:
             raise cls.DoesNotExist("%s is temporairly out of order" % code.upper())
         return obj
 

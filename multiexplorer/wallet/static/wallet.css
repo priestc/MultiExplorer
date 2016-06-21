@@ -74,6 +74,11 @@ body {
     color: black
 }
 
+.colors-uno {
+    background: #477AD0;
+    color: white;
+}
+
 .qr {
     width: 100px;
     height: 100px;

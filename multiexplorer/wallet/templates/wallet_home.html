@@ -61,7 +61,7 @@
             <span class="outstanding_ajax_counter" style="display: none">0</span>
             <h3>{{ data.name }} ({{ data.code|upper }})</h3>
             Balance: <span class="crypto_balance">0.0</span> {{ data.code|upper }}<br>
-            <div class="spinner slow-spinner {% if data.code == 'vtc' %}thin-inverted-spinner{% else %}thin-spinner{% endif %}" style="height: 10px; width: 10px;"></div>
+            <div class="spinner slow-spinner {% if data.code in use_inverted_colors %}thin-inverted-spinner{% else %}thin-spinner{% endif %}" style="height: 10px; width: 10px;"></div>
             <span class="fiat_symbol"></span><span class="fiat_balance"></span> <span class="fiat_unit"></span>
             <span class="balance_fiat"></span>
             <div class="outgoing_exchange_in_progress exchange_in_progress">
