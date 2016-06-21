@@ -21,6 +21,7 @@
     }
 </style>
 <section>
+    {% if ENABLE_EXCHANGE %}
     <h2>Deposit Cryptocurrency</h2>
     <select id="deposit_crypto">
         {% for currency in supported_cryptos %}
@@ -48,7 +49,9 @@
         <span id="deposit_address"></span><br>
         <span id="qr"></span>
     </div>
-
+    {% else %}
+        <h2>Coming Soon!</h2>
+    {% endif %}
 </section>
 
 <script src="{% static 'bitcore-lib.min.js' %}"></script>

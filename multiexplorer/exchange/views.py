@@ -2,6 +2,7 @@ import json
 
 from django.template.response import TemplateResponse
 from django import http
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 
 from models import ExchangeCurrency, ExchangeAddress
@@ -15,6 +16,7 @@ def home(request):
     return TemplateResponse(request, "exchange_home.html", {
         'supported_cryptos': ExchangeCurrency.objects.all(),
         'crypto_data': crypto_data_json,
+        'ENABLE_EXCHANGE': settings.ENABLE_EXCHANGE
     })
 
 @csrf_exempt

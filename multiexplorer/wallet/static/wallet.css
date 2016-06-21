@@ -79,6 +79,10 @@ body {
     color: white;
 }
 
+.colors-xcp {
+    background: #FFBFC2;
+    color: black;
+}
 .qr {
     width: 100px;
     height: 100px;

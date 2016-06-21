@@ -9,15 +9,19 @@ class CachedTransaction(models.Model):
     crypto = models.CharField(max_length=8, default='btc')
 
     @classmethod
-    def fetch_full_tx(cls, crypto, txid, confirmations=None):
+    def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):
         try:
             tx = cls.objects.get(txid=txid)
             if not tx.content:
                 return None
             transaction = json.loads(tx.content)
-            if confirmations:
+
+            if existing_tx_data.get('counterparty', False):
+                transaction['amount'] = existing_tx_data
+
+            if existing_tx_data.get('confirmations', None):
                 # update cached entry with updated confirmations if its available
-                transaction['confirmations'] = confirmations
+                transaction['confirmations'] = existing_tx_data['confirmations']
                 tx.content = json.dumps(transaction)
                 tx.save()
             return transaction
