@@ -62,6 +62,39 @@ function update_outstanding_ajax(crypto, value) {
     return new_
 }
 
+function fetch_history_single_address(crypto, address) {
+    update_outstanding_ajax(crypto, 1);
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    box.find(".deposit_address").text(address)
+    $.ajax({
+        'url': "/api/historical_transactions/fallback?extended_fetch=true&currency=" + crypto + "&address=" + address,
+        'type': 'get',
+    }).done(function (response) {
+        update_outstanding_ajax(crypto, -1);
+        box.find(".internal_error").text("");
+        box.find(".deposit_area").show();
+
+        var txs = response['transactions'];
+        used_addresses[crypto] = [address];
+        tx_history[crypto] = txs;
+        update_balance(crypto);
+        box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
+
+        if(txs.length == 0) {
+            box.find(".crypto_balance").text("0.0");
+            box.find(".fiat_balance").text("0.0");
+            box.find(".switch_to_send").hide();
+            box.find(".switch_to_exchange").hide();
+            box.find(".switch_to_history").hide();
+        } else {
+            box.find(".switch_to_send").show();
+            box.find(".switch_to_exchange").show();
+            box.find(".switch_to_history").show();
+        }
+        console.log("finished!");
+    });
+}
+
 function fetch_used_addresses(crypto, chain, blank_length, already_tried_addresses, all_used_arg) {
     // iterates through the deposit chain until it finds `blank_length` blank addresses.
     // the last two args are used in iteration, and shoud be passed in empty lists
@@ -223,8 +256,13 @@ function load_crypto(crypto) {
     box.find(".fiat_balance").text("0.0");
     box.find(".internal_error").text("").hide();
 
-    fetch_used_addresses(crypto, 'deposit', 10, [], []);
-    fetch_used_addresses(crypto, 'change', 10, [], []);
+    if(single_address_cryptos.indexOf(crypto) == -1) {
+        fetch_used_addresses(crypto, 'deposit', 10, [], []);
+        fetch_used_addresses(crypto, 'change', 10, [], []);
+    } else {
+        box.find(".arrow_button").hide();
+        fetch_history_single_address(crypto, get_deposit_keypair(crypto, 0)[1])
+    }
 }
 
 function open_wallet(show_wallet_list) {

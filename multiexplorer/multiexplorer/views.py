@@ -41,7 +41,7 @@ def perform_lookup(request, service_mode, service_id):
     include_raw = request.GET.get('include_raw', False)
 
     extended_fetch = (
-        request.GET.get('extended_fetch', 'false') == 'true' and
+        request.GET.get('extended_fetch', 'false').lower() == 'true' and
         service_mode == 'historical_transactions'
     )
 
@@ -190,6 +190,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         report_services=True,
         services=services,
         random=random_mode,
+        timeout=10.0
     )
 
     if service_id.startswith("paranoid"):

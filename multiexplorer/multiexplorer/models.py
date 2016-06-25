@@ -16,10 +16,7 @@ class CachedTransaction(models.Model):
                 return None
             transaction = json.loads(tx.content)
 
-            if existing_tx_data.get('counterparty', False):
-                transaction['amount'] = existing_tx_data
-
-            if existing_tx_data.get('confirmations', None):
+            if existing_tx_data and existing_tx_data.get('confirmations', None):
                 # update cached entry with updated confirmations if its available
                 transaction['confirmations'] = existing_tx_data['confirmations']
                 tx.content = json.dumps(transaction)
@@ -28,6 +25,22 @@ class CachedTransaction(models.Model):
         except cls.DoesNotExist:
             cache = cls.objects.create(txid=txid, content="")
             tx = get_single_transaction(crypto, txid, random=True)
+
+            if existing_tx_data and existing_tx_data.get('counterparty', False):
+                tx['inputs'] = []
+                tx['outputs'] = []
+
+                if existing_tx_data['amount'] > 0:
+                    # send, add amount to outputs
+                    which = "outputs"
+                else:
+                    # receive, add amount to inputs
+                    which = "inputs"
+
+                tx[which] = [{}]
+                tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
+                tx[which][0]['address'] = existing_tx_data['address']
+
             cache.content = json.dumps(tx, default=datetime_to_iso)
             cache.crypto = crypto
             cache.save()
