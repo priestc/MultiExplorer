@@ -517,7 +517,7 @@ $(function() {
         var error_area = box.find(".sweep_part .error_area");
         if(valid) {
             error_area.css({color: 'inherit'}).text("");
-            $(this).css({color: 'inherit'});
+            $(this).css({color: 'black'});
             box.find(".submit_sweep").removeAttr('disabled');
         } else {
             error_area.css({color: 'red'}).text("Invalid Private Key");
@@ -671,9 +671,9 @@ $(function() {
                 box.find(".submit_exchange").attr('disabled', 'disabled');
                 error_area.css({color: 'red'}).text("Deposit lower than minimum");
             } else {
-                box.find(".exchange_amount").css({color: 'inherit'});
+                box.find(".exchange_amount").css({color: 'black'});
                 box.find(".submit_exchange").removeAttr('disabled');
-                error_area.css({color: 'inherit'}).text('');
+                error_area.css({color: 'black'}).text('');
             }
         });
 
@@ -736,7 +736,7 @@ $(function() {
             push_tx(crypto, tx, function(response) {
                 switch_section(box, 'receive');
             }, function(error_msg) {
-                box.find(".send_part .error_area").text(error_msg);
+                box.find(".send_error_area").text(error_msg).css({color: 'red'});
             }, sending_amount * -1);
         });
     });
@@ -751,12 +751,12 @@ $(function() {
 
         if(!validate_address(crypto, sending_address)) {
             box.find(".submit_send").attr('disabled', 'disabled');
-            box.find(".send_part .error_area").text("Invalid Sending Address");
+            box.find(".send_error_area").text("Invalid Sending Address").css({color: 'red'});
             $(this).css({color: 'red'});
         } else {
             box.find(".submit_send").removeAttr('disabled');
-            box.find(".send_part .error_area").text("");
-            $(this).css({color: 'inherit'});
+            box.find(".send_error_area").text("").css({color: 'inherit'});
+            $(this).css({color: 'black'});
         }
     });
 
@@ -803,11 +803,11 @@ $(function() {
         if(to_compare > crypto_balance) {
             box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'red'});
             box.find(".submit_send").attr('disabled', 'disabled');
-            box.find(".send_part .error_area").text("Amount exceeds balance");
+            box.find(".send_error_area").text("Amount exceeds balance").css({color: 'red'});
         } else {
-            box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'inherit'});
+            box.find(".sending_fiat_amount, .sending_crypto_amount").css({color: 'black'});
             box.find(".submit_send").removeAttr('disabled');
-            box.find(".send_part .error_area").text("");
+            box.find(".send_error_area").text("").css({color: 'inherit'});
         }
         var tx_size = actual_tx_size_estimation(crypto, sat, 1);
         fill_in_fee_radios(crypto, tx_size);

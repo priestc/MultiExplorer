@@ -284,3 +284,7 @@ button {
     display: none;
     max-width: 250px;
 }
+
+input[type=number], input[type=text] {
+    color: black;
+}
