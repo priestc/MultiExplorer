@@ -820,3 +820,19 @@ $(function() {
         container.addClass("selected");
     });
 });
+
+
+function test_counterparty() {
+    try {
+
+        hex = "01000000014330a448667526595512e6da39b77d3f3aaa78b82e06176f5f368101e82594f8020000001976a914ad44fd5f413830597f94896600574d68d63e7a1b88acffffffff0336150000000000001976a91443878e562582fc0201cac32258bd696ee1cf40e588ac00000000000000001e6a1c40029655dfedd4425bfba0441cec6ec532ab25d38052c542d3ba5b854dc70000000000001976a914ad44fd5f413830597f94896600574d68d63e7a1b88ac00000000";
+        tx = new bitcore.Transaction(hex);
+        console.log(tx.toObject());
+        tx.sign('KzWsS4UaUaCfUbrtg1kx2L8FSr8iH3RPTdxC8pyFwYtYc9e7bKNG')
+
+
+    } catch(e) {
+      console.log(e.stack);
+    }
+
+}

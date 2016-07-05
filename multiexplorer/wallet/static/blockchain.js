@@ -149,6 +149,7 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
 }
 
 function push_tx(crypto, tx, success_callback, fail_callback, amount_transacted) {
+    console.log("pushing tx:", tx.toString());
     $.ajax({
         url: "/api/push_tx/fallback",
         type: "post",
