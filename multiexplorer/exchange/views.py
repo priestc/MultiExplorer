@@ -5,12 +5,16 @@ from django import http
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 
-from models import ExchangeCurrency, ExchangeAddress
+try:
+    from models import ExchangeCurrency, ExchangeAddress
+except ImportError:
+    from .models import ExchangeCurrency, ExchangeAddress
 
 from multiexplorer.utils import get_wallet_currencies
 
 crypto_data = get_wallet_currencies()
 crypto_data_json = json.dumps(crypto_data)
+
 
 def home(request):
     return TemplateResponse(request, "exchange_home.html", {
@@ -18,6 +22,7 @@ def home(request):
         'crypto_data': crypto_data_json,
         'ENABLE_EXCHANGE': settings.ENABLE_EXCHANGE
     })
+
 
 @csrf_exempt
 def create_exchange(request):

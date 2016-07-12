@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import CachedTransaction
 from django.utils.safestring import mark_safe
 
+
 class CachedTransactionAdmin(admin.ModelAdmin):
     list_display = ("txid", 'crypto', "content_length")
     readonly_fields = ('pretty_print', )

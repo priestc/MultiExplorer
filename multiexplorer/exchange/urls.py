@@ -2,9 +2,14 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-from views import (
-    home, create_exchange
-)
+try:
+    from views import (
+        home, create_exchange
+    )
+except ImportError:
+    from .views import (
+        home, create_exchange
+    )
 
 urlpatterns = [
     url(r'^$', home, name="exchange"),

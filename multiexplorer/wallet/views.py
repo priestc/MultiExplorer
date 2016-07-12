@@ -16,6 +16,7 @@ crypto_data_json = json.dumps(crypto_data)
 
 from multiexplorer.views import _cached_fetch
 
+
 def get_rates(fiat):
     rates = {}
     for data in crypto_data:
@@ -33,13 +34,14 @@ def get_rates(fiat):
         }
     return rates
 
+
 def home(request):
     return TemplateResponse(request, "wallet_home.html", {
         'crypto_data_json': crypto_data_json,
         'crypto_data': crypto_data,
         'supported_fiats': settings.WALLET_SUPPORTED_FIATS,
         'autologout_choices': AUTO_LOGOUT_CHOICES,
-        'use_inverted_colors': ['vtc', 'uno'], # makes spinner white
+        'use_inverted_colors': ['vtc', 'uno'],  # makes spinner white
     })
 
 
@@ -97,7 +99,8 @@ def login(request):
     password = request.POST['password']
 
     fithteen_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=15)
-    tries = FailedLogin.objects.filter(username=username, time__gt=fithteen_minutes_ago)
+    tries = FailedLogin.objects.filter(
+        username=username, time__gt=fithteen_minutes_ago)
     try_count = tries.count()
 
     if try_count < 5:
@@ -118,5 +121,6 @@ def login(request):
             return http.JsonResponse({"tries_left": tries_left}, status=401)
 
     time_of_next_try = tries.latest().time + datetime.timedelta(minutes=15)
-    minutes_to_wait = (time_of_next_try - timezone.now()).total_seconds() / 60.0
+    minutes_to_wait = (time_of_next_try - timezone.now()
+                       ).total_seconds() / 60.0
     return http.JsonResponse({"login_timeout": "Try again in %.1f minutes." % minutes_to_wait}, status=401)

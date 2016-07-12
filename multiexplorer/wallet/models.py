@@ -13,6 +13,7 @@ AUTO_LOGOUT_CHOICES = (
     (0, "Never"),
 )
 
+
 class WalletMasterKeys(models.Model):
     """
     Stores the BIP32 HD master seed for the user's wallet.
@@ -23,7 +24,8 @@ class WalletMasterKeys(models.Model):
 
     auto_logout = models.IntegerField(choices=AUTO_LOGOUT_CHOICES, default=0)
     display_fiat = models.CharField(max_length=5, default='usd')
-    show_wallet_list = models.TextField(default='btc,ltc,doge,dash') # comma seperated
+    show_wallet_list = models.TextField(
+        default='btc,ltc,doge,dash')  # comma seperated
 
     def __unicode__(self):
         return self.user.username
@@ -49,6 +51,7 @@ class WalletMasterKeys(models.Model):
             'display_fiat_symbol': symbol,
             'auto_logout': self.auto_logout
         }
+
 
 class FailedLogin(models.Model):
     username = models.CharField(max_length=64, db_index=True)
