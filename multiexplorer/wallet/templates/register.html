@@ -30,58 +30,88 @@
     </form>
 </div>
 <script>
-$("#register_form").submit(function() {
-    // when the user clicks the register button, generate a wallet seed,
-    // encrypt it with the user's password, then inject it into the registration
-    // form where it will be saved on the back end.
-    event.preventDefault();
-    var t = $(this);
-    raw_mnemonic = t.find("textarea.mnemonic").val();
+ // copied from http://stackoverflow.com/a/35113457
+ // using jQuery
+ function getCookie(name) {
+     var cookieValue = null;
+     if (document.cookie && document.cookie != '') {
+         var cookies = document.cookie.split(';');
+         for (var i = 0; i < cookies.length; i++) {
+             var cookie = jQuery.trim(cookies[i]);
+             // Does this cookie string begin with the name we want?
+             if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                 break;
+             }
+         }
+     }
+     return cookieValue;
+ }
 
-    if(raw_mnemonic) {
-        if(Mnemonic.isValid(raw_mnemonic)) {
-            var mn = new Mnemonic(raw_mnemonic);
-        } else {
-            $("#mnemonic_error").text("Invalid mnemonic");
-            return false;
-        }
-    } else {
-        var mn = new Mnemonic();
-        raw_mnemonic = mn.phrase;
-    }
-    hd_master_seed = mn.toHDPrivateKey();
+ var csrftoken = getCookie('csrftoken');
+ function csrfSafeMethod(method) {
+     // these HTTP methods do not require CSRF protection
+     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+ }
+ $.ajaxSetup({
+     beforeSend: function(xhr, settings) {
+         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+             xhr.setRequestHeader("X-CSRFToken", csrftoken);
+         }
+     }
+ });
 
-    var username = t.find("input[name=username]").val();
-    var email = t.find("input[name=email]").val();
-    var password = t.find("input[name=password]").val();
-    var password2 = t.find("input[name=password2]").val();
+ $("#register_form").submit(function( event ) {
+     // when the user clicks the register button, generate a wallet seed,
+     // encrypt it with the user's password, then inject it into the registration
+     // form where it will be saved on the back end.
+     event.preventDefault();
+     var t = $(this);
+     raw_mnemonic = t.find("textarea.mnemonic").val();
 
-    if(password == password2) {
-        var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, password);
-    } else {
-        return
-    }
+     if(raw_mnemonic) {
+         if(Mnemonic.isValid(raw_mnemonic)) {
+             var mn = new Mnemonic(raw_mnemonic);
+         } else {
+             $("#mnemonic_error").text("Invalid mnemonic");
+             return false;
+         }
+     } else {
+         var mn = new Mnemonic();
+         raw_mnemonic = mn.phrase;
+     }
+     hd_master_seed = mn.toHDPrivateKey();
 
-    $.ajax({
-        url: "{% url 'register_new_wallet_user' %}",
-        type: 'post',
-        data: {
-            username: username,
-            password: password,
-            email: email,
-            csrfmiddlewaretoken: "{{ csrf_token }}",
-            encrypted_mnemonic: encrypted_mnemonic.toString()
-        }
-    }).success(function(response) {
-        // if this ajax returns successfully, then the password is correct.
-        $("#register_box, #login_box").hide();
-        console.log(response);
-        exchange_rates = response.exchange_rates;
-        fill_in_settings(response.wallet_settings);
-        open_wallet(response.wallet_settings.show_wallet_list);
-        $("#register_error").text("");
-    }).fail(function(jqXHR) {
-        $("#register_error").text(jqXHR.responseText);
-    });
-});
+     var username = t.find("input[name=username]").val();
+     var email = t.find("input[name=email]").val();
+     var password = t.find("input[name=password]").val();
+     var password2 = t.find("input[name=password2]").val();
+
+     if(password == password2) {
+         var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, password);
+     } else {
+         return
+     }
+
+     $.ajax({
+         url: "{% url 'register_new_wallet_user' %}",
+         type: 'post',
+         data: {
+             username: username,
+             password: password,
+             email: email,
+             encrypted_mnemonic: encrypted_mnemonic.toString()
+         }
+     }).success(function(response) {
+         // if this ajax returns successfully, then the password is correct.
+         $("#register_box, #login_box").hide();
+         console.log(response);
+         exchange_rates = response.exchange_rates;
+         fill_in_settings(response.wallet_settings);
+         open_wallet(response.wallet_settings.show_wallet_list);
+         $("#register_error").text("");
+     }).fail(function(jqXHR) {
+         $("#register_error").text(jqXHR.responseText);
+     });
+ });
 </script>

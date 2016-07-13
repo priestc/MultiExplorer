@@ -7,6 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.template.response import TemplateResponse
 from django import http
+from django.shortcuts import redirect
+from django.db.utils import IntegrityError
 
 from .models import WalletMasterKeys, FailedLogin, AUTO_LOGOUT_CHOICES
 from multiexplorer.utils import get_wallet_currencies
@@ -66,28 +68,35 @@ def save_settings(request):
 
 
 def register_new_wallet_user(request):
-    encrypted_mnemonic = request.POST['encrypted_mnemonic']
-    password = request.POST['password']
-    username = request.POST['username']
+    if request.method == "POST":
+        encrypted_mnemonic = request.POST['encrypted_mnemonic']
+        password = request.POST['password']
+        username = request.POST['username']
 
-    user = User.objects.create(
-        username=username,
-        email=request.POST.get('email', ''),
-    )
-    user.set_password(password)
-    user.save()
+        try:
+            user = User.objects.create(
+                username=username,
+                email=request.POST.get('email', ''),
+            )
+            user.set_password(password)
+            user.save()
+        except IntegrityError:
+            # The user already exists
+            return redirect("wallet")
 
-    wal = WalletMasterKeys.objects.create(
-        user=user, encrypted_mnemonic=encrypted_mnemonic
-    )
+        wal = WalletMasterKeys.objects.create(
+            user=user, encrypted_mnemonic=encrypted_mnemonic
+        )
 
-    user = authenticate(username=username, password=password)
-    init_login(request, user)
+        user = authenticate(username=username, password=password)
+        init_login(request, user)
 
-    return http.JsonResponse({
-        'wallet_settings': wal.get_settings(),
-        'exchange_rates': get_rates(wal.display_fiat),
-    })
+        return http.JsonResponse({
+            'wallet_settings': wal.get_settings(),
+            'exchange_rates': get_rates(wal.display_fiat),
+        })
+    else:
+        return redirect("wallet")
 
 
 def login(request):
@@ -95,32 +104,37 @@ def login(request):
     Authenticate the user. On failed attempts, record the event, and limit
     5 failed attempts every 15 minutes.
     """
-    username = request.POST['username']
-    password = request.POST['password']
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
 
-    fithteen_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=15)
-    tries = FailedLogin.objects.filter(
-        username=username, time__gt=fithteen_minutes_ago)
-    try_count = tries.count()
+        fithteen_minutes_ago = datetime.datetime.now() - datetime.timedelta(minutes=15)
+        tries = FailedLogin.objects.filter(
+            username=username, time__gt=fithteen_minutes_ago)
+        try_count = tries.count()
 
-    if try_count < 5:
-        user = authenticate(username=username, password=password)
+        if try_count < 5:
+            user = authenticate(username=username, password=password)
 
-        if user and user.is_authenticated():
-            init_login(request, user)
-            wal = WalletMasterKeys.objects.get(user=request.user)
+            if user and user.is_authenticated():
+                init_login(request, user)
+                wal = WalletMasterKeys.objects.get(user=request.user)
 
-            return http.JsonResponse({
-                'encrypted_mnemonic': wal.encrypted_mnemonic,
-                'wallet_settings': wal.get_settings(),
-                'exchange_rates': get_rates(wal.display_fiat),
-            })
-        else:
-            FailedLogin.objects.create(username=username)
-            tries_left = 5 - try_count
-            return http.JsonResponse({"tries_left": tries_left}, status=401)
+                return http.JsonResponse({
+                    'encrypted_mnemonic': wal.encrypted_mnemonic,
+                    'wallet_settings': wal.get_settings(),
+                    'exchange_rates': get_rates(wal.display_fiat),
+                })
+            else:
+                FailedLogin.objects.create(username=username)
+                tries_left = 5 - try_count
+                return http.JsonResponse({"tries_left": tries_left}, status=401)
 
-    time_of_next_try = tries.latest().time + datetime.timedelta(minutes=15)
-    minutes_to_wait = (time_of_next_try - timezone.now()
-                       ).total_seconds() / 60.0
-    return http.JsonResponse({"login_timeout": "Try again in %.1f minutes." % minutes_to_wait}, status=401)
+        time_of_next_try = tries.latest().time + datetime.timedelta(minutes=15)
+        minutes_to_wait = (time_of_next_try - timezone.now()
+                           ).total_seconds() / 60.0
+        return http.JsonResponse(
+            {"login_timeout": "Try again in %.1f minutes." %
+             minutes_to_wait}, status=401)
+    else:
+        return redirect("wallet")

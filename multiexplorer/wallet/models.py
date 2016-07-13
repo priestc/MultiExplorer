@@ -28,7 +28,10 @@ class WalletMasterKeys(models.Model):
         default='btc,ltc,doge,dash')  # comma seperated
 
     def __unicode__(self):
-        return self.user.username
+        return "Master key of user: %s (UID: %d)" % (self.user.username, self.user.id)
+
+    def __str__(self):
+        return self.__unicode__()
 
     def get_show_wallet_list(self):
         return self.show_wallet_list.split(",")

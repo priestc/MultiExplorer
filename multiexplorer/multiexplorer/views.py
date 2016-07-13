@@ -122,8 +122,9 @@ def perform_lookup(request, service_mode, service_id):
 
 
 def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
-                  currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
-                  extended_fetch=False, txid=None, random_mode=False, **k):
+                  currency=None, currency_name=None, fiat=None, include_raw=False,
+                  Service=None, block_args=None, extended_fetch=False, txid=None,
+                  random_mode=False, **k):
 
     if not block_args:
         block_args = {}
@@ -179,8 +180,9 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses,
-                           xpub, currency, currency_name, block_args, fiat=None, txid=None, random_mode=False, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address,
+                           addresses, xpub, currency, currency_name,
+                           block_args, fiat=None, txid=None, random_mode=False, **k):
 
     if Service:
         if Service.supported_cryptos and currency not in Service.supported_cryptos:
