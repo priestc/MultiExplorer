@@ -28,7 +28,8 @@ def make_crypto_data_json():
             del ret[currency]
             continue
 
-        ret[currency]['address_version_byte'] = data.get('address_version_byte', None)
+        ret[currency]['address_version_byte'] = data.get(
+            'address_version_byte', None)
 
         for mode in service_modes:
             services = data.get('services', {}).get(mode, [])

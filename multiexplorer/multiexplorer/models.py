@@ -3,6 +3,7 @@ from django.db import models
 from .utils import datetime_to_iso
 from moneywagon import get_single_transaction, get_block
 
+
 class CachedTransaction(models.Model):
     txid = models.CharField(max_length=72, primary_key=True)
     content = models.TextField()
@@ -17,8 +18,10 @@ class CachedTransaction(models.Model):
             transaction = json.loads(tx.content)
 
             if existing_tx_data and existing_tx_data.get('confirmations', None):
-                # update cached entry with updated confirmations if its available
-                transaction['confirmations'] = existing_tx_data['confirmations']
+                # update cached entry with updated confirmations if its
+                # available
+                transaction['confirmations'] = existing_tx_data[
+                    'confirmations']
                 tx.content = json.dumps(transaction)
                 tx.save()
             return transaction

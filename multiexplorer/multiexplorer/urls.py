@@ -2,10 +2,16 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-from views import (
-    home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
-    onchain_exchange_rates, onchain_status, logout, single_tx
-)
+try:
+    from views import (
+        home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
+        onchain_exchange_rates, onchain_status, logout, single_tx
+    )
+except ImportError:
+    from .views import (
+        home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
+        onchain_exchange_rates, onchain_status, logout, single_tx
+    )
 
 admin.site.site_header = 'MultiExplorer Administration'
 
@@ -22,12 +28,15 @@ urlpatterns = [
     url(r'^tx/(?P<crypto>\w{3,5})/(?P<txid>\w+)', single_tx, name="single_tx"),
 
     url(r'^api$', api_docs, name="api_docs"),
-    url(r'^api/onchain_exchange_rates', onchain_exchange_rates, name="onchain_exchange_rates"),
+    url(r'^api/onchain_exchange_rates',
+        onchain_exchange_rates, name="onchain_exchange_rates"),
     url(r'^api/onchain_exchange_status', onchain_status, name="onchain_status"),
 
-    url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
+    url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)',
+        perform_lookup, name="perform_lookup"),
 
-    url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
+    url(r'^disambiguation/(?P<address>\w+)',
+        address_disambiguation, name="address_disambiguation"),
 
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),

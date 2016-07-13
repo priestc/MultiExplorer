@@ -32,6 +32,7 @@ service_info_json = make_service_info_json()
 block_info_currencies = get_block_currencies()
 service_table_html = service_table(format='html')
 
+
 @csrf_exempt
 def perform_lookup(request, service_mode, service_id):
     """
@@ -102,7 +103,7 @@ def perform_lookup(request, service_mode, service_id):
             'error': "Currency Not Recognized: %s" % currency_name
         }, status=400)
 
-    if service_mode == 'push_tx': # don't go inside cache function
+    if service_mode == 'push_tx':  # don't go inside cache function
         try:
             result = push_tx(currency, request.POST['tx'])
             return http.JsonResponse({
@@ -121,18 +122,21 @@ def perform_lookup(request, service_mode, service_id):
 
 
 def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
-    currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
-    extended_fetch=False, txid=None, random_mode=False, **k):
+                  currency=None, currency_name=None, fiat=None, include_raw=False,
+                  Service=None, block_args=None, extended_fetch=False, txid=None,
+                  random_mode=False, **k):
 
     if not block_args:
         block_args = {}
 
-    key_ending = address or xpub or fiat or (''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
+    key_ending = address or xpub or fiat or (
+        ''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
 
     if extended_fetch:
         key_ending += "--ExtendedFetch"
 
-    cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
+    cache_key = '%s:%s:%s:%s' % (
+        currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
 
     if hit:
@@ -141,7 +145,8 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
         try:
             response_dict = _make_moneywagon_fetch(**locals())
             if extended_fetch:
-                response_dict = _do_extended_fetch(currency, response_dict['transactions'])
+                response_dict = _do_extended_fetch(
+                    currency, response_dict['transactions'])
 
         except Exception as exc:
             return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
@@ -169,13 +174,15 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
                 {'name': x['name'], 'id': x['id']} for x in services
             ]
 
-    response_dict['fetched_seconds_ago'] = int(time.time()) - response_dict['timestamp']
+    response_dict['fetched_seconds_ago'] = int(
+        time.time()) - response_dict['timestamp']
     del response_dict['timestamp']
     return None, response_dict
 
 
-def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses,
-    xpub, currency, currency_name, block_args, fiat=None, txid=None, random_mode=False, **k):
+def _make_moneywagon_fetch(Service, service_mode, service_id, address,
+                           addresses, xpub, currency, currency_name,
+                           block_args, fiat=None, txid=None, random_mode=False, **k):
 
     if Service:
         if Service.supported_cryptos and currency not in Service.supported_cryptos:
@@ -184,7 +191,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
             ))
         services = [Service]
     else:
-        services = [] # fallback mode
+        services = []  # fallback mode
 
     modes = dict(
         report_services=True,
@@ -233,7 +240,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         raise Exception("Unsupported Service mode")
 
     if not used_services:
-        pass # private mode does not return services
+        pass  # private mode does not return services
     elif len(used_services) == 1:
         s = used_services[0]
         if s:
@@ -243,11 +250,13 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
             ret['service_id'] = s.service_id
     else:
         ret['services'] = [
-            {'name': s.name, 'id': s.service_id, 'raw_response': s.last_raw_response.json()}
+            {'name': s.name, 'id': s.service_id,
+                'raw_response': s.last_raw_response.json()}
             for s in used_services
         ]
 
     return ret
+
 
 def _do_extended_fetch(crypto, transactions):
     """
@@ -340,6 +349,7 @@ def api_docs(request):
         'domain': "multiexplorer.com",
     })
 
+
 def address_disambiguation(request, address):
     """
     When the user tried to lookup a currency that has a duplicate address byte
@@ -359,6 +369,7 @@ def address_disambiguation(request, address):
         'balances': balances,
         'address': address,
     })
+
 
 def onchain_exchange_rates(request):
     """
@@ -405,12 +416,13 @@ def onchain_exchange_rates(request):
             'provider': 'ShapeShift.io'
         })
 
-
     return http.JsonResponse({'pairs': final_pairs})
+
 
 def logout(request):
     dj_logout(request)
     return http.HttpResponseRedirect("/")
+
 
 def onchain_status(request):
     deposit_crypto = request.GET['deposit_currency']
@@ -418,6 +430,7 @@ def onchain_status(request):
 
     response = requests.get("https://shapeshift.io/txStat/" + address).json()
     return http.JsonResponse(response)
+
 
 def single_tx(request, crypto, txid):
     full_tx = CachedTransaction.fetch_full_tx(crypto, txid=txid)

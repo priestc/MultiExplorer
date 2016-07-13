@@ -2,6 +2,7 @@ import json
 from django.contrib import admin
 from .models import ExchangeCurrency, ExchangeMasterKey, ExchangeAddress
 
+
 class ExchangeMasterKeyAdmin(admin.ModelAdmin):
     list_display = ("created", 'notes', 'balances')
     readonly_fields = ('xpriv', )
@@ -15,6 +16,7 @@ class ExchangeMasterKeyAdmin(admin.ModelAdmin):
             #raise Exception()
         return balances
     balances.allow_tags = True
+
 
 class ExchangeCurrencyAdmin(admin.ModelAdmin):
     list_display = ("get_currency_display", 'balance', 'deposit')
@@ -44,6 +46,7 @@ class ExchangeCurrencyAdmin(admin.ModelAdmin):
             "<span class='qr' data-size='medium' data-address='{0}'></span><br>{0}<br><br>".format(x) for x in addresses
         )
     deposit_qrcodes.allow_tags = True
+
 
 class ExchangeAddressAdmin(admin.ModelAdmin):
     list_display = ('deposit_currency', 'withdraw_address')
