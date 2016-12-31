@@ -223,6 +223,8 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         used_services, tx = get_single_transaction(currency, txid, **modes)
         ret = {'transaction': tx}
     elif service_mode == 'get_block':
+        if block_args['block_number']:
+            block_args['block_number'] = int(block_args['block_number'])
         modes.update(block_args)
         used_services, block_data = get_block(currency, **modes)
         ret = {'block': block_data}
