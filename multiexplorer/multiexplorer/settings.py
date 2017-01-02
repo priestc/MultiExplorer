@@ -25,9 +25,6 @@ SECRET_KEY = 'p&&)t)%v@yh%b^_))omcfw37y%vxs5-cxkx@!wzotzfpet)@$2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = (
@@ -101,3 +98,6 @@ STATIC_ROOT = "static/"
 IGNORE_WALLET_CRYPTOS = ['rdd', 'ppc', 'xcp']
 
 from .local_settings import *
+
+
+$ ./path/to/certbot-auto certonly --webroot -w /var/www/example -d example.com -d www.example.com -w /var/www/thing -d thing.is -d m.thing.is
