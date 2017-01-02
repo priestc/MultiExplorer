@@ -98,6 +98,3 @@ STATIC_ROOT = "static/"
 IGNORE_WALLET_CRYPTOS = ['rdd', 'ppc', 'xcp']
 
 from .local_settings import *
-
-
-$ ./path/to/certbot-auto certonly --webroot -w /var/www/example -d example.com -d www.example.com -w /var/www/thing -d thing.is -d m.thing.is
