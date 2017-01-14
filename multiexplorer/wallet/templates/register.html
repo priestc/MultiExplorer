@@ -6,6 +6,7 @@
 
 <div class="center_box" id="register_box">
     <form id="register_form" method="post">
+
         <h3>Register a New Account</h3>
         Username:<br>
         <input type="text" name="username"><br>
@@ -25,6 +26,7 @@
         <span id="mnemonic_error" class="error"></span>
         <textarea class="mnemonic" style="width: 80%; height: 4em"></textarea>
         <br>
+        <div id="register_error" style="color: red"></div>
         <input type="submit" value="Register">
 
     </form>
@@ -56,9 +58,20 @@ $("#register_form").submit(function() {
     var password = t.find("input[name=password]").val();
     var password2 = t.find("input[name=password2]").val();
 
+    if(username.length < 3) {
+        $("#register_error").text("Username must be at least 3 characters.");
+        return
+    }
+
+    if(password.length < 6) {
+        $("#register_error").text("Password must be at least 6 characters.");
+        return
+    }
+
     if(password == password2) {
         var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, password);
     } else {
+        $("#register_error").text("Passwords must match.");
         return
     }
 
@@ -74,8 +87,7 @@ $("#register_form").submit(function() {
         }
     }).success(function(response) {
         // if this ajax returns successfully, then the password is correct.
-        $("#register_box, #login_box").hide();
-        console.log(response);
+        $("#register_box, #login_box, #landing_page").hide();
         exchange_rates = response.exchange_rates;
         fill_in_settings(response.wallet_settings);
         open_wallet(response.wallet_settings.show_wallet_list);
