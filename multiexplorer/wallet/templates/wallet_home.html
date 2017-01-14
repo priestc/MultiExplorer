@@ -124,34 +124,35 @@
             </div>
             <div class="send_part subsection">
                 <button class="cancel_button"> &larr; Cancel Send</button>
-                <br>
-                <strong>Send to Address:</strong><br>
-                <input type="text" class="sending_recipient_address full_width">
+                <div class="send_ui">
+                    <strong>Send to Address:</strong><br>
+                    <input type="text" class="sending_recipient_address full_width">
 
-                <br><br>
+                    <br><br>
 
-                <strong>Crypto Amount:</strong><br>
-                <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
+                    <strong>Crypto Amount:</strong><br>
+                    <input type="number" class="sending_crypto_amount"> {{ data.code|upper }}
 
-                <br><br>
+                    <br><br>
 
-                <strong>Fiat Amount:</strong><br>
-                <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
+                    <strong>Fiat Amount:</strong><br>
+                    <input type="number" class="sending_fiat_amount"> <span class="fiat_unit"></span>
 
-                <br><br>
+                    <br><br>
 
-                <div class="fee_rate_area">
-                    Optimal transaction fee based on current<br>
-                    network conditions:
-                    <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
-                </div>
+                    <div class="fee_rate_area">
+                        Optimal transaction fee based on current<br>
+                        network conditions:
+                        <span class="optimal_fee_rate_per_byte"></span> Satoshi/byte
+                    </div>
 
-                {% include "fee_chooser.html" with crypto=data.code which='send' %}
+                    {% include "fee_chooser.html" with crypto=data.code which='send' %}
 
-                <hr>
-                <div class="sending_bottom_area" style="overflow: hidden">
-                    <button class="submit_send submit_button" style="float: left" disabled>Send</button>
-                    <div class="send_error_area"></div>
+                    <hr>
+                    <div class="sending_bottom_area" style="overflow: hidden">
+                        <button class="submit_send submit_button" style="float: left" disabled>Send</button>
+                        <div class="send_error_area"></div>
+                    </div>
                 </div>
                 <div class="utxo_error_area" style="color: red"></div>
             </div>
