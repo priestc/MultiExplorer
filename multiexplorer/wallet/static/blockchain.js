@@ -322,6 +322,12 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
         } else {
             utxos[crypto] = rewritten;
         }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        var error = "Network Error";
+        if(jqXHR.responseJSON) {
+            error = jqXHR.responseJSON.error;
+        }
+        $(".crypto_box[data-currency=" + crypto + " .utxo_error_area").text(error);
     });
 }
 
