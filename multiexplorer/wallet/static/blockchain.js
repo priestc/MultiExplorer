@@ -327,7 +327,7 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
         if(jqXHR.responseJSON) {
             error = jqXHR.responseJSON.error;
         }
-        $(".crypto_box[data-currency=" + crypto + " .utxo_error_area").text(error);
+        $(".crypto_box[data-currency=" + crypto + "] .utxo_error_area").text(error);
     });
 }
 
