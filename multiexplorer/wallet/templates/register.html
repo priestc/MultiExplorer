@@ -9,15 +9,15 @@
 
         <h3>Register a New Account</h3>
         Username:<br>
-        <input type="text" name="username"><br>
+        <input type="text" name="r_username"><br>
 
         Email (optional):<br>
-        <input type="email" name="email"><br>
+        <input type="email" name="r_email"><br>
 
         Password:<br>
-        <input type="password" name="password"><br>
+        <input type="password" name="r_password"><br>
 
-        Password Again:<br><input type="password" name="password2"><br>
+        Password Again:<br><input type="password" name="r_password2"><br>
         <input type="hidden" name="encrypted_wallet_seed" id="seed">
         {% csrf_token %}
         <br>
@@ -53,10 +53,10 @@ $("#register_form").submit(function() {
     }
     hd_master_seed = mn.toHDPrivateKey();
 
-    var username = t.find("input[name=username]").val();
-    var email = t.find("input[name=email]").val();
-    var password = t.find("input[name=password]").val();
-    var password2 = t.find("input[name=password2]").val();
+    var username = t.find("input[name=r_username]").val();
+    var email = t.find("input[name=r_email]").val();
+    var password = t.find("input[name=r_password]").val();
+    var password2 = t.find("input[name=r_password2]").val();
 
     if(username.length < 3) {
         $("#register_error").text("Username must be at least 3 characters.");
@@ -68,32 +68,34 @@ $("#register_form").submit(function() {
         return
     }
 
-    if(password == password2) {
-        var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, password);
-    } else {
-        $("#register_error").text("Passwords must match.");
-        return
-    }
-
-    $.ajax({
-        url: "{% url 'register_new_wallet_user' %}",
-        type: 'post',
-        data: {
-            username: username,
-            password: password,
-            email: email,
-            csrfmiddlewaretoken: "{{ csrf_token }}",
-            encrypted_mnemonic: encrypted_mnemonic.toString()
+    make_encrypted_passwords(password, username, function(encrypted_password, mnemonic_password) {
+        if(password == password2) {
+            var encrypted_mnemonic = CryptoJS.AES.encrypt(raw_mnemonic, mnemonic_password);
+        } else {
+            $("#register_error").text("Passwords must match.");
+            return
         }
-    }).success(function(response) {
-        // if this ajax returns successfully, then the password is correct.
-        $("#register_box, #login_box, #landing_page").hide();
-        exchange_rates = response.exchange_rates;
-        fill_in_settings(response.wallet_settings);
-        open_wallet(response.wallet_settings.show_wallet_list);
-        $("#register_error").text("");
-    }).fail(function(jqXHR) {
-        $("#register_error").text(jqXHR.responseText);
+
+        $.ajax({
+            url: "{% url 'register_new_wallet_user' %}",
+            type: 'post',
+            data: {
+                username: username,
+                password: encrypted_password,
+                email: email,
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                encrypted_mnemonic: encrypted_mnemonic.toString()
+            }
+        }).success(function(response) {
+            // if this ajax returns successfully, then the password is correct.
+            $("#register_box, #login_box, #landing_page").hide();
+            exchange_rates = response.exchange_rates;
+            fill_in_settings(response.wallet_settings);
+            open_wallet(response.wallet_settings.show_wallet_list);
+            $("#register_error").text("");
+        }).fail(function(jqXHR) {
+            $("#register_error").text(jqXHR.responseText);
+        });
     });
 });
 </script>

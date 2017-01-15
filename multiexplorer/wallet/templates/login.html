@@ -58,8 +58,28 @@
 </div>
 
 <script>
+function make_encrypted_passwords(raw_password, salt, callback) {
+    // used both during login and registration. Derive a key from the raw
+    // password using username as salt. One key is sent to the server as a
+    // password for the django auth system, the other derived key is used to encrypt
+    // the wallet mnemonic. Therefore this second derived key should never
+    // get sent to the server.
+    scrypt_module_factory(function (scrypt) {
+        var server_password = scrypt.to_hex(scrypt.crypto_scrypt(
+            scrypt.encode_utf8(raw_password),
+            scrypt.encode_utf8(salt),
+            16384, 8, 1, 64
+        ));
+        var mnemonic_password = scrypt.to_hex(scrypt.crypto_scrypt(
+            scrypt.encode_utf8(raw_password),
+            scrypt.encode_utf8(salt + "Mnemonic"),
+            16384, 8, 1, 64
+        ));
+        callback(server_password, mnemonic_password);
+    });
+};
+
 var raw_password = undefined;
-var raw_mnemonic = undefined;
 $("#login_form").submit(function(event) {
     event.preventDefault();
     var username = $(this).find("input[name=username]").val();
@@ -68,30 +88,32 @@ $("#login_form").submit(function(event) {
     $("#register_box, #wallet_front_screen").hide();
     $("#loading_screen").show();
 
-    $.ajax({
-        url: "{% url 'login' %}",
-        type: 'post',
-        data: {
-            username: "{{ user.username }}" || username,
-            password: raw_password,
-            csrfmiddlewaretoken: "{{ csrf_token }}"
-        }
-    }).success(function(response) {
-        // if this ajax returns successfully, then the password is correct.
-        raw_mnemonic = CryptoJS.AES.decrypt(response['encrypted_mnemonic'], raw_password).toString(CryptoJS.enc.Utf8);
-        hd_master_seed = (new Mnemonic(raw_mnemonic)).toHDPrivateKey();
-        $("#login_error").text("");
-        exchange_rates = response.exchange_rates;
-        fill_in_settings(response.wallet_settings);
-    }).fail(function(jqXHR) {
-        if (jqXHR.responseJSON.tries_left) {
-            $("#login_error").text("Failed Login! " + jqXHR.responseJSON.tries_left + " tries left");
-        } else if (jqXHR.responseJSON.login_timeout) {
-            $("#login_error").text("Too many login attempts! " + jqXHR.responseJSON.login_timeout);
-        }
+    make_encrypted_passwords(raw_password, username, function(encrypted_password, mnemonic_password) {
+        $.ajax({
+            url: "{% url 'login' %}",
+            type: 'post',
+            data: {
+                username: "{{ user.username }}" || username,
+                password: encrypted_password,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            }
+        }).success(function(response) {
+            // if this ajax returns successfully, then the password is correct.
+            raw_mnemonic = CryptoJS.AES.decrypt(response['encrypted_mnemonic'], mnemonic_password).toString(CryptoJS.enc.Utf8);
+            hd_master_seed = (new Mnemonic(raw_mnemonic)).toHDPrivateKey();
+            $("#login_error").text("");
+            exchange_rates = response.exchange_rates;
+            fill_in_settings(response.wallet_settings);
+        }).fail(function(jqXHR) {
+            if (jqXHR.responseJSON.tries_left) {
+                $("#login_error").text("Failed Login! " + jqXHR.responseJSON.tries_left + " tries left");
+            } else if (jqXHR.responseJSON.login_timeout) {
+                $("#login_error").text("Too many login attempts! " + jqXHR.responseJSON.login_timeout);
+            }
 
-        $("#register_box, #wallet_front_screen").show();
-        $("#loading_screen").hide();
+            $("#register_box, #wallet_front_screen").show();
+            $("#loading_screen").hide();
+        });
     });
 
 });
