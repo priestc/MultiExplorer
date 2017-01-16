@@ -10,27 +10,34 @@ from django import http
 
 from .models import WalletMasterKeys, FailedLogin, AUTO_LOGOUT_CHOICES
 from multiexplorer.utils import get_wallet_currencies
+from moneywagon.core import NoService
 
 crypto_data = get_wallet_currencies()
 crypto_data_json = json.dumps(crypto_data)
 
 from multiexplorer.views import _cached_fetch
 
-def get_rates(fiat):
+def get_rates(fiat, cryptos):
     rates = {}
     for data in crypto_data:
-        services, response = _cached_fetch(
-            service_mode="current_price",
-            service_id="fallback",
-            fiat=fiat,
-            currency=data['code'],
-            currency_name=data['name']
-        )
-
-        rates[data['code']] = {
-            'rate': response['current_price'],
-            'provider': response['service_name']
-        }
+        if data['code'] not in cryptos:
+            continue
+        try:
+            services, response = _cached_fetch(
+                service_mode="current_price",
+                service_id="fallback",
+                fiat=fiat,
+                currency=data['code'],
+                currency_name=data['name']
+            )
+            rates[data['code']] = {
+                'rate': response['current_price'],
+                'provider': response['service_name']
+            }
+        except NoService as exc:
+            rates[data['code']] = {
+                'error': str(exc),
+            }
     return rates
 
 def home(request):
@@ -58,7 +65,7 @@ def save_settings(request):
     }
 
     if previous_fiat != new_fiat:
-        resp['exchange_rates'] = get_rates(new_fiat),
+        resp['exchange_rates'] = get_rates(new_fiat, wallet.show_wallet_list),
 
     return http.JsonResponse(resp)
 
@@ -84,7 +91,7 @@ def register_new_wallet_user(request):
 
     return http.JsonResponse({
         'wallet_settings': wal.get_settings(),
-        'exchange_rates': get_rates(wal.display_fiat),
+        'exchange_rates': get_rates(wal.display_fiat, wal.show_wallet_list),
     })
 
 
@@ -110,7 +117,7 @@ def login(request):
             return http.JsonResponse({
                 'encrypted_mnemonic': wal.encrypted_mnemonic,
                 'wallet_settings': wal.get_settings(),
-                'exchange_rates': get_rates(wal.display_fiat),
+                'exchange_rates': get_rates(wal.display_fiat, wal.show_wallet_list),
             })
         else:
             FailedLogin.objects.create(username=username)

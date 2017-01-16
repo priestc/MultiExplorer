@@ -142,6 +142,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
             # let error occur, preserving the traceback
             to_catch = None
         else:
+            # catch any error and return message to front end to show the user
             to_catch = Exception
 
         try:
