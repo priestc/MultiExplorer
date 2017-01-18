@@ -107,7 +107,7 @@ def login(request):
     tries = FailedLogin.objects.filter(username=username, time__gt=fithteen_minutes_ago)
     try_count = tries.count()
 
-    if try_count < 5:
+    if try_count < settings.LOGIN_TRIES:
         user = authenticate(username=username, password=password)
 
         if user and user.is_authenticated():
@@ -121,7 +121,7 @@ def login(request):
             })
         else:
             FailedLogin.objects.create(username=username)
-            tries_left = 5 - try_count
+            tries_left = settings.LOGIN_TRIES - try_count
             return http.JsonResponse({"tries_left": tries_left}, status=401)
 
     time_of_next_try = tries.latest().time + datetime.timedelta(minutes=15)

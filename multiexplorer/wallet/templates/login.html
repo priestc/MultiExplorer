@@ -75,7 +75,6 @@ function make_encrypted_passwords(raw_password, salt, callback) {
             scrypt.encode_utf8(salt + "Mnemonic"),
             16384, 8, 1, 64
         ));
-        console.log(server_password, mnemonic_password);
         callback(server_password, mnemonic_password);
     });
 };
