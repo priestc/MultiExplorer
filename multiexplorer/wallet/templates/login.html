@@ -75,10 +75,12 @@ function make_encrypted_passwords(raw_password, salt, callback) {
             scrypt.encode_utf8(salt + "Mnemonic"),
             16384, 8, 1, 64
         ));
+        //console.log(server_password, mnemonic_password);
         callback(server_password, mnemonic_password);
     });
 };
 
+var OLD_LOGIN = false;
 var raw_password = undefined;
 $("#login_form").submit(function(event) {
     event.preventDefault();
@@ -89,6 +91,9 @@ $("#login_form").submit(function(event) {
     $("#loading_screen").show();
 
     make_encrypted_passwords(raw_password, username, function(encrypted_password, mnemonic_password) {
+        if(OLD_LOGIN) {
+            encrypted_password = raw_password;
+        }
         $.ajax({
             url: "{% url 'login' %}",
             type: 'post',
