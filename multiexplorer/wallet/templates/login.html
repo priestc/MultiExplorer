@@ -93,6 +93,7 @@ $("#login_form").submit(function(event) {
     make_encrypted_passwords(raw_password, username, function(encrypted_password, mnemonic_password) {
         if(OLD_LOGIN) {
             encrypted_password = raw_password;
+            mnemonic_password = raw_password;
         }
         $.ajax({
             url: "{% url 'login' %}",
