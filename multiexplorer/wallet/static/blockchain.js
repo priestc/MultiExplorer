@@ -44,7 +44,7 @@ function get_unused_change_address(crypto) {
     var change_address = undefined;
     while(true) {
         change_address = get_change_keypair(crypto, i)[1];
-        if(used_addresses[crypto].indexOf(change_address) == -1) {
+        if(get_blockchain_data(crypto, 'used_addresses').indexOf(change_address) == -1) {
             return change_address;
         }
         i += 1;
@@ -85,6 +85,21 @@ function get_privkeys_from_inputs(crypto, inputs) {
 
 function estimate_tx_size(in_count, out_count) {
     return out_count * 34 + 148 * in_count + 10
+}
+
+function get_blockchain_data(crypto, type) {
+    var result = localStorage[type + ':' + crypto];
+    if(!result) return
+    return JSON.parse(result);
+}
+
+function set_blockchain_data(crypto, type, data) {
+    localStorage[type + ':' + crypto] = JSON.stringify(data);
+}
+
+function concat_blockchain_data(crypto, type, data) {
+    localStorage[type + ':' + crypto] = JSON.stringify(get_blockchain_data(crypto, type).concat(data));
+    return get_blockchain_data(crypto, type);
 }
 
 function actual_tx_size_estimation(crypto, satoshis_will_send, outs_length) {
@@ -155,7 +170,7 @@ function push_tx(crypto, tx, success_callback, fail_callback, amount_transacted)
         type: "post",
         data: {currency: crypto, tx: tx.toString()}
     }).success(function(response){
-        used_addresses[crypto].push(get_unused_change_address(crypto));
+        concat_blockchain_data(crypto, 'used_addresses', [get_unused_change_address(crypto)]);
         follow_unconfirmed(crypto, response.txid, amount_transacted);
         success_callback(response);
     }).fail(function(jqXHR) {
@@ -258,7 +273,7 @@ function follow_unconfirmed(crypto, txid, amount) {
                 area.hide();
                 box.find(".fiat_balance").css({color: "inherit"}).text((er * new_balance).toFixed(2));
                 update_total_fiat_balance();
-                tx_history[crypto].push(tx);
+                concat_blockchain_data(crypto, 'tx_history', [tx]);
                 generate_history(crypto);
                 return
             } else {
@@ -293,7 +308,7 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
     if(sweep_address) {
         var addrs = "address=" + sweep_address;
     } else {
-        addresses = used_addresses[crypto];
+        addresses = get_blockchain_data(crypto, 'used_addresses');
         //console.log("getting utxos for", addresses);
         if(addresses.length == 1) {
             var addrs = "address=" + addresses[0];
@@ -334,7 +349,7 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
 }
 
 function my_amount_for_tx(crypto, tx) {
-    var my_addresses = used_addresses[crypto];
+    var my_addresses = get_blockchain_data(crypto, 'used_addresses');
     var my_amount = 0;
     $.each(tx.inputs, function(i, input) {
         if(my_addresses.indexOf(input.address) != -1) {

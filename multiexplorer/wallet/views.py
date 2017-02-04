@@ -55,6 +55,7 @@ def save_settings(request):
     wallet = WalletMasterKeys.objects.get(user=request.user)
     new_fiat = request.POST['display_fiat']
     previous_fiat = wallet.display_fiat
+    previous_show_wallet_list = wallet.show_wallet_list
     wallet.display_fiat = new_fiat
     wallet.auto_logout = request.POST['auto_logout']
     wallet.show_wallet_list = request.POST['show_wallet_list']
@@ -64,7 +65,7 @@ def save_settings(request):
         'settings': wallet.get_settings()
     }
 
-    if previous_fiat != new_fiat:
+    if previous_fiat != new_fiat or previous_show_wallet_list != wallet.show_wallet_list:
         resp['exchange_rates'] = get_rates(new_fiat, wallet.show_wallet_list),
 
     return http.JsonResponse(resp)

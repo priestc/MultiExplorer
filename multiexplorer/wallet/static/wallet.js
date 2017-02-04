@@ -38,7 +38,12 @@ function update_balance(crypto) {
     bal.text(calculated_balance.toFixed(8));
 
     var exchange_rate = exchange_rates[crypto]['rate'];
-    box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * calculated_balance).toFixed(2));
+    if(!exchange_rate) {
+        box.find(".fiat_balance").text("0.00");
+        box.find(".internal_error").show().text(exchange_rates[crypto]['error']);
+    } else {
+        box.find(".fiat_balance").css({color: "inherit"}).text((exchange_rate * calculated_balance).toFixed(2));
+    }
     update_total_fiat_balance();
 }
 
@@ -75,8 +80,8 @@ function fetch_history_single_address(crypto, address) {
         box.find(".deposit_area").show();
 
         var txs = response['transactions'];
-        used_addresses[crypto] = [address];
-        tx_history[crypto] = txs;
+        set_blockchain_data(crypto, 'used_addresses', [address]);
+        set_blockchain_data(crypto, 'tx_history', txs);
         update_balance(crypto);
         box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
 
@@ -139,7 +144,7 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
         box.find(".deposit_area").show();
 
         var txs = response['transactions'];
-        tx_history[crypto] = tx_history[crypto].concat(txs);
+        concat_blockchain_data(crypto, 'tx_history', txs);
         $.each(txs, function(i, tx) {
             var ins_and_outs = tx.inputs.concat(tx.outputs);
             $.each(ins_and_outs, function(i, in_or_out) {
@@ -180,11 +185,11 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
                 i += 1;
             }
             if(chain == 'deposit') {
-                unused_deposit_addresses[crypto] = unused_address_pool;
+                set_blockchain_data(crypto, 'unused_deposit_addresses', unused_address_pool);
             } else if (chain == 'change') {
-                unused_change_addresses[crypto] = unused_address_pool;
+                set_blockchain_data(crypto, 'unused_change_addresses', unused_address_pool);
             }
-            used_addresses[crypto] = used_addresses[crypto].concat(all_used);
+            concat_blockchain_data(crypto, 'used_addresses', all_used);
             return // stop iteration
         } else {
             fetch_used_addresses(crypto, chain, needs_to_go, all_tried, all_used);
@@ -195,61 +200,29 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
             error = jqXHR.responseJSON.error
         }
 
-        box.find(".internal_error").text(error).show();
-        box.find(".switch_to_send").hide();
-        box.find(".switch_to_exchange").hide();
-        box.find(".switch_to_history").hide();
-        box.find(".switch_to_sweep").hide();
-        box.find(".arrow_button").hide();
-        box.find(".deposit_area").hide();
-        box.find(".qr").empty();
+        ui_set_error(crypto, error);
 
     }).always(function() {
         var outstanding = update_outstanding_ajax(crypto, -1);
         if (outstanding == 0 && !box.find(".internal_error").text()) {
-            box.find(".internal_error").hide();
-            $("#loading_screen").hide();
-            update_balance(crypto);
-            console.log(crypto, "finished getting history for both chains");
-
-            var address = unused_deposit_addresses[crypto][0];
-            box.find(".receive_part").show();
-            box.find(".switch_to_sweep").show();
-            box.find(".deposit_address").text(address);
-            box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: address});
-
-            if(used_addresses[crypto].length == 0) {
-                box.find(".crypto_balance").text("0.0");
-                box.find(".fiat_balance").text("0.0");
-                box.find(".switch_to_send").hide();
-                box.find(".switch_to_exchange").hide();
-                box.find(".switch_to_history").hide();
-            } else {
-                box.find(".switch_to_send").show();
-                box.find(".switch_to_exchange").show();
-                box.find(".switch_to_history").show();
-            }
-
-            $.each(tx_history[crypto], function(i, tx) {
-                if (tx.confirmations == 0) {
-                    //console.log("unconfirmed found in history!", crypto);
-                    var amount = my_amount_for_tx(crypto, tx);
-                    follow_unconfirmed(crypto, tx.txid, amount);
-                }
-            });
+            set_ui(crypto);
         }
     })
 }
 
 function rotate_deposit(crypto, up) {
-    var pool = unused_deposit_addresses[crypto];
-    unused_deposit_addresses[crypto] = arrayRotate(pool, up);
+    var pool = get_blockchain_data(crypto, 'unused_deposit_addresses');
+    set_blockchain_data(crypto, 'unused_deposit_addresses', arrayRotate(pool, up));
     return pool[0];
 }
 
-function load_crypto(crypto) {
-    used_addresses[crypto] = [];
-    tx_history[crypto] = [];
+function load_crypto(crypto, force) {
+    if(get_blockchain_data(crypto, 'tx_history') && !force) {
+        set_ui(crypto);
+        return;
+    }
+    set_blockchain_data(crypto, 'used_addresses', []);
+    set_blockchain_data(crypto, 'tx_history', []);
 
     var box = $(".crypto_box[data-currency=" + crypto + "]");
     box.find(".crypto_balance").text("0.0");
@@ -332,7 +305,7 @@ function fill_in_fee_radios(crypto, tx_size) {
 }
 
 function generate_history(crypto) {
-    var history = tx_history[crypto].sort(function(a, b){
+    var history = get_blockchain_data(crypto, 'tx_history').sort(function(a, b){
         return new Date(b.time) - new Date(a.time);
     });
 
@@ -437,7 +410,7 @@ $(function() {
 
     $(".refresh_crypto").click(function() {
         var crypto = $(this).parent().parent().data('currency');
-        load_crypto(crypto);
+        load_crypto(crypto, true);
     });
 
     $(".switch_to_sweep").click(function() {
@@ -683,7 +656,7 @@ $(function() {
             var withdraw_code = box.find(".withdraw_code").first().text().toLowerCase();
             var optimal_fee_per_kb = parseFloat(box.find(".optimal_fee_per_kb").text());
             var withdraw_amount = parseFloat(box.find(".withdraw.exchange_amount").val());
-            var withdraw_address = unused_deposit_addresses[withdraw_code][0];
+            var withdraw_address = get_blockchain_data(withdraw_code, 'unused_deposit_addresses')[0];
 
             error_area.html(spinner + " Calling Exchange...");
 
@@ -697,7 +670,7 @@ $(function() {
             }).done(function(response) {
                 var deposit_address = response.deposit;
                 var tx = make_tx(crypto, [[deposit_address, deposit_satoshi]], 1.0);
-                used_addresses[withdraw_code].push(withdraw_address);
+                concat_blockchain_data(withdraw_code, 'used_addresses', [withdraw_address]);
                 console.log(tx.toString());
                 error_area.html(spinner + " Pushing Transaction...");
                 push_tx(crypto, tx, function(response) {
@@ -835,4 +808,52 @@ function test_counterparty() {
       console.log(e.stack);
     }
 
+}
+
+function ui_set_error(crypto, error) {
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    box.find(".internal_error").text(error).show();
+    box.find(".switch_to_send").hide();
+    box.find(".switch_to_exchange").hide();
+    box.find(".switch_to_history").hide();
+    box.find(".switch_to_sweep").hide();
+    box.find(".arrow_button").hide();
+    box.find(".deposit_area").hide();
+    box.find(".qr").empty();
+}
+
+function set_ui(crypto) {
+    var box = $(".crypto_box[data-currency=" + crypto + "]");
+    console.log("set ui");
+    box.find(".spinner").first().hide();
+    box.find(".internal_error").hide();
+    $("#loading_screen").hide();
+    update_balance(crypto);
+    console.log(crypto, "finished getting history for both chains");
+
+    var first_address = get_blockchain_data(crypto, 'unused_deposit_addresses')[0];
+    box.find(".receive_part").show();
+    box.find(".switch_to_sweep").show();
+    box.find(".deposit_address").text(first_address);
+    box.find(".qr").empty().qrcode({render: 'div', width: 100, height: 100, text: first_address});
+
+    if(get_blockchain_data(crypto, 'used_addresses').length == 0) {
+        box.find(".crypto_balance").text("0.0");
+        box.find(".fiat_balance").text("0.0");
+        box.find(".switch_to_send").hide();
+        box.find(".switch_to_exchange").hide();
+        box.find(".switch_to_history").hide();
+    } else {
+        box.find(".switch_to_send").show();
+        box.find(".switch_to_exchange").show();
+        box.find(".switch_to_history").show();
+    }
+
+    $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
+        if (tx.confirmations == 0) {
+            //console.log("unconfirmed found in history!", crypto);
+            var amount = my_amount_for_tx(crypto, tx);
+            follow_unconfirmed(crypto, tx.txid, amount);
+        }
+    });
 }
