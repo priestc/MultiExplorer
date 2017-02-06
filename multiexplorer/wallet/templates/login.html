@@ -3,7 +3,7 @@
 <div id="wallet_front_screen">
     <div class="center_box" id="login_box">
         <form id="login_form" method="post">
-            <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout">Log Out</a>{% endif %}</h3>
+            <h3>Login {% if user.is_authenticated %} as {{ user.username }} <a href="/logout" onclick="localStorage.clear();">Log Out</a>{% endif %}</h3>
             <span id="login_error" style="color: red"></span><br>
             <div {% if user.is_authenticated %}style="display: none"{% endif %}>
             Username: <input type="text" name="username" value="{{ user.username }}"></div><br>
@@ -109,6 +109,10 @@ $("#login_form").submit(function(event) {
             hd_master_seed = (new Mnemonic(raw_mnemonic)).toHDPrivateKey();
             $("#login_error").text("");
             exchange_rates = response.exchange_rates;
+            if(localStorage['username'] != username) {
+                localStorage.clear();
+                localStorage['username'] = username;
+            }
             fill_in_settings(response.wallet_settings);
         }).fail(function(jqXHR) {
             if (jqXHR.responseJSON.tries_left) {

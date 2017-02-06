@@ -719,7 +719,7 @@ $(function() {
 
     $(".sending_recipient_address").keyup(function(event) {
         var sending_address = $(this).val();
-        var box = $(this).parent().parent().parent();
+        var box = $(this).parents('.crypto_box');
         var crypto = box.data('currency');
 
         if(!validate_address(crypto, sending_address)) {
@@ -737,7 +737,7 @@ $(function() {
         if(event.keyCode < 0x20 && event.keyCode != 8 && event.keyCode != 46) {
             return // non printable char pressed (tab, shift, del, etc)
         }
-        var box = $(this).parent().parent();
+        var box = $(this).parents('.crypto_box');
         var which = "fiat";
         if($(this).hasClass("sending_crypto_amount")) {
             which = "crypto";
@@ -746,6 +746,7 @@ $(function() {
         var crypto = box.data('currency');
         var value_entered = parseFloat($(this).val());
 
+        //console.log(crypto, exchange_rates, box);
         var er = exchange_rates[crypto]['rate'];
 
         var converted = er * value_entered;
