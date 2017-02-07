@@ -8,6 +8,9 @@ class CachedTransaction(models.Model):
     content = models.TextField()
     crypto = models.CharField(max_length=8, default='btc')
 
+    def __unicode__(self):
+        return "%s:%s" % (self.crypto.upper(), json.loads(self.content)['txid'])
+
     @classmethod
     def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):
         try:
@@ -48,3 +51,8 @@ class CachedTransaction(models.Model):
 
     def update_confirmations(self):
         current_block = get_block(self.crypto, latest=True)
+
+class Memo(models.Model):
+    encrypted_text = models.TextField(blank=False)
+    txid = models.ForeignKey(CachedTransaction)
+    pubkey = models.TextField()

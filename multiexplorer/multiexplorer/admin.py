@@ -1,6 +1,6 @@
 import json
 from django.contrib import admin
-from .models import CachedTransaction
+from .models import CachedTransaction, Memo
 from django.utils.safestring import mark_safe
 
 class CachedTransactionAdmin(admin.ModelAdmin):
@@ -15,4 +15,11 @@ class CachedTransactionAdmin(admin.ModelAdmin):
     def content_length(self, obj):
         return len(obj.content)
 
+class MemoAdmin(admin.ModelAdmin):
+    list_display = ("txid", "content_length")
+
+    def content_length(self, obj):
+        return len(obj.encrypted_text)
+
 admin.site.register(CachedTransaction, CachedTransactionAdmin)
+admin.site.register(Memo, MemoAdmin)

@@ -24,7 +24,8 @@ from .utils import (
     get_block_currencies, get_balance_currencies
 )
 
-from .models import CachedTransaction
+from .models import CachedTransaction, Memo
+from bitcoin import ecdsa_verify, pubkey_to_address
 
 services_by_id = {s.service_id: s for s in ALL_SERVICES}
 crypto_data_json = make_crypto_data_json()
@@ -127,7 +128,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     if not block_args:
         block_args = {}
 
-    key_ending = address or xpub or fiat or (''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
+    key_ending = address or xpub or txid or fiat or (''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
 
     if extended_fetch:
         key_ending += "--ExtendedFetch"
@@ -434,3 +435,44 @@ def single_tx(request, crypto, txid):
         'crypto': crypto,
         'crypto_name': crypto_data[crypto]['name']
     })
+
+@csrf_exempt
+def handle_memo(request):
+    if request.POST:
+        return save_memo(request)
+    if request.GET:
+        return get_memo(request)
+
+def save_memo(request):
+    encrypted_text = request.POST['encrypted_text']
+    pubkey = request.POST['pubkey']
+    sig = request.POST['signature']
+    txid = request.POST['txid']
+    crypto = request.POST['currency']
+
+    address = pubkey_to_address(pubkey, crypto_data[crypto]['address_version_byte'])
+    errors, response = _cached_fetch('single_transaction', 'fallback', currency=crypto, txid=txid)
+    tx = response['transaction']
+
+    for item in tx['inputs'] + tx['outputs']:
+        if item['address'] == address:
+            break
+    else:
+        return http.HttpResponse("Pubkey not in TXID", status=400)
+
+    if ecdsa_verify(encrypted_text, sig, pubkey):
+        memo = Memo.objects.get_or_create(
+            txid=CachedTransaction.objects.get(txid=txid),
+            pubkey=pubkey,
+            encrypted_text=encrypted_text
+        )
+    else:
+        return http.HttpResponse("Invalid signature", status=400)
+
+    return http.HttpResponse("OK")
+
+def get_memo(request):
+    memos = Memo.objects.filter(txid=request.GET['txid'])
+    if memos.exist():
+        http.JsonResponse([x.excrypted_text for x in memos])
+    return http.JsonResponse([])

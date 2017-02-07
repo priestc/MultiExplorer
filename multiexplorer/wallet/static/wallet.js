@@ -825,12 +825,10 @@ function ui_set_error(crypto, error) {
 
 function set_ui(crypto) {
     var box = $(".crypto_box[data-currency=" + crypto + "]");
-    console.log("set ui");
     box.find(".spinner").first().hide();
     box.find(".internal_error").hide();
     $("#loading_screen").hide();
     update_balance(crypto);
-    console.log(crypto, "finished getting history for both chains");
 
     var first_address = get_blockchain_data(crypto, 'unused_deposit_addresses')[0];
     box.find(".receive_part").show();
@@ -857,4 +855,54 @@ function set_ui(crypto) {
             follow_unconfirmed(crypto, tx.txid, amount);
         }
     });
+}
+
+function my_privkey_from_txid(crypto, txid) {
+    var found_tx = undefined;
+    $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
+        if(tx.txid == txid) {
+            found_tx = tx;
+        }
+    });
+    var my_addresses = get_blockchain_data(crypto, 'used_addresses');
+    var my_matched_privkey = undefined;
+
+    $.each(found_tx.inputs.concat(found_tx.outputs), function(i, item) {
+        $.each(my_addresses, function(i, address) {
+            if(item.address == address) {
+                my_matched_privkey = get_privkey(crypto, address);
+                return false;
+            }
+        });
+    });
+    return my_matched_privkey;
+}
+
+function save_memo(message, crypto, txid) {
+    var priv = my_privkey_from_txid(crypto, txid);
+    var encrypted_text = CryptoJS.AES.encrypt(message, priv).toString();
+    var pk = bitcore.PrivateKey.fromWIF(priv);
+    var sig = Message(encrypted_text).sign(pk).toString();
+
+    $.ajax({
+        url: "/memo",
+        type: "post",
+        data: {
+            encrypted_text: encrypted_text,
+            signature: sig,
+            currency: crypto,
+            txid: txid,
+            pubkey: pk.toPublicKey().toString()
+        }
+    }).done(function(response){
+
+    });
+}
+
+function decrypt_memo(encrypted_memo, txid) {
+    var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv)
+    if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
+        match = decrypted_attemp
+    }
+    return decrypted_attemp;
 }

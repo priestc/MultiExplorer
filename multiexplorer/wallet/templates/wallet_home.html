@@ -13,11 +13,13 @@
 <script src="{% static 'aes.js' %}"></script>
 <script src="{% static 'bitcore-lib.min.js' %}"></script>
 <script src="{% static 'bitcore-mnemonic.min.js' %}"></script>
+<script src="{% static 'bitcore-message.min.js' %}"></script>
 <script src="{% static 'underscore-min.js' %}"></script>
 <script>
     //var reddcore = require('reddcore');
     var bitcore = require('bitcore-lib');
     var Mnemonic = require('bitcore-mnemonic');
+    var Message = require('bitcore-message');
     var crypto_data = JSON.parse('{{ crypto_data_json|safe }}');
     var hd_master_seed = undefined;
     var raw_mnemonic = undefined;
