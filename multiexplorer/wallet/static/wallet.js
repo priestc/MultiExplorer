@@ -857,7 +857,7 @@ function set_ui(crypto) {
     });
 }
 
-function my_privkey_from_txid(crypto, txid) {
+function my_privkeys_from_txid(crypto, txid) {
     var found_tx = undefined;
     $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
         if(tx.txid == txid) {
@@ -865,22 +865,23 @@ function my_privkey_from_txid(crypto, txid) {
         }
     });
     var my_addresses = get_blockchain_data(crypto, 'used_addresses');
-    var my_matched_privkey = undefined;
+    var my_matched_privkey = [];
 
     $.each(found_tx.inputs.concat(found_tx.outputs), function(i, item) {
         $.each(my_addresses, function(i, address) {
             if(item.address == address) {
-                my_matched_privkey = get_privkey(crypto, address);
-                return false;
+                my_matched_privkey.push(get_privkey(crypto, address));
             }
         });
     });
-    return my_matched_privkey;
+    return my_matched_privkey.sort();
 }
 
 function save_memo(message, crypto, txid) {
-    var priv = my_privkey_from_txid(crypto, txid);
-    var encrypted_text = CryptoJS.AES.encrypt(message, priv).toString();
+    // Given a txid, make a memo using the first privkey in terms of sorting
+    // alphabetical.
+    var priv = my_privkeys_from_txid(crypto, txid)[0];
+    var encrypted_text = CryptoJS.AES.encrypt("BIPXXX" + message, priv).toString();
     var pk = bitcore.PrivateKey.fromWIF(priv);
     var sig = Message(encrypted_text).sign(pk).toString();
 
@@ -899,10 +900,15 @@ function save_memo(message, crypto, txid) {
     });
 }
 
-function decrypt_memo(encrypted_memo, txid) {
-    var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv)
-    if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
-        match = decrypted_attemp
-    }
-    return decrypted_attemp;
+function decrypt_memo(crypto, txid, encrypted_memo) {
+    var my_keys = my_privkeys_from_txid(crypto, txid);
+    var match = undefined;
+    $.each(my_keys, function(i, priv){
+        var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv).toString(CryptoJS.enc.Utf8);
+        if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
+            match = decrypted_attemp.substr(6);
+            return false; // stop iteration
+        }
+    });
+    return match;
 }
