@@ -151,7 +151,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/current_price/<i>[service_id]</i>?[fiat=<i>fiat</i>|currency=<i>currency</i>]</span>
+        <span class="general_url">https://{{ domain }}/api/current_price/<i>[service_id]</i>?[fiat=<i>fiat</i>|currency=<i>currency</i>]</span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the service number in the table above,
                 or a servcie mode such as "fallback", "average3". Note, "paranoid mode"
@@ -166,7 +166,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/current_price/fallback?fiat=usd&amp;crypto=btc&amp;include_raw=true
+            https://{{ domain }}/api/current_price/fallback?fiat=usd&amp;crypto=btc&amp;include_raw=true
         </div>
 
         <div class="code_wrapper">
@@ -203,7 +203,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/address_balance/<i>[service_id]</i>?[address=<i>address</i>|addresses=<i>addresses</i> (comma seperated)]</i></span>
+        <span class="general_url">https://{{ domain }}/api/address_balance/<i>[service_id]</i>?[address=<i>address</i>|addresses=<i>addresses</i> (comma seperated)]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the service number in the table above,
                 or a servcie mode such as "fallback", "paranoid3". Note, "average mode" does not
@@ -219,7 +219,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/address_balance/fallback?address=PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5&amp;include_raw=true
+            https://{{ domain }}/api/address_balance/fallback?address=PVjubSWa6L3RrFNNUYFbdQUJTL84qko1P5&amp;include_raw=true
         </div>
 
         <div class="code_wrapper">
@@ -269,7 +269,7 @@
         </div>
 
         <div class="url">
-            http://{{ domain }}/api/address_balance/5?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n&amp;currency=ltc
+            https://{{ domain }}/api/address_balance/5?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n&amp;currency=ltc
         </div>
 
         <div class="code_wrapper">
@@ -290,7 +290,7 @@
         </div>
 
         <div class="url">
-            http://{{ domain }}/api/address_balance/private5?addresses=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9,1MgGUeGKTWjTGM8FYmVBbYhoPznZvos5cg&amp;currency=btc
+            https://{{ domain }}/api/address_balance/private5?addresses=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9,1MgGUeGKTWjTGM8FYmVBbYhoPznZvos5cg&amp;currency=btc
         </div>
 
         <div class="code_wrapper">
@@ -318,7 +318,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/unspent_outputs/<i>[service_id]</i>?address=<i>[address]</i></span>
+        <span class="general_url">https://{{ domain }}/api/unspent_outputs/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of unspent outputs.</li>
@@ -332,7 +332,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/unspent_outputs/11?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n
+            https://{{ domain }}/api/unspent_outputs/11?address=LVyKFjC1Xgu7QiADYszzHC6hSFfDELgi7n
         </div>
         <div class="code_wrapper">
             <code>
@@ -370,7 +370,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
+        <span class="general_url">https://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical.</li>
@@ -386,7 +386,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/transaction_history/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
+            https://{{ domain }}/api/transaction_history/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
         </div>
         <div class="code_wrapper">
             <code>
@@ -426,7 +426,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/get_block/<i>[service_id]</i>?block_number=<i>[block_number]</i>&amp;block_hash=<i>[block_hash]</i>&amp;latest=<i>[true|false]</i></span>
+        <span class="general_url">https://{{ domain }}/api/get_block/<i>[service_id]</i>?block_number=<i>[block_number]</i>&amp;block_hash=<i>[block_hash]</i>&amp;latest=<i>[true|false]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of block information.</li>
@@ -441,7 +441,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/get_block/6?block_hash=00000000b6ee1bc8ef48268ca7fbd243cf2d4c4792620ebfc5933cf08c487bdb&amp;currency=btc
+            https://{{ domain }}/api/get_block/6?block_hash=00000000b6ee1bc8ef48268ca7fbd243cf2d4c4792620ebfc5933cf08c487bdb&amp;currency=btc
         </div>
         <div class="code_wrapper">
             <code>
@@ -477,7 +477,7 @@
         </div>
 
         <div class="url">
-            http://{{ domain }}/api/get_block/32?block_number=653&amp;currency=vtc<br>
+            https://{{ domain }}/api/get_block/32?block_number=653&amp;currency=vtc<br>
         </div>
 
         <div class="code_wrapper">
@@ -518,7 +518,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
+        <span class="general_url">https://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a servie mode such as "fallback", "paranoid3". Note, <i>only</li> "average mode" applies for the optimal fee endpoint.
@@ -535,7 +535,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/get_optimal_fee/average4?currency=btc
+            https://{{ domain }}/api/get_optimal_fee/average4?currency=btc
         </div>
         <div class="code_wrapper">
             <code>
@@ -571,7 +571,7 @@
         </div>
 
         <div class="url">
-            http://{{ domain }}/api/get_optimal_fee/fallback?currency=ltc<br>
+            https://{{ domain }}/api/get_optimal_fee/fallback?currency=ltc<br>
         </div>
 
         <div class="code_wrapper">
@@ -595,7 +595,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">http://{{ domain }}/api/push_tx/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
+        <span class="general_url">https://{{ domain }}/api/push_tx/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a servie mode such as "fallback", "paranoid3".
@@ -609,7 +609,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            http://{{ domain }}/api/push_tx/average4?currency=btc
+            https://{{ domain }}/api/push_tx/average4?currency=btc
         </div>
         <div style="word-break: break-all;">
             POST body:<br>

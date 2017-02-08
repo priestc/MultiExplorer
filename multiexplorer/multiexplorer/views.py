@@ -350,7 +350,7 @@ def block_lookup(request):
 def api_docs(request):
     return TemplateResponse(request, 'api_docs.html', {
         'service_table': service_table_html,
-        'domain': "multiexplorer.com",
+        'domain': settings.ALLOWED_HOSTS[0],
     })
 
 def address_disambiguation(request, address):
