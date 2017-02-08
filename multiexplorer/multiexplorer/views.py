@@ -227,7 +227,8 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         used_services, txs = get_historical_transactions(currency, **modes)
         ret = {'transactions': sorted(txs, key=lambda x: x['txid'])}
     elif service_mode == 'single_transaction':
-        used_services, tx = get_single_transaction(currency, txid, **modes)
+        used_services = None
+        tx = CachedTransaction.fetch_full_tx(currency, txid=txid)
         ret = {'transaction': tx}
     elif service_mode == 'get_block':
         if block_args['block_number']:
