@@ -128,10 +128,13 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
     if not block_args:
         block_args = {}
 
-    key_ending = address or xpub or txid or fiat or (''.join([x[:5] for x in addresses]) or "".join(block_args.values()))
+    key_ending = (address or xpub or txid or fiat or
+        (','.join([x[:5] for x in addresses.split(',')]) or
+        "".join(block_args.values()))
+    )
 
     if extended_fetch:
-        key_ending += "--ExtendedFetch"
+        key_ending += "--EF"
 
     cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
     hit = cache.get(cache_key)
