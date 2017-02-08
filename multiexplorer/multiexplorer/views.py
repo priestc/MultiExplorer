@@ -448,7 +448,7 @@ def save_memo(request):
     pubkey = request.POST['pubkey']
     sig = request.POST['signature']
     txid = request.POST['txid']
-    crypto = request.POST['currency']
+    crypto = request.POST.get('currency', 'btc').lower()
 
     address = pubkey_to_address(pubkey, crypto_data[crypto]['address_version_byte'])
     errors, response = _cached_fetch('single_transaction', 'fallback', currency=crypto, txid=txid)
@@ -461,18 +461,21 @@ def save_memo(request):
         return http.HttpResponse("Pubkey not in TXID", status=400)
 
     if ecdsa_verify(encrypted_text, sig, pubkey):
-        memo = Memo.objects.get_or_create(
-            txid=CachedTransaction.objects.get(txid=txid),
-            pubkey=pubkey,
-            encrypted_text=encrypted_text
+        memo, c = Memo.objects.get_or_create(
+            crypto=crypto,
+            txid=txid,
+            pubkey=pubkey
         )
+        memo.encrypted_text = encrypted_text
+        memo.save()
     else:
         return http.HttpResponse("Invalid signature", status=400)
 
     return http.HttpResponse("OK")
 
 def get_memo(request):
-    memos = Memo.objects.filter(txid=request.GET['txid'])
+    crypto = request.GET.get('currency', 'btc').lower()
+    memos = Memo.objects.filter(txid=request.GET['txid'], crypto=crypto)
     if memos.exist():
         http.JsonResponse([x.excrypted_text for x in memos])
     return http.JsonResponse([])

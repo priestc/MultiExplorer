@@ -14,19 +14,19 @@ class CachedTransaction(models.Model):
     @classmethod
     def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):
         try:
-            tx = cls.objects.get(txid=txid)
-            if not tx.content:
+            tx_obj = cls.objects.get(txid=txid)
+            if not tx_obj.content:
                 return None
-            transaction = json.loads(tx.content)
+            tx = json.loads(tx_obj.content)
 
             if existing_tx_data and existing_tx_data.get('confirmations', None):
                 # update cached entry with updated confirmations if its available
-                transaction['confirmations'] = existing_tx_data['confirmations']
-                tx.content = json.dumps(transaction)
-                tx.save()
-            return transaction
+                tx['confirmations'] = existing_tx_data['confirmations']
+                tx_obj.content = json.dumps(tx)
+                tx_obj.save()
+
         except cls.DoesNotExist:
-            cache = cls.objects.create(txid=txid, content="")
+            tx_obj = cls.objects.create(txid=txid, content="")
             tx = get_single_transaction(crypto, txid, random=True)
 
             if existing_tx_data and existing_tx_data.get('counterparty', False):
@@ -44,15 +44,18 @@ class CachedTransaction(models.Model):
                 tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
                 tx[which][0]['address'] = existing_tx_data['address']
 
-            cache.content = json.dumps(tx, default=datetime_to_iso)
-            cache.crypto = crypto
-            cache.save()
-            return tx
+            tx_obj.content = json.dumps(tx, default=datetime_to_iso)
+            tx_obj.crypto = crypto
+            tx_obj.save()
+
+        tx['memos'] = [x.encrypted_text for x in Memo.objects.filter(txid=txid, crypto=crypto)]
+        return tx
 
     def update_confirmations(self):
         current_block = get_block(self.crypto, latest=True)
 
 class Memo(models.Model):
+    crypto = models.CharField(max_length=8, default='btc')
     encrypted_text = models.TextField(blank=False)
-    txid = models.ForeignKey(CachedTransaction)
+    txid = models.CharField(max_length=72, db_index=True)
     pubkey = models.TextField()
