@@ -344,8 +344,15 @@ function generate_history(crypto) {
 
         var time = moment(tx.time).fromNow();
 
+        var memo = "";
+        if(tx.memos) {
+            var found = decrypt_memo(crypto, tx.txid, tx.memos);
+            if(found) {
+                memo = "<br><small>" + found + "</small>";
+            }
+        }
         var explorer_link = "<a target='_blank'  href='/tx/" + crypto + "/" + tx.txid + "'>" + tx.txid.substr(0, 8) + "...</a>";
-        history_section.append(explorer_link + " " + time + "<br>" + formatted_amount + "<hr>");
+        history_section.append(explorer_link + " " + time + "<br>" + formatted_amount + memo + "<hr>");
         all_txids.push(tx.txid);
     });
 
@@ -900,14 +907,21 @@ function save_memo(message, crypto, txid) {
     });
 }
 
-function decrypt_memo(crypto, txid, encrypted_memo) {
+function decrypt_memo(crypto, txid, encrypted_memos) {
+    // given a list of encrypted memos and a txid, decrypt each one
+    // and return the result as soon as one is found.
     var my_keys = my_privkeys_from_txid(crypto, txid);
     var match = undefined;
-    $.each(my_keys, function(i, priv){
-        var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv).toString(CryptoJS.enc.Utf8);
-        if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
-            match = decrypted_attemp.substr(6);
-            return false; // stop iteration
+    $.each(encrypted_memos, function(i, encrypted_memo) {
+        $.each(my_keys, function(i, priv){
+            var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv).toString(CryptoJS.enc.Utf8);
+            if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
+                match = decrypted_attemp.substr(6);
+                return false; // stop iteration
+            }
+        });
+        if(match) {
+            return false; //stop iteration
         }
     });
     return match;
