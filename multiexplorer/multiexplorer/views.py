@@ -455,7 +455,17 @@ def save_memo(request):
     txid = request.POST['txid']
     crypto = request.POST.get('currency', 'btc').lower()
 
-    address = pubkey_to_address(pubkey, crypto_data[crypto]['address_version_byte'])
+    data = dict(pubkey=pubkey, crypto=crypto, txid=txid, encrypted_text=encrypted_text)
+    if Memo.objects.filter(**f).exists():
+        return http.HttpResponse("OK")
+    data['signature'] = sig
+
+    try:
+        version_byte = crypto_data[crypto]['address_version_byte']
+    except IndexError:
+        return http.HttpResponse("Currency not supported", status=400)
+
+    address = pubkey_to_address(pubkey, version_byte)
     errors, response = _cached_fetch('single_transaction', 'fallback', currency=crypto, txid=txid)
     tx = response['transaction']
 
@@ -476,14 +486,18 @@ def save_memo(request):
     else:
         return http.HttpResponse("Invalid signature", status=400)
 
+    perform_pushes(data)
     return http.HttpResponse("OK")
 
 def get_memo(request):
+    """
+    Given a txid, or a list of txids, return all memos that match the txid.
+    Can pass in either full txids, or "first bits" of at least 4 chars.
+    """
     crypto = request.GET.get('currency', 'btc').lower()
-    txids = []
     txid = request.GET.get('txid')
-    if not txid and request.GET.get('txids'):
-        txids = request.GET.get('txids').split(',')
+    if ',' in txid:
+        txids = txid.split(',')
         memos = Memo.objects.filter(crypto=crypto)
         for txid in txids:
             if len(txid) < 4:
@@ -520,3 +534,14 @@ def serve_memo_pull(request):
         'c': m.crypto,
         } for m in memos
     ]})
+
+def perform_pushes(data):
+    """
+    Pushes new memo submission to all push servers defined in the settings.
+    `data` is a dict containing the following keys: encrypted_text, pubkey, sig,
+    txid, crypto
+    """
+    data['currency'] = data['crypto']
+    del data['crypto']
+    for push_url in settings.MEMO_SERVER_PUSH:
+        requests.post(push_url, data=data)
