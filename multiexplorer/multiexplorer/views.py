@@ -480,22 +480,43 @@ def save_memo(request):
 
 def get_memo(request):
     crypto = request.GET.get('currency', 'btc').lower()
-    memos = Memo.objects.filter(txid=request.GET['txid'], crypto=crypto)
+    txids = []
+    txid = request.GET.get('txid')
+    if not txid and request.GET.get('txids'):
+        txids = request.GET.get('txids').split(',')
+        memos = Memo.objects.filter(crypto=crypto)
+        for txid in txids:
+            if len(txid) < 4:
+                return http.JsonResponse("TXID: %s is too small. Must include 4 chars." % txid)
+            memos = memos.filter(txid__startswith=txid)
+
+    else:
+        memos = Memo.objects.filter(txid__startswith=request.GET['txid'], crypto=crypto)
+
     if memos.exist():
-        http.JsonResponse([x.excrypted_text for x in memos])
+        http.JsonResponse([{'txid':x.txid, 'memo': x.encrypted_text} for x in memos])
     return http.JsonResponse([])
 
 def serve_memo_pull(request):
     """
     Another memo server will ask this memo server for memos made after the
     `since` value. This view handles this action by returning json encoded memos.
+    This view also handles full sync using the "page" parameter.
     """
-    since = arrow.get(request.GET['since'])
-    memos = Memo.objects.filter(created__gte=since.datetime).order_by('created')
-    return http.JsonResponse([{
+    if request.GET.get('since'):
+        since = arrow.get(request.GET['since'])
+        memos = Memo.objects.filter(created__gte=since.datetime).order_by('created')
+
+    if request.GET.get('page'):
+        page = request.GET.get('page')
+        start = (int(page) - 1) * 100
+        end = start + 100
+        memos = Memo.objects.all().order_by('created')[start:end]
+
+    return http.JsonResponse({'memos': [{
         't': m.encrypted_text,
         'p': m.pubkey,
         'x': m.txid,
         'c': m.crypto,
         } for m in memos
-    ], safe=False)
+    ]})
