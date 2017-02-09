@@ -29,6 +29,6 @@ EXCHANGE_FEE_PERCENTAGE = 1.5
 
 LOGIN_TRIES = 5
 ALLOWED_HOSTS = []
-MEMO_SERVER_PULL = []
-MEMO_SERVER_PUSH = []
+MEMO_SERVER_PULL = ['https://multiexplorer.com/memo/pull']
+MEMO_SERVER_PUSH = ['https://multiexplorer.com/memo']
 DEBUG = False

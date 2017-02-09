@@ -456,7 +456,7 @@ def save_memo(request):
     crypto = request.POST.get('currency', 'btc').lower()
 
     data = dict(pubkey=pubkey, crypto=crypto, txid=txid, encrypted_text=encrypted_text)
-    if Memo.objects.filter(**f).exists():
+    if Memo.objects.filter(**data).exists():
         return http.HttpResponse("OK")
     data['signature'] = sig
 
