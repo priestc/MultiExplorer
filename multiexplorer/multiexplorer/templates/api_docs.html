@@ -81,6 +81,21 @@
 <section id="api">
     <h2>API Documentation</h2>
 
+    <h3>Table of Contents</h3>
+    <div class="info">
+        <ul>
+            <li><a href="#service_table">Service Table</a></li>
+            <li><a href="#current_price">Current Price</a></li>
+            <li><a href="#address_balance">Address Balance</a></li>
+            <li><a href="#unspent_outputs">Unspent Outputs</a></li>
+            <li><a href="#historical_transactions">Historical Transactions by Address</a></li>
+            <li><a href="#single_transaction">Single Transaction by TXID</a></li>
+            <li><a href="#get_block">Block Information</a></li>
+            <li><a href="#get_optimal_fee">Optimal Transaction Fee</a></li>
+            <li><a href="#push_tx">Push Transaction</a></li></li>
+        </ul>
+    </div>
+
     <h3>Introduction</h3>
 
     <div class="info">
@@ -109,6 +124,7 @@
 
     </div>
 
+    <a name="service_table"></a>
     <h3>Pass through JSON API</h3>
 
     <div class="info">
@@ -147,6 +163,7 @@
         </ul>
     </div>
 
+    <a name="current_price"></a>
     <h3>Current Price</h3>
 
     <div class="info">
@@ -198,7 +215,7 @@
             </code>
         </div>
 
-
+    <a name="address_balance"></a>
     <h3>Address Balance</h3>
 
     <div class="info">
@@ -314,6 +331,7 @@
 
     </div>
 
+    <a name="unspent_outputs"></a>
     <h3>Unspent Outputs for Address</h3>
 
     <div class="info">
@@ -366,6 +384,7 @@
         </div>
     </div>
 
+    <a name="historical_transactions"></a>
     <h3>Transaction History for Address</h3>
 
     <div class="info">
@@ -373,7 +392,7 @@
         <span class="general_url">https://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical.</li>
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical transactions.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The data that comes out of this endpoint is meant for use in wallet UIs
@@ -422,6 +441,74 @@
         </div>
     </div>
 
+    <a name="single_transaction"></a>
+    <h3>Single Transaction by TXID</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">https://{{ domain }}/api/single_transaction/<i>[service_id]</i>?currency=<i>[currency_code]</i>&amp;txid=<i>[txid]</i></span>
+        <ul>
+            <li><i>service_id</i> is a number corresponding to the number in the table above,
+                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of a transaction.</li>
+            <li>The <i>currency</i> argument is required.</li>
+            <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
+                the response as it was returned directly from the service.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}/api/single_transaction/fallback?currency=ltc&amp;txid=3a1e7ad13f99b2aed018ce1fe269665b530293174e9a2b92bf8f16d852a70b4c
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "currency": [
+            "ltc",
+            "Litecoin"
+        ],
+        "fetched_seconds_ago": 19,
+        "transaction": {
+            "block_number": 992053,
+            "confirmations": 155729,
+            "fee": 0.00181212,
+            "inputs": [
+                {
+                    "address": "LiMKkg8UqHgJJ19m97GhfBPPyi2ajqtSqR",
+                    "amount": 11948020
+                },
+                {
+                    "address": "LS6MWGEtaQy9ER3C4JY1bBBgbpvnZr26qL",
+                    "amount": 11986421
+                }
+            ],
+            "memos": [
+                "U2FsdGVkX1/4sIbXOI8JH1N2WBTp1cKz/A/RDV416FY="
+            ],
+            "outputs": [
+                {
+                    "address": "LRr5ehqmscVZH2t5fhLN8gfQZd28xP7u6Y",
+                    "amount": 11662384
+                },
+                {
+                    "address": "LUtQ7dGABJ5KWsoX184vfCEajJERRPiMWt",
+                    "amount": 12090845
+                }
+            ],
+            "time": "2016-05-16T00:09:54+00:00",
+            "total_in": 23934441,
+            "total_out": 23753229,
+            "txid": "3a1e7ad13f99b2aed018ce1fe269665b530293174e9a2b92bf8f16d852a70b4c"
+        }
+    }
+            </pre>
+            </code>
+        </div>
+    </div>
+
+    <a name="get_block"></a>
     <h3>Block Information</h3>
 
     <div class="info">
@@ -514,6 +601,7 @@
 
     </div>
 
+    <a name="get_optimal_fee"></a>
     <h3>Recommended Transaction Fee</h3>
 
     <div class="info">
@@ -591,6 +679,7 @@
 
     </div>
 
+    <a name="push_tx"></a>
     <h3>Push Transaction</h3>
 
     <div class="info">
