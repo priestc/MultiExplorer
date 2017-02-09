@@ -1,4 +1,6 @@
 import json
+
+from django.utils import timezone
 from django.db import models
 from .utils import datetime_to_iso
 from moneywagon import get_single_transaction, get_block
@@ -59,3 +61,15 @@ class Memo(models.Model):
     encrypted_text = models.TextField(blank=False)
     txid = models.CharField(max_length=72, db_index=True)
     pubkey = models.TextField()
+    created = models.DateTimeField(default=timezone.now)
+
+class PullHistory(models.Model):
+    """
+    Records when the last time a memo server has been pulled
+    """
+    last_pulled = models.DateTimeField(default=timezone.now)
+    pull_url = models.TextField()
+
+    def __unicode__(self):
+        ago = (timezone.now() - self.last_pulled)
+        return "%s (%s Ago)" % (self.pull_url, ago)

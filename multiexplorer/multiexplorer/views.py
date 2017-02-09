@@ -2,6 +2,7 @@ import json
 import time
 import random
 
+import arrow
 from django.views.decorators.csrf import csrf_exempt
 from django import http
 from django.template.response import TemplateResponse
@@ -483,3 +484,18 @@ def get_memo(request):
     if memos.exist():
         http.JsonResponse([x.excrypted_text for x in memos])
     return http.JsonResponse([])
+
+def serve_memo_pull(request):
+    """
+    Another memo server will ask this memo server for memos made after the
+    `since` value. This view handles this action by returning json encoded memos.
+    """
+    since = arrow.get(request.GET['since'])
+    memos = Memo.objects.filter(created__gte=since.datetime).order_by('created')
+    return http.JsonResponse([{
+        't': m.encrypted_text,
+        'p': m.pubkey,
+        'x': m.txid,
+        'c': m.crypto,
+        } for m in memos
+    ], safe=False)
