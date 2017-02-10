@@ -288,3 +288,16 @@ button {
 input[type=number], input[type=text] {
     color: black;
 }
+
+.edit_memo_area {
+    display: none;
+}
+
+.edit_memo_area textarea {
+    width: calc(100% - 4px);
+    height: 3em;
+}
+
+.existing_memo {
+    font-size: small;
+}

@@ -1,10 +1,11 @@
+import requests
+import urllib
+import datetime
+
 from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from multiexplorer.models import PullHistory
-
-import requests
-import urllib
 
 class Command(BaseCommand):
     help = 'Perform pulling of memos from another memo server.'
@@ -14,7 +15,7 @@ class Command(BaseCommand):
             history, created = PullHistory.objects.get_or_create(pull_url=pull_url)
 
             if created:
-                full_sync(pull_url)
+                since = timzone.now() - datetime.timedelta(hours=3)
             else:
                 since = urllib.urlencode({'since': history.last_pulled})
                 try:

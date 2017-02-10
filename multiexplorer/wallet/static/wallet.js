@@ -346,13 +346,13 @@ function generate_history(crypto) {
 
         var memo = "";
         if(tx.memos) {
-            var found = decrypt_memo(crypto, tx.txid, tx.memos);
-            if(found) {
-                memo = "<br><small>" + found + "</small>";
-            }
+            memo = decrypt_memo(crypto, tx.txid, tx.memos) || "";
         }
         var explorer_link = "<a target='_blank'  href='/tx/" + crypto + "/" + tx.txid + "'>" + tx.txid.substr(0, 8) + "...</a>";
-        history_section.append(explorer_link + " " + time + "<br>" + formatted_amount + memo + "<hr>");
+        var history = explorer_link + " " + time + "<br>" + formatted_amount + "<br><span class='existing_memo'>" + memo + "</span>";
+        var buttons = "<button class='save_memo' data-txid=" + tx.txid + ">Save</button> <button class='cancel_memo'>Cancel</button>"
+        var edit_area = "<div class='edit_memo_area'><textarea></textarea>" + buttons + "</div>"
+        history_section.append("<div class='touch_for_memo'>" + history + edit_area + "<hr></div>");
         all_txids.push(tx.txid);
     });
 
@@ -403,6 +403,42 @@ function update_total_fiat_balance() {
 }
 
 $(function() {
+    $('.crypto_box').on("click", ".touch_for_memo", function() {
+        //var txid =
+        var memo = $(this).find(".existing_memo").text();
+        $(this).find(".existing_memo").hide();
+        $(this).find(".edit_memo_area textarea").text(memo)
+        $(this).find(".edit_memo_area").show();
+    });
+
+    $(".crypto_box").on("click", ".save_memo", function(event) {
+        event.stopPropagation(); // to avoid triggering ".touch_for_memo" click.
+        var save_button = $(this);
+        var crypto = save_button.parents(".crypto_box").data("currency");
+        var message = save_button.parent().find("textarea").val();
+        var txid = save_button.data('txid');
+
+        if(!message) {
+            save_button.siblings(".cancel_memo").click();
+            return
+        }
+
+        save_memo(message, crypto, txid, function(response) {
+            if(response == "OK") {
+                save_button.parents(".touch_for_memo").find(".existing_memo").text(message).show();
+                save_button.parents(".edit_memo_area").hide();
+            } else {
+                save_button.siblings(".error").text(response);
+            }
+        });
+    });
+
+    $(".crypto_box").on("click", ".cancel_memo", function(event) {
+        event.stopPropagation(); // to avoid triggering ".touch_for_memo" click.
+        $(this).parents(".touch_for_memo").find(".existing_memo").show();
+        $(this).parents(".edit_memo_area").hide();
+    });
+
     $(".cancel_button").click(function() {
         var box = $(this).parent().parent();
         switch_section(box, "receive");
@@ -865,6 +901,7 @@ function set_ui(crypto) {
 }
 
 function my_privkeys_from_txid(crypto, txid) {
+    // Given a txid, return all privkeys in terms of sorting alphabetical.
     var found_tx = undefined;
     $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
         if(tx.txid == txid) {
@@ -872,21 +909,19 @@ function my_privkeys_from_txid(crypto, txid) {
         }
     });
     var my_addresses = get_blockchain_data(crypto, 'used_addresses');
-    var my_matched_privkey = [];
+    var my_matched_privkeys = [];
 
     $.each(found_tx.inputs.concat(found_tx.outputs), function(i, item) {
         $.each(my_addresses, function(i, address) {
             if(item.address == address) {
-                my_matched_privkey.push(get_privkey(crypto, address));
+                my_matched_privkeys.push(get_privkey(crypto, address));
             }
         });
     });
-    return my_matched_privkey.sort();
+    return my_matched_privkeys.sort();
 }
 
-function save_memo(message, crypto, txid) {
-    // Given a txid, make a memo using the first privkey in terms of sorting
-    // alphabetical.
+function save_memo(message, crypto, txid, callback) {
     var priv = my_privkeys_from_txid(crypto, txid)[0];
     var encrypted_text = CryptoJS.AES.encrypt("BIPXXX" + message, priv).toString();
     var pk = bitcore.PrivateKey.fromWIF(priv);
@@ -902,8 +937,17 @@ function save_memo(message, crypto, txid) {
             txid: txid,
             pubkey: pk.toPublicKey().toString()
         }
-    }).done(function(response){
-
+    }).done(function(response) {
+        // after successful submitting of memo to memo server, save to localStorage
+        // so a page refresh will redraw the memo.
+        var history = get_blockchain_data(crypto, "tx_history");
+        $.each(history, function(i, tx){
+            if(tx.txid == txid) {
+                tx.memos = [encrypted_text];
+            }
+        });
+        set_blockchain_data(crypto, "tx_history", history);
+        callback(response);
     });
 }
 
