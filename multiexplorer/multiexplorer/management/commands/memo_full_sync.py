@@ -7,7 +7,7 @@ import requests
 import urllib
 
 class Command(BaseCommand):
-    help = 'Perform pulling of memos from another memo server.'
+    help = 'Full Sync. For memo servers that start with zero memos in their local db.'
 
     def handle(self, *args, **options):
         for i, pull_url in enumerate(settings.MEMO_SERVER_PULL, 1):

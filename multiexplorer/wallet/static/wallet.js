@@ -921,6 +921,25 @@ function my_privkeys_from_txid(crypto, txid) {
     return my_matched_privkeys.sort();
 }
 
+function delete_memo(crypto, txid, callback) {
+    var priv = my_privkeys_from_txid(crypto, txid)[0];
+    var pk = bitcore.PrivateKey.fromWIF(priv);
+
+    $.ajax({
+        url: "/memo",
+        type: "post",
+        data: {
+            encrypted_text: "Please Delete",
+            signature: Message("Please Delete").sign(pk).toString(),
+            currency: crypto,
+            txid: txid,
+            pubkey: pk.toPublicKey().toString()
+        }
+    }).done(function(response) {
+        update_history_with_memo(crypto, txid, undefined)
+    });
+}
+
 function save_memo(message, crypto, txid, callback) {
     var priv = my_privkeys_from_txid(crypto, txid)[0];
     var encrypted_text = CryptoJS.AES.encrypt("BIPXXX" + message, priv).toString();
@@ -940,13 +959,7 @@ function save_memo(message, crypto, txid, callback) {
     }).done(function(response) {
         // after successful submitting of memo to memo server, save to localStorage
         // so a page refresh will redraw the memo.
-        var history = get_blockchain_data(crypto, "tx_history");
-        $.each(history, function(i, tx){
-            if(tx.txid == txid) {
-                tx.memos = [encrypted_text];
-            }
-        });
-        set_blockchain_data(crypto, "tx_history", history);
+        update_history_with_memo(crypto, txid, encrypted_text)
         callback(response);
     });
 }
@@ -969,4 +982,20 @@ function decrypt_memo(crypto, txid, encrypted_memos) {
         }
     });
     return match;
+}
+
+function update_history_with_memo(crypto, txid, memo) {
+    // Goes through the localStorage and updates the tx_history to include the
+    // new memo (or deletes existing memo).
+    var history = get_blockchain_data(crypto, "tx_history");
+    $.each(history, function(i, tx){
+        if(tx.txid == txid) {
+            if(memo) {
+                tx.memos = [memo];
+            } else {
+                tx.memos = [];
+            }
+        }
+    });
+    set_blockchain_data(crypto, "tx_history", history);
 }

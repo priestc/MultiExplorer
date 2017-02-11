@@ -466,8 +466,7 @@ def save_memo(request):
         return http.HttpResponse("Currency not supported", status=400)
 
     address = pubkey_to_address(pubkey, version_byte)
-    errors, response = _cached_fetch('single_transaction', 'fallback', currency=crypto, txid=txid)
-    tx = response['transaction']
+    tx = CachedTransaction.fetch_full_tx(currency, txid=txid)
 
     for item in tx['inputs'] + tx['outputs']:
         if item['address'] == address:
@@ -496,36 +495,40 @@ def get_memo(request):
     """
     crypto = request.GET.get('currency', 'btc').lower()
     txid = request.GET.get('txid')
+    memos = Memo.objects.filter(crypto=crypto).exclude(encrypted_text="Please Delete")
+
     if ',' in txid:
         txids = txid.split(',')
-        memos = Memo.objects.filter(crypto=crypto)
         for txid in txids:
             if len(txid) < 4:
                 return http.JsonResponse("TXID: %s is too small. Must include 4 chars." % txid)
             memos = memos.filter(txid__startswith=txid)
 
     else:
-        memos = Memo.objects.filter(txid__startswith=request.GET['txid'], crypto=crypto)
+        memos = memos.filter(txid__startswith=txid)
 
-    if memos.exist():
-        http.JsonResponse([{'txid':x.txid, 'memo': x.encrypted_text} for x in memos])
-    return http.JsonResponse([])
+    return http.JsonResponse([{'txid':x.txid, 'memo': x.encrypted_text} for x in memos])
 
 def serve_memo_pull(request):
     """
-    Another memo server will ask this memo server for memos made after the
-    `since` value. This view handles this action by returning json encoded memos.
-    This view also handles full sync using the "page" parameter.
+    There are two ways to use the "Memo Pull" method: by eithr pasing in a "since timestamp",
+    or by passing in a page number.
+
+    Page number is used when performing a "full memo sync", and does not include
+    records of deleted memos.
+
+    On the other hand, "since timestamp" is used when performing a periodical
+    pull. The response will include all new memos (and "Please Delete" memos)
+    made since the timestamp.
     """
     if request.GET.get('since'):
         since = arrow.get(request.GET['since'])
         memos = Memo.objects.filter(created__gte=since.datetime).order_by('created')
 
     if request.GET.get('page'):
-        page = request.GET.get('page')
-        start = (int(page) - 1) * 100
+        start = (int(request.GET.get('page', 1)) - 1) * 100
         end = start + 100
-        memos = Memo.objects.all().order_by('created')[start:end]
+        memos = Memo.objects.exclude(encrypted_text="Please Delete").order_by('created')[start:end]
 
     return http.JsonResponse({'memos': [{
         't': m.encrypted_text,
