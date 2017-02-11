@@ -5,7 +5,7 @@ import datetime
 from django.utils import timezone
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from multiexplorer.models import PullHistory
+from multiexplorer.models import PullHistory, Memo
 
 class Command(BaseCommand):
     help = 'Perform pulling of memos from another memo server.'
@@ -15,16 +15,18 @@ class Command(BaseCommand):
             history, created = PullHistory.objects.get_or_create(pull_url=pull_url)
 
             if created:
-                s = timzone.now() - datetime.timedelta(hours=3)
+                s = timezone.now() - datetime.timedelta(hours=3)
             else:
                 s = history.last_pulled
 
             since = urllib.urlencode({'since': s})
             try:
                 response = requests.get("%s?%s" % (pull_url, since)).json()
-            except:
+            except Exception as exc:
                 self.stderr.write(
-                    self.style.ERROR('Failed to fetch from %s' % pull_url)
+                    self.style.ERROR('Failed to fetch from %s: %s' % (
+                        pull_url, exc
+                    ))
                 )
                 continue
 

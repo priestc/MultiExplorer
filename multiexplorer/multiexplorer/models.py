@@ -62,7 +62,17 @@ class Memo(models.Model):
     encrypted_text = models.TextField(blank=False)
     txid = models.CharField(max_length=72, db_index=True)
     pubkey = models.TextField()
+    signature = models.TextField(blank=True)
     created = models.DateTimeField(default=timezone.now)
+
+    def as_dict(self):
+        return {
+            'encrypted_text': self.encrypted_text,
+            'txid': self.txid,
+            'signature': self.signature,
+            'pubkey': self.pubkey,
+            'currency': self.crypto
+        }
 
 class PullHistory(models.Model):
     """
@@ -74,3 +84,6 @@ class PullHistory(models.Model):
     def __unicode__(self):
         ago = (timezone.now() - self.last_pulled)
         return "%s (%s Ago)" % (self.pull_url, ago)
+
+class PushHistory(models.Model):
+    last_pushed = models.DateTimeField(default=timezone.now)

@@ -481,6 +481,7 @@ def save_memo(request):
             pubkey=pubkey
         )
         memo.encrypted_text = encrypted_text
+        memo.signature = sig
         memo.save()
     else:
         return http.HttpResponse("Invalid signature", status=400)
