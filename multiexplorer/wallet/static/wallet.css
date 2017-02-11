@@ -301,3 +301,8 @@ input[type=number], input[type=text] {
 .existing_memo {
     font-size: small;
 }
+
+.memo_error {
+    color: red;
+    display: inline-block;
+}

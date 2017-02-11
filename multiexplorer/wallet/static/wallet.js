@@ -350,7 +350,7 @@ function generate_history(crypto) {
         }
         var explorer_link = "<a target='_blank'  href='/tx/" + crypto + "/" + tx.txid + "'>" + tx.txid.substr(0, 8) + "...</a>";
         var history = explorer_link + " " + time + "<br>" + formatted_amount + "<br><span class='existing_memo'>" + memo + "</span>";
-        var buttons = "<button class='save_memo' data-txid=" + tx.txid + ">Save</button> <button class='cancel_memo'>Cancel</button>"
+        var buttons = "<button class='save_memo' data-txid=" + tx.txid + ">Save</button> <button class='cancel_memo'>Cancel</button><div class='memo_error'></div>"
         var edit_area = "<div class='edit_memo_area'><textarea></textarea>" + buttons + "</div>"
         history_section.append("<div class='touch_for_memo'>" + history + edit_area + "<hr></div>");
         all_txids.push(tx.txid);
@@ -420,18 +420,24 @@ $(function() {
         var txid = save_button.data('txid');
 
         if(!message && !existing) {
+            // no existing memo and textbox was blank, treat as cancel button click
             save_button.siblings(".cancel_memo").click();
             return
         } else if(!message && existing) {
             message = ""; // Will end up a "Please Delete" sent to server
         }
 
+        var spinner_classes = save_button.parents(".crypto_box").find(".spinner").first().attr('class');
+        var spinner = "<div class='" + spinner_classes + "' style='width: 12px; height: 12px'></div>";
+        save_button.siblings(".memo_error").html(spinner);
+
         save_memo(message, crypto, txid, function(response) {
             if(response == "OK") {
                 save_button.parents(".touch_for_memo").find(".existing_memo").text(message).show();
                 save_button.parents(".edit_memo_area").hide();
+                save_button.siblings(".memo_error").text("");
             } else {
-                save_button.siblings(".error").text(response);
+                save_button.siblings(".memo_error").text(response || "Error");
             }
         });
     });
@@ -949,6 +955,9 @@ function save_memo(message, crypto, txid, callback) {
         // so a page refresh will redraw the memo.
         update_history_with_memo(crypto, txid, encrypted_text)
         callback(response);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log("errror");
+        callback(jqXHR.responseJSON);
     });
 }
 
