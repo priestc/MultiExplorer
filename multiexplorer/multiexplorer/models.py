@@ -50,7 +50,8 @@ class CachedTransaction(models.Model):
             tx_obj.crypto = crypto
             tx_obj.save()
 
-        tx['memos'] = [x.encrypted_text for x in Memo.objects.filter(txid=txid, crypto=crypto)]
+        memos = Memo.objects.filter(txid=txid, crypto=crypto).exclude(encrypted_text="Please Delete")
+        tx['memos'] = [x.encrypted_text for x in memos]
         return tx
 
     def update_confirmations(self):
