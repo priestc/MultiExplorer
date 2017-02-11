@@ -11,6 +11,11 @@ body {
     border-radius: 7px;
 }
 
+#login_status {
+    display: block-inline;
+    color: red;
+}
+
 #wallets {
     display: flex;
     flex-wrap: wrap;
