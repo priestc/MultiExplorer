@@ -93,6 +93,12 @@
             <li><a href="#get_block">Block Information</a></li>
             <li><a href="#get_optimal_fee">Optimal Transaction Fee</a></li>
             <li><a href="#push_tx">Push Transaction</a></li></li>
+            <li>Memo Server
+                <ul>
+                    <li><a href="#memo_publish">Memo Publish</a></il>
+                    <li><a href="#get_memos">Get Memos for txid</a></li>
+                </ul>
+            </li>
         </ul>
     </div>
 
@@ -339,7 +345,7 @@
         <span class="general_url">https://{{ domain }}/api/unspent_outputs/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of unspent outputs.</li>
+                or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of unspent outputs.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
@@ -392,7 +398,7 @@
         <span class="general_url">https://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical transactions.</li>
+                or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical transactions.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
             <li>The data that comes out of this endpoint is meant for use in wallet UIs
@@ -449,7 +455,7 @@
         <span class="general_url">https://{{ domain }}/api/single_transaction/<i>[service_id]</i>?currency=<i>[currency_code]</i>&amp;txid=<i>[txid]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of a transaction.</li>
+                or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of a transaction.</li>
             <li>The <i>currency</i> argument is required.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
@@ -516,7 +522,7 @@
         <span class="general_url">https://{{ domain }}/api/get_block/<i>[service_id]</i>?block_number=<i>[block_number]</i>&amp;block_hash=<i>[block_hash]</i>&amp;latest=<i>[true|false]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of block information.</li>
+                or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of block information.</li>
             <li>The <i>currency</i> argument is <strong>required</strong>. There is no way to infer the currency
                 from the block hash or block height, unlike from address version byte.</li>
             <li>You can use either <i>block_number</i>, <i>latest</i> or <i>block_hash</i>, but only one at the same time.</li>
@@ -609,7 +615,7 @@
         <span class="general_url">https://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3". Note, <i>only</li> "average mode" applies for the optimal fee endpoint.
+                or a service mode such as "fallback", "paranoid3". Note, <i>only</i> "average mode" applies for the optimal fee endpoint.
                 Each service returns a different value, so it makes sense to use the value of each service averaged together.
                 Paranoid mode will always fail, because rarely do each service return the exact same recommended fee.</li>
             <li>The <i>currency</i> argument is <strong>required</strong>. Must be 3 or 4 letter code.</li>
@@ -687,7 +693,7 @@
         <span class="general_url">https://{{ domain }}/api/push_tx/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
-                or a servie mode such as "fallback", "paranoid3".
+                or a service mode such as "fallback", "paranoid3".
             <li>The <i>currency</i> argument is <strong>required</strong>. Must be 3 or 4 letter cryptocurrency code.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
@@ -708,7 +714,110 @@
         <div class="code_wrapper">
             <code>
             <pre>
-                {'txid': 896744a809d9b7bcb682c3c94916aadd5d89d7b771b0337910446061a24e5e07}
+    {'txid': 896744a809d9b7bcb682c3c94916aadd5d89d7b771b0337910446061a24e5e07}
+            </pre>
+            </code>
+        </div>
+
+    </div>
+
+    <a name="memo_publish"></a>
+    <h3>Publish New Memo</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">https://{{ domain }}/memo</span>
+        <ul>
+            <li>Neither <i>service_id</i> nor <i>service_mode</i> pertains to this endpoint.
+            <li>Fields included in POST body must be: currency, encrypted_text
+            pubkey, signature, and txid.</li>
+            <li>Refer to the BIPXXX specification on specifics on how to prepare
+            the signature and <i>encrypted_text</i>.</li>
+            <li>Returned is always "OK" if completed successfully.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}/memo
+        </div>
+        <div style="word-break: break-all;">
+            POST body:<br>
+
+            currency=btc&amp;encrypted_text=U2FsdGVkX1/G2ErLcbFGMGI1L7HdaN01nctjQrsV3nTOixrnY6pz15mOQ7aCtPNh&amp;pubkey=03fb3147dc93058b04ac6b9f0cd8389ab994a8d20dfad70ba390bedb4cf292d5db&amp;signature=INSk3Xv13uz9j5DfCYJ6mJQevpbPP2tWi7NyMUW1eSRoFpP7ZhtIWEMWjX89+vWGNNeD5DIfESp8YaFOtIedMvU=&amp;txid=9a6e1f0ac89582d09eb795e63221ffb91e65e060320c487dcb549601f85830dd&amp;
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+                OK
+            </pre>
+            </code>
+        </div>
+
+    </div>
+
+    <a name="get_memos"></a>
+    <h3>Get Memos by TXID</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">https://{{ domain }}/memo?currency=<i>[currency_code]</i>&txid=<i>[txid or comma seperated list of txids]</i></span>
+        <ul>
+            <li>Neither <i>service_id</i> nor <i>service_mode</i> pertains to this endpoint.
+            <li>Fields included in POST body must be: currency, encrypted_text
+            pubkey, signature, and txid. TXID can be full or partial.</li>
+            <li>Refer to the BIPXXX specification on specifics on how to prepare
+            the signature and <i>encrypted_text</i>.</li>
+            <li>Returned is always "OK" if completed successfully.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}/memo?currency=ltc&amp;txid=922668d583c60822542a4668b9a6d781e9e58d46851dfe7414d2bff2fce463d6<br>
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+      "memos": [
+        {
+          "memo": "U2FsdGVkX19McXnOAgL9+znA2QzVmJCyG/GbRltGkLfKclcBAjTC4KD2yJSD5O1decojOfkZOXqFH6DhlL5qNpiwLGn72rIpodbzbSwLW90=",
+          "txid": "922668d583c60822542a4668b9a6d781e9e58d46851dfe7414d2bff2fce463d6"
+        }
+      ]
+    }
+            </pre>
+            </code>
+        </div>
+
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}/memo?currency=ltc&amp;txid=922668,6819ed,677254<br>
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+        {
+          "memos": [
+            {
+              "memo": "U2FsdGVkX1/uNk+avjf7hGUWaFHB1jlrtSmUhTFlu3w=",
+              "txid": "6819ed9573134bcceef2d8c2bfd2c8d1b373569098abcb748b655b03383dc9ad"
+            },
+            {
+              "memo": "U2FsdGVkX19McXnOAgL9+znA2QzVmJCyG/GbRltGkLfKclcBAjTC4KD2yJSD5O1decojOfkZOXqFH6DhlL5qNpiwLGn72rIpodbzbSwLW90=",
+              "txid": "922668d583c60822542a4668b9a6d781e9e58d46851dfe7414d2bff2fce463d6"
+            },
+            {
+              "memo": "U2FsdGVkX1889v0l2GibFg4Ca0JtZAPCRfKhLt1Ykt7PH787qPGkJN0BqbgqToX5",
+              "txid": "6772540dd8fb137c9292e60da492c57c413a746f6e223597381340b9bd31f8c5"
+            }
+          ]
+        }
             </pre>
             </code>
         </div>

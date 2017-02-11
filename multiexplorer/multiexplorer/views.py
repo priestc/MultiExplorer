@@ -8,6 +8,7 @@ from django import http
 from django.template.response import TemplateResponse
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth import logout as dj_logout
 import requests
@@ -500,15 +501,20 @@ def get_memo(request):
 
     if ',' in txid:
         txids = txid.split(',')
+        q = Q()
         for txid in txids:
             if len(txid) < 4:
                 return http.JsonResponse("TXID: %s is too small. Must include 4 chars." % txid)
-            memos = memos.filter(txid__startswith=txid)
+            q = q | Q(txid__startswith=txid)
+
+        memos = memos.filter(q)
 
     else:
         memos = memos.filter(txid__startswith=txid)
 
-    return http.JsonResponse([{'txid':x.txid, 'memo': x.encrypted_text} for x in memos])
+    return http.JsonResponse({'memos':
+        [{'txid':x.txid, 'memo': x.encrypted_text} for x in memos]
+    })
 
 def serve_memo_pull(request):
     """

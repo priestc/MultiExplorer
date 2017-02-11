@@ -11,7 +11,10 @@ class CachedTransaction(models.Model):
     crypto = models.CharField(max_length=8, default='btc')
 
     def __unicode__(self):
-        return "%s:%s" % (self.crypto.upper(), json.loads(self.content)['txid'])
+        txid = "?"
+        if self.content:
+            txid = json.loads(self.content)['txid']
+        return "%s:%s" % (self.crypto.upper(), txid)
 
     @classmethod
     def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):

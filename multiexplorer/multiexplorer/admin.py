@@ -16,7 +16,7 @@ class CachedTransactionAdmin(admin.ModelAdmin):
         return len(obj.content)
 
 class MemoAdmin(admin.ModelAdmin):
-    list_display = ("txid", "content_length", 'created')
+    list_display = ("txid", "content_length", 'crypto', 'created')
     ordering = ('-created',)
 
     def content_length(self, obj):
