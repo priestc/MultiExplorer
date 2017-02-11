@@ -502,7 +502,7 @@ def get_memo(request):
     if ',' in txid:
         txids = txid.split(',')
         q = Q()
-        for txid in txids:
+        for txid in txids[:50]:
             if len(txid) < 4:
                 return http.JsonResponse("TXID: %s is too small. Must include 4 chars." % txid)
             q = q | Q(txid__startswith=txid)
