@@ -11,6 +11,10 @@ class Command(BaseCommand):
     help = 'Perform pulling of memos from another memo server.'
 
     def handle(self, *args, **options):
+        if settings.MEMO_SERVER_PRIVATE_MODE:
+            self.stderr.write(self.style.NOTICE('Private Mode is enabled. Not pulling.'))
+            return
+
         for pull_url in settings.MEMO_SERVER_PULL:
             history, created = PullHistory.objects.get_or_create(pull_url=pull_url)
 

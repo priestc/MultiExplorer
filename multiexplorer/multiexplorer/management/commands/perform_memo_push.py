@@ -11,6 +11,10 @@ class Command(BaseCommand):
     help = 'Perform pushing of memos from another memo server.'
 
     def handle(self, *args, **options):
+        if settings.MEMO_SERVER_PRIVATE_MODE:
+            self.stderr.write(self.style.NOTICE('Private Mode is enabled. Not pushing.'))
+            return
+
         history, created = PushHistory.objects.get_or_create()
         memos = Memo.objects.filter(created__gte=history.last_pushed).exclude(signature='')
 

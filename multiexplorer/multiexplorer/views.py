@@ -487,7 +487,6 @@ def save_memo(request):
     else:
         return http.HttpResponse("Invalid signature", status=400)
 
-    perform_pushes(data)
     return http.HttpResponse("OK")
 
 def get_memo(request):
@@ -528,6 +527,9 @@ def serve_memo_pull(request):
     pull. The response will include all new memos (and "Please Delete" memos)
     made since the timestamp.
     """
+    if settings.MEMO_SERVER_PRIVATE_MODE:
+        return http.HttpResponse("Memo Server is in Private Mode", status=401)
+
     if request.GET.get('since'):
         since = arrow.get(request.GET['since'])
         memos = Memo.objects.filter(created__gte=since.datetime).order_by('created')
@@ -544,14 +546,3 @@ def serve_memo_pull(request):
         'c': m.crypto,
         } for m in memos
     ]})
-
-def perform_pushes(data):
-    """
-    Pushes new memo submission to all push servers defined in the settings.
-    `data` is a dict containing the following keys: encrypted_text, pubkey, sig,
-    txid, crypto
-    """
-    data['currency'] = data['crypto']
-    del data['crypto']
-    for push_url in settings.MEMO_SERVER_PUSH:
-        requests.post(push_url, data=data)

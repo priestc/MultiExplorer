@@ -13,7 +13,7 @@ class Command(BaseCommand):
         for i, pull_url in enumerate(settings.MEMO_SERVER_PULL, 1):
             print("%s - %s" % (i, pull_url))
 
-        choice = int(raw_input("Choose which pull server to perform full sync from: "))
+        choice = int(raw_input("Choose which pull server to perform full sync from: ") or 1)
         pull_url = settings.MEMO_SERVER_PULL[choice-1]
 
         total_count = 0
