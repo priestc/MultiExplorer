@@ -8,7 +8,7 @@ from django.conf import settings
 from multiexplorer.models import PushHistory, Memo
 
 class Command(BaseCommand):
-    help = 'Perform pulling of memos from another memo server.'
+    help = 'Perform pushing of memos from another memo server.'
 
     def handle(self, *args, **options):
         history, created = PushHistory.objects.get_or_create()
@@ -18,9 +18,11 @@ class Command(BaseCommand):
             for memo in memos:
                 try:
                     response = requests.post(push_url, data=memo.as_dict())
-                except:
+                except Exception as exc:
                     self.stderr.write(
-                        self.style.ERROR('Failed to push to %s' % push_url)
+                        self.style.ERROR('Failed to push to %s: %s' % (
+                            push_url, exc
+                        ))
                     )
 
         history.last_pushed = timezone.now()
