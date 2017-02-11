@@ -414,13 +414,16 @@ $(function() {
     $(".crypto_box").on("click", ".save_memo", function(event) {
         event.stopPropagation(); // to avoid triggering ".touch_for_memo" click.
         var save_button = $(this);
+        var existing = save_button.parents(".touch_for_memo").find(".existing_memo").text();
         var crypto = save_button.parents(".crypto_box").data("currency");
         var message = save_button.parent().find("textarea").val();
         var txid = save_button.data('txid');
 
-        if(!message) {
+        if(!message && !existing) {
             save_button.siblings(".cancel_memo").click();
             return
+        } else if(!message && existing) {
+            message = ""; // Will end up a "Please Delete" sent to server
         }
 
         save_memo(message, crypto, txid, function(response) {
@@ -921,28 +924,13 @@ function my_privkeys_from_txid(crypto, txid) {
     return my_matched_privkeys.sort();
 }
 
-function delete_memo(crypto, txid, callback) {
-    var priv = my_privkeys_from_txid(crypto, txid)[0];
-    var pk = bitcore.PrivateKey.fromWIF(priv);
-
-    $.ajax({
-        url: "/memo",
-        type: "post",
-        data: {
-            encrypted_text: "Please Delete",
-            signature: Message("Please Delete").sign(pk).toString(),
-            currency: crypto,
-            txid: txid,
-            pubkey: pk.toPublicKey().toString()
-        }
-    }).done(function(response) {
-        update_history_with_memo(crypto, txid, undefined)
-    });
-}
-
 function save_memo(message, crypto, txid, callback) {
     var priv = my_privkeys_from_txid(crypto, txid)[0];
-    var encrypted_text = CryptoJS.AES.encrypt("BIPXXX" + message, priv).toString();
+    if(message) {
+        var encrypted_text = CryptoJS.AES.encrypt("BIPXXX" + message, priv).toString();
+    } else {
+        var encrypted_text = "Please Delete";
+    }
     var pk = bitcore.PrivateKey.fromWIF(priv);
     var sig = Message(encrypted_text).sign(pk).toString();
 

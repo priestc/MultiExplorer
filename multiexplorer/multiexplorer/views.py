@@ -466,7 +466,7 @@ def save_memo(request):
         return http.HttpResponse("Currency not supported", status=400)
 
     address = pubkey_to_address(pubkey, version_byte)
-    tx = CachedTransaction.fetch_full_tx(currency, txid=txid)
+    tx = CachedTransaction.fetch_full_tx(crypto, txid=txid)
 
     for item in tx['inputs'] + tx['outputs']:
         if item['address'] == address:
