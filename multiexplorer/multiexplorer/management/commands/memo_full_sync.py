@@ -1,7 +1,7 @@
 from __future__ import print_function
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from multiexplorer.models import PullHistory
+from multiexplorer.models import PullHistory, Memo
 
 import requests
 import urllib
