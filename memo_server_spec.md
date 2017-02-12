@@ -57,6 +57,9 @@ transaction. The function loops through each input and output, and determines wh
 were made by private keys the wallet controls. This function then returns those
 WIF encoded private keys in alphabetical order.
 
+To see the entire implementatin of the `my_privkeys_from_txid` function, refer
+to the [MultiExplorer code on github](https://github.com/priestc/MultiExplorer/blob/716a17b159e1fe2e99ee9bf5bcd5461860a71f68/multiexplorer/wallet/static/wallet.js#L918)
+
 A full memo publish request looks like the following:
 
     private key: T5wFr74YkSA3ocEkDNHhmEHYsoqF3u2TtYXmNxNVnM2A8EHmK79o
