@@ -419,6 +419,12 @@ $(function() {
         var message = save_button.parent().find("textarea").val();
         var txid = save_button.data('txid');
 
+        if(message.length > 713) {
+            // 713 corresponds to AES encrypted size of just under 1000 bytes. (common limit for memo severs)
+            save_button.siblings(".memo_error").text("Memo too long")
+            return
+        }
+
         if(!message && !existing) {
             // no existing memo and textbox was blank, treat as cancel button click
             save_button.siblings(".cancel_memo").click();
@@ -957,7 +963,7 @@ function save_memo(message, crypto, txid, callback) {
         callback(response);
     }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log("errror");
-        callback(jqXHR.responseJSON);
+        callback("Error from memo server: " + jqXHR.responseJSON['error']);
     });
 }
 
@@ -968,7 +974,11 @@ function decrypt_memo(crypto, txid, encrypted_memos) {
     var match = undefined;
     $.each(encrypted_memos, function(i, encrypted_memo) {
         $.each(my_keys, function(i, priv){
-            var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv).toString(CryptoJS.enc.Utf8);
+            try {
+                var decrypted_attemp = CryptoJS.AES.decrypt(encrypted_memo, priv).toString(CryptoJS.enc.Utf8);
+            } catch(e) { // sometimes failed decrypts attempts result in UTF8 failures.
+                var decrypted_attemp = "";
+            }
             if(decrypted_attemp.substr(0, 6) == 'BIPXXX') {
                 match = decrypted_attemp.substr(6);
                 return false; // stop iteration

@@ -27,6 +27,7 @@ WALLET_SUPPORTED_FIATS = ['usd', 'eur', 'cny', 'jpy']
 EXCHANGE_KICK_INTERVAL_MINUTES = 10
 EXCHANGE_FEE_PERCENTAGE = 1.5
 
+MAX_MEMO_SIZE_BYTES = 1000
 MEMO_SERVER_PRIVATE_MODE = False
 MEMO_SERVER_PULL = [
     'https://multiexplorer.com/memo/pull'

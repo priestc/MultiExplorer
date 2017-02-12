@@ -453,8 +453,14 @@ def save_memo(request):
     encrypted_text = request.POST['encrypted_text']
     pubkey = request.POST['pubkey']
     sig = request.POST['signature']
-    txid = request.POST['txid']
+    txid = request.POST['txid'].lower()
     crypto = request.POST.get('currency', 'btc').lower()
+
+    if len(encrypted_text) > settings.MAX_MEMO_SIZE_BYTES:
+        return http.JsonResponse(
+            {'error': "Memo exceeds maximum size of: %s bytes" % settings.MAX_MEMO_SIZE_BYTES},
+            status=400
+        )
 
     data = dict(pubkey=pubkey, crypto=crypto, txid=txid, encrypted_text=encrypted_text)
     if Memo.objects.filter(**data).exists():
