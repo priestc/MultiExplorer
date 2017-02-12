@@ -44,7 +44,7 @@ the function `my_privkeys_from_txid`. This function actually returns a list of
 private keys, but in the code above only the first one is selected from that list
 to be the one we use to create the memo publish request.
 
-The signing algorithm is provided by the project bitcore-message. All default
+The signing algorithm is provided by the project [bitcore-message](https://github.com/bitpay/bitcore-message). All default
 settings are used.
 
 The resulting signature is sent to the memo server, along with the corresponding
