@@ -38,7 +38,7 @@ function save_memo(message, crypto, txid) {
 }
 ```
 
-If the message is encrypted with the AES algorithm, provided by the CryptoJS
+If the message is encrypted with the AES algorithm, provided by the [CryptoJS](https://github.com/brix/crypto-js)
 library. The encrypted message is then signed with the private key that is returned by
 the function `my_privkeys_from_txid`. This function actually returns a list of
 private keys, but in the code above only the first one is selected from that list
@@ -93,7 +93,7 @@ function decrypt_memo(crypto, txid, encrypted_memos) {
 }
 ```
 
-The AES decrypt function is provided by the CryptoJS library. The memo server may
+The AES decrypt function is provided by the [CryptoJS](https://github.com/brix/crypto-js) library. The memo server may
 return multiple encrypted memos per txid, so we have to loop over each one and
 attempt to decrypt each obe until we get a match. We know we have a match when
 the first six letters of the result are "BIPXXX".
