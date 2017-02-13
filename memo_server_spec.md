@@ -11,6 +11,10 @@ to easily move their funds from one wallet software provider to another.
 Unfortunately not all wallet data can be easily moved over, such as wallet settings,
 imported wallets, and memos.
 
+This system creates a decentralized network of "memo servers" that store encrypted memos.
+When users move their master seed from one wallet that supports Memo server, to another
+wallet that supports memo server, they memos will carry over to the new wallet.
+
 ## Front end Memo encrypt and publish
 
 ```javascript
@@ -98,7 +102,7 @@ function decrypt_memo(crypto, txid, encrypted_memos) {
 
 The AES decrypt function is provided by the [CryptoJS](https://github.com/brix/crypto-js) library. The memo server may
 return multiple encrypted memos per txid, so we have to loop over each one and
-attempt to decrypt each obe until we get a match. We know we have a match when
+attempt to decrypt each one until we get a match. We know we have a match when
 the first six letters of the result are "BIPXXX".
 
 ## Server side save
@@ -120,9 +124,9 @@ def save_memo(request):
     if Memo.objects.filter(encrypted_text=encrypted_text, txid=txid).exists():
         return http.HttpResponse("OK")
 
-    address = pubkey_to_address(pubkey, crypto)
-    tx = CachedTransaction.fetch_full_tx(crypto, txid=txid)
+    tx = get_transaction(crypto, txid=txid)
 
+    address = pubkey_to_address(pubkey, crypto)
     for item in tx['inputs'] + tx['outputs']:
         if item['address'] == address:
             break
@@ -143,6 +147,22 @@ def save_memo(request):
 
     return http.HttpResponse("OK")
 ```
+
+* Lines 2-6: Variables are set based on data sent in from the POST body
+* Lines 8-12: The memo is checked to make sure it isn't greater than the max
+length determined by the memo server settings.
+* Lines 14-15: If this memo server already has this exact memo already stored in it's
+database, nothing is done. This prevents a "push loop" from occurring.
+* Lines 17: The TXID is retrieved from a database of blockchain data.
+* Lines 19-24: The Pubkey is converted to an address, and then the address is verified to
+exist within one of the inputs of outputs. If the addresses is not found, an error
+response is returned. If the address is found, execution continues.
+* Lines 26-34: The signature is verified to be valid, using the `pubkey`, and `encrypted_text`.
+If the signature is found to be valid, the memo is saved. Otherwise an error
+response is returned. If there is already a memo in the server with the same TXID and
+pubkey, this new memo will replace the old one.
+* Line 38: The text "OK" is returned if the memo publish was completed successfully.
+
 ## Server side get by txid
 
 ```python
@@ -174,3 +194,8 @@ def get_memo(request):
         [{'txid':x.txid, 'memo': x.encrypted_text} for x in memos]
     })
 ```
+
+# Push and Pulling
+
+Memo servers can push and pull memos between each other. A memo server can
+also run in "private mode", which will disable all push and pull operations.
