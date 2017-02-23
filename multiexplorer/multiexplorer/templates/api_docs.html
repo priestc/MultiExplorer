@@ -189,7 +189,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/current_price/fallback?fiat=usd&amp;crypto=btc&amp;include_raw=true
+            https://{{ domain }}/api/current_price/fallback?fiat=usd&amp;currency=btc&amp;include_raw=true
         </div>
 
         <div class="code_wrapper">
@@ -411,7 +411,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/transaction_history/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
+            https://{{ domain }}/api/historical_transactions/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
         </div>
         <div class="code_wrapper">
             <code>
@@ -612,7 +612,7 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">https://{{ domain }}/api/get_optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
+        <span class="general_url">https://{{ domain }}/api/optimal_fee/<i>[service_id]</i>?currency=<i>[curency_code]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a service mode such as "fallback", "paranoid3". Note, <i>only</i> "average mode" applies for the optimal fee endpoint.
@@ -629,7 +629,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/get_optimal_fee/average4?currency=btc
+            https://{{ domain }}/api/optimal_fee/average4?currency=btc
         </div>
         <div class="code_wrapper">
             <code>
@@ -665,7 +665,7 @@
         </div>
 
         <div class="url">
-            https://{{ domain }}/api/get_optimal_fee/fallback?currency=ltc<br>
+            https://{{ domain }}/api/optimal_fee/fallback?currency=ltc<br>
         </div>
 
         <div class="code_wrapper">

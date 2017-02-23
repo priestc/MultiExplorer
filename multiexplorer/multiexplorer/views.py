@@ -122,23 +122,39 @@ def perform_lookup(request, service_mode, service_id):
 
     return http.JsonResponse(response_dict)
 
+def make_cache_key(service_mode, a):
+    if service_mode == 'optimal_fee':
+        return "OF-%s-%s" % (a['service_id'], a['currency'])
+
+    if service_mode == 'get_block':
+        return "GB-%s-%s-%s" % (
+            a['service_id'], a['currency'], ','.join(a['block_args'].values())
+        )
+
+    if service_mode == 'current_price':
+        return "CP-%s-%s-%s" % (
+             a['service_id'], a['currency'], a['fiat'],
+        )
+
+    if service_mode in ['address_balance', 'unspent_outputs', 'historical_transactions'] :
+        add = a.get('addresses') or a['address']
+        addresses = (','.join([x[:5] for x in add.split(',')]))
+        ef = "-EF" if a.get('extended_fetch') else ""
+        return "%s-%s-%s-%s%s" % (
+            service_mode, a['service_id'], a['currency'], addresses, ef
+        )
+
+    if service_mode == 'single_transaction':
+        return "ST-%s-%s-%s" % (
+            a['service_id'], a['currency'], a['txid'][:8]
+        )
+
 
 def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=None,
     currency=None, currency_name=None, fiat=None, include_raw=False, Service=None, block_args=None,
     extended_fetch=False, txid=None, random_mode=False, **k):
 
-    if not block_args:
-        block_args = {}
-
-    key_ending = (address or xpub or txid or fiat or
-        (','.join([x[:5] for x in addresses.split(',')]) or
-        "".join(block_args.values()))
-    )
-
-    if extended_fetch:
-        key_ending += "--EF"
-
-    cache_key = '%s:%s:%s:%s' % (currency.lower(), service_mode, service_id, key_ending)
+    cache_key = make_cache_key(service_mode=service_mode, a=locals())
     hit = cache.get(cache_key)
 
     if hit:
