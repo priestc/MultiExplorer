@@ -205,6 +205,7 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
     }).always(function() {
         var outstanding = update_outstanding_ajax(crypto, -1);
         if (outstanding == 0 && !box.find(".internal_error").text()) {
+            remove_duplicates_from_history(crypto);
             set_ui(crypto);
         }
     })
@@ -319,10 +320,6 @@ function generate_history(crypto) {
     var er = exchange_rates[crypto]['rate'];
     var all_txids = [];
     $.each(history, function(i, tx) {
-        if(all_txids.indexOf(tx.txid) != -1) {
-            return // duplicate, don't make part of history...
-        }
-
         var my_amount = my_amount_for_tx(crypto, tx);
         if(tx.confirmations >= 1) {
             running_total += my_amount;

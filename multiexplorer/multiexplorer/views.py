@@ -156,6 +156,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
 
     cache_key = make_cache_key(service_mode=service_mode, a=locals())
     hit = cache.get(cache_key)
+    #print "cache key", cache_key
 
     if hit:
         response_dict = hit

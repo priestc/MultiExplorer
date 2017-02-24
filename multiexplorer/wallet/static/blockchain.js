@@ -97,6 +97,20 @@ function set_blockchain_data(crypto, type, data) {
     localStorage[type + ':' + crypto] = JSON.stringify(data);
 }
 
+function remove_duplicates_from_history(crypto) {
+    var all_txids = [];
+    var history = []
+    $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
+        if(all_txids.indexOf(tx.txid) != -1) {
+            console.log("found dupe", tx.txid);
+            return // duplicate, don't make part of history...
+        }
+        history.push(tx);
+        all_txids.push(tx.txid);
+    });
+    set_blockchain_data(crypto, 'tx_history', history);
+}
+
 function concat_blockchain_data(crypto, type, data) {
     localStorage[type + ':' + crypto] = JSON.stringify(get_blockchain_data(crypto, type).concat(data));
     return get_blockchain_data(crypto, type);
@@ -346,6 +360,48 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
         cbox.find(".send_ui").hide();
         cbox.find(".utxo_error_area").text(error);
     });
+}
+
+function get_utxos2(crypto, sweep_address, sweep_callback) {
+    var utxos = [];
+    var history = get_blockchain_data(crypto, 'tx_history');
+    var my_addresses = get_blockchain_data(crypto, 'used_addresses');
+
+    function is_unspent(txid) {
+        // look through all history and see if this txid has been included
+        // in any inputs. (is unspent)
+        var is_spent = false;
+        $.each(history, function(i, tx){
+            $.each(tx.inputs, function(j, input){
+                if(input.txid == txid) {
+                    is_spent = true;
+                    return false;
+                }
+            });
+            if(is_spent) return false; // stop iteration
+        });
+        return !is_spent;
+    }
+
+    $.each(history, function(i, tx){
+        $.each(tx.outputs, function(j, out){
+            $.each(my_addresses, function(k, address) {
+                if(out.address == address && is_unspent(tx.txid)){
+                    // is an incoming payment to one of my addresses
+                    console.log("found", out, tx);
+                    utxos.push({
+                        address: out.address,
+                        amount: out.amount,
+                        output: out.scriptPubKey,
+                        outputIndex: j,
+                        txid: tx.txid
+                    });
+                    return false; //stop iteration
+                }
+            });
+        });
+    });
+    return utxos
 }
 
 function my_amount_for_tx(crypto, tx) {
