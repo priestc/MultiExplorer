@@ -6,6 +6,7 @@ from django.utils.safestring import mark_safe
 class CachedTransactionAdmin(admin.ModelAdmin):
     list_display = ("txid", 'crypto', "content_length")
     readonly_fields = ('pretty_print', )
+    search_fields = ('txid', )
 
     def pretty_print(self, obj):
         return mark_safe("<br><pre>%s</pre" % json.dumps(

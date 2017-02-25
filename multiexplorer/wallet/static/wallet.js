@@ -495,7 +495,7 @@ $(function() {
             var sweep_priv = new bitcore.PrivateKey(priv);
             var sweep_address = sweep_priv.toAddress(net);
 
-            get_utxos(crypto, sweep_address, function(utxos) {
+            get_sweep_utxos(crypto, sweep_address, function(utxos) {
                 var tx = new bitcore.Transaction()
                 var amount = 0;
                 var input_count = 0;
@@ -563,7 +563,7 @@ $(function() {
         var error_area = box.find(".exchange_part .error_area");
         exchange_pairs[crypto] = [];
 
-        get_utxos(crypto);
+        utxos[crypto] = get_utxos2(crypto);
         if(!optimal_fees[crypto]) {
             get_optimal_fee(crypto);
         }
@@ -751,7 +751,7 @@ $(function() {
 
         switch_section(box, "send");
 
-        get_utxos(crypto);
+        utxos[crypto] = get_utxos2(crypto);
         get_optimal_fee(crypto, box.find(".optimal_fee_rate_per_byte"));
 
         box.find(".submit_send").unbind('click').click(function() {

@@ -318,18 +318,12 @@ function get_optimal_fee(crypto, area) {
     });
 }
 
-function get_utxos(crypto, sweep_address, sweep_callback) {
-    if(sweep_address) {
-        var addrs = "address=" + sweep_address;
-    } else {
-        addresses = get_blockchain_data(crypto, 'used_addresses');
-        //console.log("getting utxos for", addresses);
-        if(addresses.length == 1) {
-            var addrs = "address=" + addresses[0];
-        } else {
-            var addrs = "addresses=" + addresses.join(',');
-        }
-    }
+function get_sweep_utxos(crypto, sweep_address, sweep_callback) {
+    // Given a sweep address, call the UTXOs API endpoint and pass
+    // all UTXOS into the callback.
+
+    var addrs = "address=" + sweep_address;
+
     $.ajax({
         url: "/api/unspent_outputs/fallback?" + addrs + "&currency=" + crypto,
     }).done(function(response) {
@@ -346,11 +340,7 @@ function get_utxos(crypto, sweep_address, sweep_callback) {
                 address: utxo.address
             })
         });
-        if(sweep_address) {
-            sweep_callback(rewritten);
-        } else {
-            utxos[crypto] = rewritten;
-        }
+        sweep_callback(rewritten)
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var error = "Network Error";
         if(jqXHR.responseJSON) {
@@ -388,11 +378,10 @@ function get_utxos2(crypto, sweep_address, sweep_callback) {
             $.each(my_addresses, function(k, address) {
                 if(out.address == address && is_unspent(tx.txid)){
                     // is an incoming payment to one of my addresses
-                    console.log("found", out, tx);
                     utxos.push({
                         address: out.address,
-                        amount: out.amount,
-                        output: out.scriptPubKey,
+                        amount: out.amount / 1e8,
+                        script: out.scriptPubKey,
                         outputIndex: j,
                         txid: tx.txid
                     });
