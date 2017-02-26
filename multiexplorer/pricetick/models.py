@@ -11,6 +11,7 @@ import pytz
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from multiexplorer.utils import get_wallet_currencies
 
 from moneywagon import get_current_price
 
@@ -194,10 +195,10 @@ def get_ticks(verbose=False):
     fresh.
     """
     all_ticks = []
-    for fiat in ['usd', 'cny', 'rur', 'eur']:
+    for fiat in settings.WALLET_SUPPORTED_FIATS:
         all_ticks.append(PriceTick.get_current_price('btc', fiat, verbose=verbose))
 
-    for crypto in ['ltc', 'doge', 'nxt', 'ppc', 'vtc', 'ftc', 'myr']:
+    for crypto in [x['code'] for x in get_wallet_currencies()]:
         all_ticks.append(PriceTick.get_current_price(crypto, 'btc', verbose=verbose))
 
     return all_ticks
