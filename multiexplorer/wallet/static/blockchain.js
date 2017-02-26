@@ -351,7 +351,7 @@ function get_sweep_utxos(crypto, sweep_address, sweep_callback) {
     });
 }
 
-function get_utxos2(crypto, sweep_address, sweep_callback) {
+function get_utxos2(crypto) {
     var utxos = [];
     var history = get_blockchain_data(crypto, 'tx_history');
     var my_addresses = get_blockchain_data(crypto, 'used_addresses');

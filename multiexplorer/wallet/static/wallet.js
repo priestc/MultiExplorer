@@ -118,17 +118,21 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
         }
         i += 1;
     }
+    var fiat = $(".fiat_unit").first().text();
+    args = {
+        extended_fetch: true,
+        fiat: fiat,
+        currency: crypto
+    }
 
     var addresses_with_activity = [];
     if(addresses.length == 1) {
-        var args = "?address=" + addresses[0];
+        args['address'] = addresses[0];
         var mode = "fallback";
     } else {
-        var args = "?addresses=" + addresses.join(",");
+        args['addresses'] = addresses.join(",");
         var mode = "private5";
     }
-
-    args += "&extended_fetch=true&currency=" + crypto;
 
     var all_my_addresses = already_tried_addresses.concat(addresses);
 
@@ -136,8 +140,9 @@ function fetch_used_addresses(crypto, chain, blank_length, already_tried_address
 
     update_outstanding_ajax(crypto, 1);
     $.ajax({
-        'url': "/api/historical_transactions/" + mode + "/" + args,
-        'type': 'get',
+        url: "/api/historical_transactions/" + mode,
+        type: 'get',
+        data: args
     }).done(function (response) {
         box.find(".internal_error").text("");
         box.find(".arrow_button").show();
