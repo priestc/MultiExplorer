@@ -27,6 +27,7 @@ from .utils import (
 )
 
 from .models import CachedTransaction, Memo
+from pricetick.models import PriceTick
 from bitcoin import ecdsa_verify, pubkey_to_address
 
 services_by_id = {s.service_id: s for s in ALL_SERVICES}
@@ -238,6 +239,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
 
     if service_mode == 'current_price':
         used_services, price = get_current_price(currency, fiat, **modes)
+        PriceTick.record_price(used_services, price, currency, fiat)
         ret = {'current_price': price}
     elif service_mode == 'address_balance':
         used_services, balance = get_address_balance(currency, **modes)

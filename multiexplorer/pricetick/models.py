@@ -10,8 +10,9 @@ import pytz
 
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
-from moneywagon import CurrentPrice
+from moneywagon import get_current_price
 
 class PriceTick(models.Model):
     currency = models.CharField(max_length=8) # btc/ltc/doge/etc.
@@ -24,11 +25,33 @@ class PriceTick(models.Model):
         return "%s %s %s->%s" % (self.date, self.price, self.currency, self.base_fiat)
 
     @classmethod
-    def nearest(self, date):
+    def nearest(cls, date):
         """
         Find the tick nearest the passed in date.
         """
-        return self.objects.filter(date__lt=date).latest()
+        return cls.objects.filter(date__lt=date).latest()
+
+    @classmethod
+    def record_price(cls, sources, price, crypto, fiat):
+        interval_ago = timezone.now() - datetime.timedelta(seconds=settings.PRICE_INTERVAL_SECONDS)
+        last_date = cls.last_recorded_date(crypto, fiat)
+        if not last_date or last_date < interval_ago:
+            obj = cls.objects.create(
+                date=timezone.now(),
+                price=price,
+                base_fiat=fiat.upper(),
+                currency=crypto.upper(),
+                exchange=sources[0].name
+            )
+            return True
+        return False
+
+    @classmethod
+    def last_recorded_date(cls, crypto, fiat):
+        try:
+            return cls.objects.filter(currency=crypto, base_fiat=fiat).latest().date
+        except cls.DoesNotExist:
+            return None
 
     class Meta:
         get_latest_by = 'date'
