@@ -25,7 +25,7 @@ class PriceTick(models.Model):
         return "%s %s %s->%s" % (self.date, self.price, self.currency, self.base_fiat)
 
     @classmethod
-    def nearest(cls, date, crypto, fiat):
+    def nearest(cls, crypto, fiat, date):
         """
         Find the tick nearest the passed in date. May raise DoesNotExist
         if a value can't be found.
@@ -56,13 +56,13 @@ class PriceTick(models.Model):
         return tick
 
     @classmethod
-    def record_price(cls, price, crypto, fiat, source_name, at_time=None):
+    def record_price(cls, price, crypto, fiat, source_name, at_time=None, interval=None):
         """
         If you already have the price data and want to record that, use this method.
         WIll only record if the current price is within PRICE_INTERVAL_SECONDS.
         """
         at_time = at_time or timezone.now()
-        if cls.needs_update(crypto, fiat, at_time):
+        if cls.needs_update(crypto, fiat, at_time, interval):
             obj = cls.objects.create(
                 date=at_time,
                 price=price,
@@ -74,32 +74,36 @@ class PriceTick(models.Model):
         return False
 
     @classmethod
-    def get_non_stale_price(cls, crypto, fiat, at_time=None):
+    def get_non_stale_price(cls, crypto, fiat, at_time=None, interval=None):
         at_time = at_time or timezone.now()
         try:
-            price = cls.objects.filter(
-                currency__iexact=crypto, base_fiat__iexact=fiat,
-                date__lt=at_time
-            ).latest()
+            kwargs = {
+                'currency__iexact': crypto,
+                'base_fiat__iexact': fiat,
+                'date__lte': at_time
+            }
+            if interval:
+                kwargs['date__gte'] = at_time - interval
+            price = cls.objects.filter(**kwargs).latest()
         except cls.DoesNotExist:
             return None
 
-        if price.is_stale():
+        if price.is_stale(at_time, interval):
             return None
 
         return price
 
 
     @classmethod
-    def needs_update(cls, crypto, fiat, at_time=None):
+    def needs_update(cls, crypto, fiat, at_time=None, interval=None):
         at_time = at_time or timezone.now()
-        price = cls.get_non_stale_price(crypto, fiat, at_time)
+        price = cls.get_non_stale_price(crypto, fiat, at_time, interval)
         return price is None
 
-    def is_stale(self):
-        interval_ago = timezone.now() - datetime.timedelta(
-            seconds=settings.PRICE_INTERVAL_SECONDS
-        )
+    def is_stale(self, at_time=None, interval=None):
+        interval = interval or datetime.timedelta(seconds=settings.PRICE_INTERVAL_SECONDS)
+        at_time = at_time or timezone.now()
+        interval_ago = at_time - interval
         return self.date < interval_ago
 
     class Meta:
@@ -116,16 +120,18 @@ def load_btc():
         timestamp, price, volume = line.split(",")
         tick_date = datetime.datetime.fromtimestamp(int(timestamp)).replace(tzinfo=pytz.UTC)
 
-        if i % 300 == 0:
-            p = PriceTick.objects.create(
-                currency='BTC',
-                exchange='bitstampUSD',
-                base_fiat='USD',
-                date=tick_date,
-                price=price,
+        if i % 100 == 0:
+            p = PriceTick.record_price(
+                price=price, crypto='BTC',
+                fiat='USD', source_name='bitstampUSD',
+                at_time=tick_date,
+                interval=datetime.timedelta(hours=1)
             )
 
-            print p
+            if p:
+                print "made:", p
+            else:
+                print "skipping", tick_date
 
 def load_ltc():
     # https://www.quandl.com/BTCE/BTCLTC-BTC-LTC-Exchange-Rate
