@@ -395,12 +395,18 @@
 
     <div class="info">
         URL general form:<br>
-        <span class="general_url">https://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i></span>
+        <span class="general_url">https://{{ domain }}/api/historical_transactions/<i>[service_id]</i>?address=<i>[address]</i>&amp;fiat=<i>[fiat]</i>&amp;extended_fetch=<i>[true or false]</i></span>
         <ul>
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of historical transactions.</li>
             <li>The <i>currency</i> argument is optional. If you leave it off,
                 the currency will be guessed from decoding the address version byte.</li>
+            <li>If <i>extended_fetch</i> is set to <i>true</i>, returned will be
+                the full transaction information coming from the "single transaction by txid"
+                API method.</li>
+            <li>The <i>fiat</i> option is optional and will return the fiat price
+                at the time of the transaction being confirmed. Options include: usd, eur, rur, and btc.
+                (Only applicable when extended fetch is enabled)</li>
             <li>The data that comes out of this endpoint is meant for use in wallet UIs
                 to show activity from addresses. It is not meant to be used in creation of transactions.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
@@ -411,7 +417,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/historical_transactions/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
+            https://{{ domain }}/api/historical_transactions/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9fiat=usd
         </div>
         <div class="code_wrapper">
             <code>

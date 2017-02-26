@@ -57,20 +57,22 @@ class CachedTransaction(models.Model):
                 tx_obj.save()
 
         if fiat:
-            try:
-                price, source = PriceTick.nearest(crypto, fiat, arrow.get(tx['time']).datetime)
-                d = {'fiat': fiat, 'price': price, 'source': source}
-            except PriceTick.DoesNotExist:
-                d = None
-
-            tx['historical_fiat'] = d
-
+            time = arrow.get(tx['time']).datetime
+            tx['historical_price'] = self.get_historical_fiat(fiat, time)
 
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
 
     def update_confirmations(self):
         current_block = get_block(self.crypto, latest=True)
+
+    def get_historical_fiat(self, fiat, time):
+        try:
+            price, source, price_time = PriceTick.nearest(crypto, fiat, time)
+            return {'fiat': fiat, 'price': price, 'source': source, 'time': price_time}
+        except PriceTick.DoesNotExist:
+            return None
+
 
 class Memo(models.Model):
     crypto = models.CharField(max_length=8, default='btc')
