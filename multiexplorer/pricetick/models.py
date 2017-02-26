@@ -32,14 +32,23 @@ class PriceTick(models.Model):
         return cls.objects.filter(date__lt=date).latest()
 
     @classmethod
-    def get_current_price(self, crypto, fiat):
-        sources, price = get_current_price(crypto, fiat, report_services=True)
-        cls.record_price(sources, price, crypto, fiat)
-        return sources, price
+    def get_current_price(cls, crypto, fiat, verbose=False):
+        price = cls.get_non_stale_price(crypto, fiat)
+        if price:
+            return price
+        sources, price = get_current_price(crypto, fiat, report_services=True, verbose=verbose)
+        if not sources[0]:
+            import debug
+        tick = cls.record_price(price, crypto, fiat, sources[0].name)
+        return tick
 
     @classmethod
     def record_price(cls, price, crypto, fiat, source_name):
-        if cls.is_stale(crypto, fiat):
+        """
+        If you already have the price data and want to record that, use this method.
+        WIll only record if the current price is within PRICE_INTERVAL_SECONDS.
+        """
+        if cls.needs_update(crypto, fiat):
             obj = cls.objects.create(
                 date=timezone.now(),
                 price=price,
@@ -47,19 +56,33 @@ class PriceTick(models.Model):
                 currency=crypto.upper(),
                 exchange=source_name
             )
-            return True
+            return obj
         return False
 
     @classmethod
-    def is_stale(cls, crypto, fiat):
+    def get_non_stale_price(cls, crypto, fiat):
         try:
-            last_date = cls.objects.filter(
-                currency=crypto.upper(), base_fiat=fiat.upper()).latest().date
+            price = cls.objects.filter(
+                currency=crypto.upper(), base_fiat=fiat.upper()).latest()
         except cls.DoesNotExist:
-            return True
+            return None
 
-        interval_ago = timezone.now() - datetime.timedelta(seconds=settings.PRICE_INTERVAL_SECONDS)
-        return last_date < interval_ago
+        if price.is_stale():
+            return None
+
+        return price
+
+
+    @classmethod
+    def needs_update(cls, crypto, fiat):
+        price = cls.get_non_stale_price(crypto, fiat)
+        return price is None
+
+    def is_stale(self):
+        interval_ago = timezone.now() - datetime.timedelta(
+            seconds=settings.PRICE_INTERVAL_SECONDS
+        )
+        return self.date < interval_ago
 
     class Meta:
         get_latest_by = 'date'
@@ -141,25 +164,16 @@ def load_all():
     load_btc()
     load_from_CRYPTOCHART_at_quandl()
 
-def get_ticks():
+def get_ticks(verbose=False):
     """
-    Run this function every 10 or so minutes so to keep the PriceTicks table
+    Run this function every 60 or so minutes so to keep the PriceTicks table
     fresh.
     """
-    useragent = 'HistoricalCryptoPrice.pricetick.models.get_ticks'
-    getter = CryptoPrice()
     all_ticks = []
-    for fiat in ['usd', 'cad', 'btc', 'rur', 'eur']:
-        for crypto in ['btc', 'ltc', 'doge', 'nxt', 'ppc', 'vtc', 'ftc']:
-            price, market = getter.get_price(fiat, crypto)
-            all_ticks.append(
-                PriceTick.objects.create(
-                    currency=crypto.upper(),
-                    exchange=market,
-                    base_fiat=fiat.upper(),
-                    date=datetime.datetime.now(),
-                    price=price,
-                )
-            )
+    for fiat in ['usd', 'cny', 'rur', 'eur']:
+        all_ticks.append(PriceTick.get_current_price('btc', fiat, verbose=verbose))
+
+    for crypto in ['ltc', 'doge', 'nxt', 'ppc', 'vtc', 'ftc', 'myr']:
+        all_ticks.append(PriceTick.get_current_price(crypto, 'btc', verbose=verbose))
 
     return all_ticks
