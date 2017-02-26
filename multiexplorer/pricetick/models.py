@@ -43,8 +43,8 @@ class PriceTick(models.Model):
                 currency__iexact='btc', base_fiat__iexact=fiat, date__lt=date
             ).latest()
             return (
-                fiat_btc.price / crypto_btc.price,
-                "%s/%s" % (fiat_btc.exchange, crypto_btc.exchange)
+                fiat_btc.price * crypto_btc.price,
+                "%s->%s" % (fiat_btc.exchange, crypto_btc.exchange)
             )
     @classmethod
     def get_current_price(cls, crypto, fiat, verbose=False):
@@ -52,8 +52,6 @@ class PriceTick(models.Model):
         if price:
             return price
         sources, price = get_current_price(crypto, fiat, report_services=True, verbose=verbose)
-        if not sources[0]:
-            import debug
         tick = cls.record_price(price, crypto, fiat, sources[0].name)
         return tick
 
