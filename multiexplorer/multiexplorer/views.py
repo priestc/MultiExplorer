@@ -427,6 +427,9 @@ def onchain_exchange_rates(request):
         except (KeyError, TypeError):
             continue
 
+        if pair['maxLimit'] == 0:
+            continue
+
         final_pairs.append({
             'deposit_currency': {'code': deposit_code, 'name': deposit_name},
             'withdraw_currency': {'code': withdraw_code, 'name': withdraw_name},

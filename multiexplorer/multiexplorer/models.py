@@ -20,7 +20,7 @@ class CachedTransaction(models.Model):
     def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):
         try:
             tx_obj = cls.objects.get(txid=txid)
-            if not tx_obj.content:
+            if tx_obj.content == "Pending":
                 return None
             tx = json.loads(tx_obj.content)
 
@@ -31,7 +31,8 @@ class CachedTransaction(models.Model):
                 tx_obj.save()
 
         except cls.DoesNotExist:
-            tx_obj = cls.objects.create(txid=txid, content="")
+            # not cached, fetch from API service.
+            tx_obj, c = cls.objects.get_or_create(txid=txid, content="Pending")
             tx = get_single_transaction(crypto, txid, random=True)
 
             if existing_tx_data and existing_tx_data.get('counterparty', False):
@@ -49,12 +50,12 @@ class CachedTransaction(models.Model):
                 tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
                 tx[which][0]['address'] = existing_tx_data['address']
 
-            tx_obj.content = json.dumps(tx, default=datetime_to_iso)
-            tx_obj.crypto = crypto
-            tx_obj.save()
+            if tx['confirmations'] > 0:
+                tx_obj.content = json.dumps(tx, default=datetime_to_iso)
+                tx_obj.crypto = crypto
+                tx_obj.save()
 
-        memos = Memo.objects.filter(txid=txid, crypto=crypto).exclude(encrypted_text="Please Delete")
-        tx['memos'] = [x.encrypted_text for x in memos]
+        tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
 
     def update_confirmations(self):
@@ -67,6 +68,11 @@ class Memo(models.Model):
     pubkey = models.TextField()
     signature = models.TextField(blank=True)
     created = models.DateTimeField(default=timezone.now)
+
+    @classmethod
+    def get(cls, crypto, txid):
+        memos = cls.objects.filter(txid=txid, crypto=crypto).exclude(encrypted_text="Please Delete")
+        return [x.encrypted_text for x in memos]
 
     def as_dict(self):
         return {

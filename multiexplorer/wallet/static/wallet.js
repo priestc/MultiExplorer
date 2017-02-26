@@ -692,12 +692,18 @@ $(function() {
             } else if (deposit && deposit > max) {
                 box.find(".exchange_amount").css({color: 'red'});
                 box.find(".submit_exchange").attr('disabled', 'disabled');
-                error_area.css({color: 'red'}).text("Deposit larger than maximum");
+                var withdraw_crypto = box.find(".withdraw_code").first().text();
+                error_area.css({color: 'red'}).text(
+                    "Deposit larger than maximum of " + max + " " + withdraw_crypto.toUpperCase()
+                );
             } else if(deposit && deposit < min) {
                 console.log("Deposit" + deposit + " lower than minimum of " + min);
                 box.find(".exchange_amount").css({color: 'red'});
                 box.find(".submit_exchange").attr('disabled', 'disabled');
-                error_area.css({color: 'red'}).text("Deposit lower than minimum");
+                var withdraw_crypto = box.find(".withdraw_code").first().text();
+                error_area.css({color: 'red'}).text(
+                    "Deposit lower than minimum of " + max + " " + withdraw_crypto.toUpperCase()
+                );
             } else {
                 box.find(".exchange_amount").css({color: 'black'});
                 box.find(".submit_exchange").removeAttr('disabled');
