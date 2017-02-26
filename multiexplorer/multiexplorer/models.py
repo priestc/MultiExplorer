@@ -57,8 +57,14 @@ class CachedTransaction(models.Model):
                 tx_obj.save()
 
         if fiat:
-            price, source = PriceTick.nearest(crypto, fiat, arrow.get(tx['time']).datetime)
-            tx['historical_fiat'] = {'fiat': fiat, 'price': price, 'source': source}
+            try:
+                price, source = PriceTick.nearest(crypto, fiat, arrow.get(tx['time']).datetime)
+                d = {'fiat': fiat, 'price': price, 'source': source}
+            except PriceTick.DoesNotExist:
+                d = None
+
+            tx['historical_fiat'] = d
+
 
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
