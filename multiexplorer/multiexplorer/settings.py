@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'multiexplorer',
     'wallet',
     'exchange',
+    'pricetick',
     'django_extensions',
     'corsheaders',
 )
