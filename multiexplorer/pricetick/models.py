@@ -56,14 +56,15 @@ class PriceTick(models.Model):
         return tick
 
     @classmethod
-    def record_price(cls, price, crypto, fiat, source_name):
+    def record_price(cls, price, crypto, fiat, source_name, at_time=None):
         """
         If you already have the price data and want to record that, use this method.
         WIll only record if the current price is within PRICE_INTERVAL_SECONDS.
         """
-        if cls.needs_update(crypto, fiat):
+        at_time = at_time or timezone.now()
+        if cls.needs_update(crypto, fiat, at_time):
             obj = cls.objects.create(
-                date=timezone.now(),
+                date=at_time,
                 price=price,
                 base_fiat=fiat.upper(),
                 currency=crypto.upper(),
@@ -73,10 +74,13 @@ class PriceTick(models.Model):
         return False
 
     @classmethod
-    def get_non_stale_price(cls, crypto, fiat):
+    def get_non_stale_price(cls, crypto, fiat, at_time=None):
+        at_time = at_time or timezone.now()
         try:
             price = cls.objects.filter(
-                currency=crypto.upper(), base_fiat=fiat.upper()).latest()
+                currency__iexact=crypto, base_fiat__iexact=fiat,
+                date__lt=at_time
+            ).latest()
         except cls.DoesNotExist:
             return None
 
@@ -87,8 +91,9 @@ class PriceTick(models.Model):
 
 
     @classmethod
-    def needs_update(cls, crypto, fiat):
-        price = cls.get_non_stale_price(crypto, fiat)
+    def needs_update(cls, crypto, fiat, at_time=None):
+        at_time = at_time or timezone.now()
+        price = cls.get_non_stale_price(crypto, fiat, at_time)
         return price is None
 
     def is_stale(self):
