@@ -25,12 +25,27 @@ class PriceTick(models.Model):
         return "%s %s %s->%s" % (self.date, self.price, self.currency, self.base_fiat)
 
     @classmethod
-    def nearest(cls, date):
+    def nearest(cls, date, crypto, fiat):
         """
-        Find the tick nearest the passed in date.
+        Find the tick nearest the passed in date. May raise DoesNotExist
+        if a value can't be found.
         """
-        return cls.objects.filter(date__lt=date).latest()
-
+        try:
+            match = cls.objects.filter(
+                currency__iexact=crypto, base_fiat__iexact=fiat, date__lt=date
+            ).latest()
+            return match.price, match.exchange
+        except cls.DoesNotExist:
+            fiat_btc = cls.objects.filter(
+                currency__iexact=crypto, base_fiat__iexact='BTC', date__lt=date
+            ).latest()
+            crypto_btc = cls.objects.filter(
+                currency__iexact='btc', base_fiat__iexact=fiat, date__lt=date
+            ).latest()
+            return (
+                fiat_btc.price / crypto_btc.price,
+                "%s/%s" % (fiat_btc.exchange, crypto_btc.exchange)
+            )
     @classmethod
     def get_current_price(cls, crypto, fiat, verbose=False):
         price = cls.get_non_stale_price(crypto, fiat)
