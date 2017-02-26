@@ -99,16 +99,15 @@ function set_blockchain_data(crypto, type, data) {
 
 function remove_duplicates_from_history(crypto) {
     var all_txids = [];
-    var history = []
+    var rewritten_history = []
     $.each(get_blockchain_data(crypto, 'tx_history'), function(i, tx) {
         if(all_txids.indexOf(tx.txid) != -1) {
-            console.log("found dupe", tx.txid);
-            return // duplicate, don't make part of history...
+            return // duplicate, don't make part of rewritten history...
         }
-        history.push(tx);
+        rewritten_history.push(tx);
         all_txids.push(tx.txid);
     });
-    set_blockchain_data(crypto, 'tx_history', history);
+    set_blockchain_data(crypto, 'tx_history', rewritten_history);
 }
 
 function concat_blockchain_data(crypto, type, data) {
