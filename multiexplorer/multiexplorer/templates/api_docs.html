@@ -457,6 +457,8 @@
             <li><i>service_id</i> is a number corresponding to the number in the table above,
                 or a service mode such as "fallback", "paranoid3". Note, "average mode" does not apply in the context of a transaction.</li>
             <li>The <i>currency</i> argument is required.</li>
+            <li>The <i>fiat</i> option is optional and will return the fiat price
+                at the time of the transaction being confirmed. options include: usd, eur, rur, and btc.</li>
             <li>The <i>include_raw</i> argument is also optional. Setting it to true will include
                 the response as it was returned directly from the service.</li>
         </ul>
@@ -465,7 +467,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/single_transaction/fallback?currency=ltc&amp;txid=3a1e7ad13f99b2aed018ce1fe269665b530293174e9a2b92bf8f16d852a70b4c
+            https://{{ domain }}/api/single_transaction/fallback?currency=ltc&amp;txid=3a1e7ad13f99b2aed018ce1fe269665b530293174e9a2b92bf8f16d852a70b4c&amp;fiat=usd
         </div>
         <div class="code_wrapper">
             <code>
@@ -480,6 +482,11 @@
             "block_number": 992053,
             "confirmations": 155729,
             "fee": 0.00181212,
+            "historical_fiat": {
+              "fiat": "usd",
+              "source": "bitstampUSD",
+              "price": 588.84
+            },
             "inputs": [
                 {
                     "address": "LiMKkg8UqHgJJ19m97GhfBPPyi2ajqtSqR",

@@ -199,6 +199,8 @@ def get_ticks(verbose=False):
         all_ticks.append(PriceTick.get_current_price('btc', fiat, verbose=verbose))
 
     for crypto in [x['code'] for x in get_wallet_currencies()]:
+        if crypto == 'btc':
+            continue
         all_ticks.append(PriceTick.get_current_price(crypto, 'btc', verbose=verbose))
 
     return all_ticks

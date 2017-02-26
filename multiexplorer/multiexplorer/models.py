@@ -1,9 +1,10 @@
 import json
-
+import arrow
 from django.utils import timezone
 from django.db import models
 from .utils import datetime_to_iso
 from moneywagon import get_single_transaction, get_block
+from pricetick.models import PriceTick
 
 class CachedTransaction(models.Model):
     txid = models.CharField(max_length=72, primary_key=True)
@@ -17,7 +18,7 @@ class CachedTransaction(models.Model):
         return "%s:%s" % (self.crypto.upper(), txid)
 
     @classmethod
-    def fetch_full_tx(cls, crypto, txid, existing_tx_data=None):
+    def fetch_full_tx(cls, crypto, txid, existing_tx_data=None, fiat=None):
         try:
             tx_obj = cls.objects.get(txid=txid)
             if tx_obj.content == "Pending":
@@ -54,6 +55,10 @@ class CachedTransaction(models.Model):
                 tx_obj.content = json.dumps(tx, default=datetime_to_iso)
                 tx_obj.crypto = crypto
                 tx_obj.save()
+
+        if fiat:
+            price, source = PriceTick.nearest(crypto, fiat, arrow.get(tx['time']).datetime)
+            tx['historical_fiat'] = {'fiat': fiat, 'price': price, 'source': source}
 
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx

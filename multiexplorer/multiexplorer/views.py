@@ -146,8 +146,8 @@ def make_cache_key(service_mode, a):
         )
 
     if service_mode == 'single_transaction':
-        return "ST-%s-%s-%s" % (
-            a['service_id'], a['currency'], a['txid'][:8]
+        return "ST-%s-%s-%s-%s" % (
+            a['service_id'], a['currency'], a['txid'][:8], a['fiat']
         )
 
 
@@ -252,7 +252,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         ret = {'transactions': sorted(txs, key=lambda x: x['txid'])}
     elif service_mode == 'single_transaction':
         used_services = None
-        tx = CachedTransaction.fetch_full_tx(currency, txid=txid)
+        tx = CachedTransaction.fetch_full_tx(currency, txid=txid, fiat=fiat)
         ret = {'transaction': tx}
     elif service_mode == 'get_block':
         if block_args['block_number']:
