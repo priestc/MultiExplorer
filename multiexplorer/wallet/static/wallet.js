@@ -697,12 +697,11 @@ $(function() {
                     "Deposit larger than maximum of " + max + " " + withdraw_crypto.toUpperCase()
                 );
             } else if(deposit && deposit < min) {
-                console.log("Deposit" + deposit + " lower than minimum of " + min);
                 box.find(".exchange_amount").css({color: 'red'});
                 box.find(".submit_exchange").attr('disabled', 'disabled');
                 var withdraw_crypto = box.find(".withdraw_code").first().text();
                 error_area.css({color: 'red'}).text(
-                    "Deposit lower than minimum of " + max + " " + withdraw_crypto.toUpperCase()
+                    "Deposit lower than minimum of " + min + " " + withdraw_crypto.toUpperCase()
                 );
             } else {
                 box.find(".exchange_amount").css({color: 'black'});
