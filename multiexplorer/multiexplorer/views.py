@@ -239,7 +239,7 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
 
     if service_mode == 'current_price':
         used_services, price = get_current_price(currency, fiat, **modes)
-        PriceTick.record_price(used_services, price, currency, fiat)
+        PriceTick.record_price(price, currency, fiat, used_services[0].name)
         ret = {'current_price': price}
     elif service_mode == 'address_balance':
         used_services, balance = get_address_balance(currency, **modes)

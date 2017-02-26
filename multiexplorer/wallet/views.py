@@ -9,6 +9,8 @@ from django.template.response import TemplateResponse
 from django import http
 
 from .models import WalletMasterKeys, FailedLogin, AUTO_LOGOUT_CHOICES
+from pricetick.models import PriceTick
+
 from multiexplorer.utils import get_wallet_currencies
 from moneywagon.core import NoService
 
@@ -29,6 +31,11 @@ def get_rates(fiat, cryptos):
                 fiat=fiat,
                 currency=data['code'],
                 currency_name=data['name']
+            )
+            PriceTick.record_price(
+                crypto=data['code'], fiat=fiat,
+                source_name=response['service_name'],
+                price=response['current_price'],
             )
             rates[data['code']] = {
                 'rate': response['current_price'],

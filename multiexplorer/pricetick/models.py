@@ -32,26 +32,34 @@ class PriceTick(models.Model):
         return cls.objects.filter(date__lt=date).latest()
 
     @classmethod
-    def record_price(cls, sources, price, crypto, fiat):
-        interval_ago = timezone.now() - datetime.timedelta(seconds=settings.PRICE_INTERVAL_SECONDS)
-        last_date = cls.last_recorded_date(crypto, fiat)
-        if not last_date or last_date < interval_ago:
+    def get_current_price(self, crypto, fiat):
+        sources, price = get_current_price(crypto, fiat, report_services=True)
+        cls.record_price(sources, price, crypto, fiat)
+        return sources, price
+
+    @classmethod
+    def record_price(cls, price, crypto, fiat, source_name):
+        if cls.is_stale(crypto, fiat):
             obj = cls.objects.create(
                 date=timezone.now(),
                 price=price,
                 base_fiat=fiat.upper(),
                 currency=crypto.upper(),
-                exchange=sources[0].name
+                exchange=source_name
             )
             return True
         return False
 
     @classmethod
-    def last_recorded_date(cls, crypto, fiat):
+    def is_stale(cls, crypto, fiat):
         try:
-            return cls.objects.filter(currency=crypto, base_fiat=fiat).latest().date
+            last_date = cls.objects.filter(
+                currency=crypto.upper(), base_fiat=fiat.upper()).latest().date
         except cls.DoesNotExist:
-            return None
+            return True
+
+        interval_ago = timezone.now() - datetime.timedelta(seconds=settings.PRICE_INTERVAL_SECONDS)
+        return last_date < interval_ago
 
     class Meta:
         get_latest_by = 'date'
