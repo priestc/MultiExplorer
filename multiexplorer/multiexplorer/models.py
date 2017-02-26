@@ -58,7 +58,7 @@ class CachedTransaction(models.Model):
 
         if fiat:
             time = arrow.get(tx['time']).datetime
-            tx['historical_price'] = self.get_historical_fiat(fiat, time)
+            tx['historical_price'] = cls.get_historical_fiat(fiat, time)
 
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
@@ -66,7 +66,8 @@ class CachedTransaction(models.Model):
     def update_confirmations(self):
         current_block = get_block(self.crypto, latest=True)
 
-    def get_historical_fiat(self, fiat, time):
+    @classmethod
+    def get_historical_fiat(cls, fiat, time):
         try:
             price, source, price_time = PriceTick.nearest(crypto, fiat, time)
             return {'fiat': fiat, 'price': price, 'source': source, 'time': price_time}
