@@ -417,7 +417,7 @@
     <div class="examples">
         <div class='title'>Examples:</div>
         <div class="url">
-            https://{{ domain }}/api/historical_transactions/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9fiat=usd
+            https://{{ domain }}/api/historical_transactions/4?address=16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9
         </div>
         <div class="code_wrapper">
             <code>
@@ -446,6 +446,111 @@
             }
         ],
         "url": "https://api.smartbit.com.au/v1/blockchain/address/16DsrC7mUZG7ZYJR1T6rJo16aogKicwAi9"
+    }
+
+            </pre>
+            </code>
+        </div>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}/api/historical_transactions/fallback/?address=123Nc1QiMbJT7RuvsEwNoopmkYi47M2SDX&extended_fetch=true&currency=btc&fiat=usd
+
+        </div>
+        <div class="code_wrapper">
+            <code>
+            <pre>
+
+    {
+        "currency": [
+            "btc",
+            "Bitcoin"
+        ],
+        "fetched_seconds_ago": 0,
+        "transactions": [
+            {
+                "block_number": 412853,
+                "historical_price": {
+                    "fiat": "usd",
+                    "source": "bitstampUSD",
+                    "price": 442.08,
+                    "time": "2016-05-22T05:30:16Z"
+                },
+                "fee": 15322,
+                "inputs": [
+                    {
+                        "amount": 306254,
+                        "address": "1MvNEiXhWGekzn7nbqRjDePSFRubiHiech",
+                        "txid": "85c6ce352e550a4761ae4785f4adb204146de30a38b3e247420a1486c5cf2433"
+                    },
+                    {
+                        "amount": 118929,
+                        "address": "123Nc1QiMbJT7RuvsEwNoopmkYi47M2SDX",
+                        "txid": "e96e6fcb0697e1da71e4e4bc105e8ee2766c98162919c7ebb75d0e4cb6a8553e"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "amount": 179338,
+                        "address": "1FVhW1DwLHVcpqJQf7vMxj4v9JyERHd1X5",
+                        "scriptPubKey": "76a9149eff373537c7a41c0a83804142e0a1c59d903ab488ac"
+                    },
+                    {
+                        "amount": 230523,
+                        "address": "1NSY5JuB4UudHU3rueypLFdU74nZiANGnw",
+                        "scriptPubKey": "76a914eb2efae212215794bdf3b3fe47b01edcf710a99488ac"
+                    }
+                ],
+                "txid": "57a7c554cf2441c156ca24ffc00bf656e40d0ff34c299c0990ad00eba78f1ff2",
+                "confirmations": 42029,
+                "time": "2016-05-22T07:33:24+00:00",
+                "memos": [
+
+                ],
+                "size": 373
+            },
+            {
+                "block_number": 412667,
+                "total_out": 253130,
+                "inputs": [
+                    {
+                        "amount": 253130,
+                        "address": "19AyzMTuUF6iuRsHCFqzZBh8kfFVSFi1AY",
+                        "txid": "aa5520a98a102a373822ed56d0dd0a56d48160aa8745b730ce1e03381d290934"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "amount": 123581,
+                        "address": "1Brn6urn5osSkgWo86RLex7kuXDUYC2N2o",
+                        "scriptPubKey": "76a914771b4a05df5320acfb44cb21c12cd54894e12d4b88ac"
+                    },
+                    {
+                        "amount": 118929,
+                        "address": "123Nc1QiMbJT7RuvsEwNoopmkYi47M2SDX",
+                        "scriptPubKey": "76a9140b6afdd0462e53087921f6e030b1922d4239e84488ac"
+                    }
+                ],
+                "time": "2016-05-21T03:51:13.731000+00:00",
+                "historical_price": {
+                      "fiat": "usd",
+                      "source": "bitstampUSD",
+                      "price": 442.66,
+                      "time": "2016-05-21T01:43:36Z"
+                },
+                "txid": "e96e6fcb0697e1da71e4e4bc105e8ee2766c98162919c7ebb75d0e4cb6a8553e",
+                "block_hash": "0000000000000000008636296955d8ab9f79ba6955fff303ea8e6a16abb28d16",
+                "confirmations": 42215,
+                "total_in": 253130,
+                "fees": 10620,
+                "memos": [
+
+                ],
+                "size": 226
+            }
+        ]
     }
 
             </pre>
