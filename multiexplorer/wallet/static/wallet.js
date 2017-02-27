@@ -323,6 +323,8 @@ function generate_history(crypto) {
 
     var running_total = 0;
     var er = exchange_rates[crypto]['rate'];
+    var source = "Current Price"
+
     var all_txids = [];
     $.each(history, function(i, tx) {
         var my_amount = my_amount_for_tx(crypto, tx);
@@ -332,7 +334,12 @@ function generate_history(crypto) {
             console.log("not counting", tx);
             return // don't print 0 confirm to history section.
         }
-
+        var hp = tx.historical_price;
+        if(hp) {
+            er = hp.price;
+            source = hp.price.toFixed(2) + " " + fiat_unit + "/" + crypto + " " + hp.source + " " + hp.time;
+            console.log(er, source);
+        }
         var disp = Math.abs(my_amount).toFixed(8)
         //console.log(tx.time, my_amount.toFixed(8));
         if (my_amount > 0) {
@@ -342,7 +349,7 @@ function generate_history(crypto) {
         }
 
         var fiat = " (" + fiat_symbol + (disp * er).toFixed(2) + " " + fiat_unit + ")";
-        var formatted_amount = " <span style='color: " + color_and_sign + disp + " " + crypto.toUpperCase() + fiat + "</span>";
+        var formatted_amount = " <span title='" + source +"' style='color: " + color_and_sign + disp + " " + crypto.toUpperCase() + fiat + "</span>";
 
         var time = moment(tx.time).fromNow();
 
