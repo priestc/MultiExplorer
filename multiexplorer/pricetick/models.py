@@ -137,53 +137,31 @@ def load_btc():
             else:
                 print "skipping", tick_date
 
-def load_ltc():
-    # https://www.quandl.com/BTCE/BTCLTC-BTC-LTC-Exchange-Rate
-    url = "http://www.quandl.com/api/v1/datasets/TAMMER1/LTCUSD.csv"
-    response = requests.get(url)
-    reader = csv.DictReader(StringIO.StringIO(response.content))
-    for line in reader:
-        tick_date = arrow.get(line['Date']).datetime
-        p = PriceTick.record_price(
-            price=line['Close'], crypto='LTC',
-            fiat='BTC', source_name='btc-e',
-            at_time=tick_date,
-            interval=datetime.timedelta(hours=1)
-        )
-
-        if p:
-            print "made:", p
-        else:
-            print "skipping", tick_date
-
 
 def load_quandl_v3():
     sources = [
-        #['MYR', 'CRYPTOCHART/MYR'],
-        #['PPC', 'CRYPTOCHART/PPC'],
-        #['LTC', 'BTCE/BTCLTC'],
-        #['VTC', 'CRYPTOCHART/VTC'],
-        #['NXT', 'CRYPTOCHART/NXT'],
-        #['FTC', 'CRYPTOCHART/FTC'],
-        ['DASH', 'BTER/DASHBTC'],
-        ['DOGE', 'BTER/DOGEBTC'],
+        {'fiat': 'EUR', 'crypto': 'BTC', 'tag': 'GDAX/EUR'},
+        {'fiat': "BTC", 'crypto': 'DASH', 'tag': 'BTER/DASHBTC'},
+        {'fiat': 'BTC', 'crypto': 'DOGE', 'tag': 'BTER/DOGEBTC'},
+        {'fiat': 'CNY', 'crypto': 'BTC', 'tag': 'BTER/BTCCNY'}
+        {'fiat': 'BTC', 'crypto': 'LTC', 'tag': 'BTCE/BTCLTC'}
     ]
-    for currency, source in sources:
-        url = "https://www.quandl.com/api/v3/datasets/%s.csv?api_key=%s" % (
-            source, settings.QUANDL_APIKEY
+    for data in sources:
+        url = "https://www.quandl.com/api/v3/datasets/%s.json?api_key=%s" % (
+            data['tag'], settings.QUANDL_APIKEY
         )
-        source_name = source.split("/")[0]
+        source_name = data['tag'].split("/")[0]
         response = requests.get(url).json()
 
-        for line in response['data']:
+        for line in response['dataset']['data']:
             tick_date = arrow.get(line[0]).datetime
             price = line[1]
             if price:
                 price = float(price)
 
             p = PriceTick.record_price(
-                price=price, crypto=currency,
-                fiat='BTC', source_name=source_name,
+                price=price, crypto=data['crypto'],
+                fiat=data['fiat'], source_name=source_name,
                 at_time=tick_date,
                 interval=datetime.timedelta(hours=1)
             )
@@ -193,41 +171,6 @@ def load_quandl_v3():
             else:
                 print "skipping", tick_date
 
-
-def load_quandl_v1():
-    """
-    Using the quandl.com API, get the historical price (by day).
-    All data comes from the CRYPTOCHART source, which claims to be from
-    multiple exchange sources for price.
-    """
-    sources = [
-        ['MYR', 'CRYPTOCHART/MYR', ],
-        ['DOGE', 'CRYPTOCHART/DOGE'],
-        ['PPC', 'CRYPTOCHART/PPC'],
-        ['LTC', 'BTCE/BTCLTC'],
-        ['VTC', 'CRYPTOCHART/VTC'],
-        ['NXT', 'CRYPTOCHART/NXT'],
-        ['FTC', 'CRYPTOCHART/FTC'],
-    ]
-
-    for currency, source in sources:
-        url = "https://www.quandl.com/api/v1/datasets/%s.json" % source
-
-        response = requests.get(url).json()
-        for line in response['data']:
-            tick_date = arrow.get(line[0]).datetime
-            price = line[1]
-            if price:
-                price = float(price)
-
-            p = PriceTick.objects.create(
-                currency=currency,
-                exchange=source.lower(),
-                base_fiat='BTC',
-                date=tick_date,
-                price=price,
-            )
-            print p
 
 def load_all():
     load_btc()
