@@ -144,17 +144,57 @@ def load_ltc():
     reader = csv.DictReader(StringIO.StringIO(response.content))
     for line in reader:
         tick_date = arrow.get(line['Date']).datetime
-        p = PriceTick.objects.create(
-            currency='LTC',
-            exchange='btc-e',
-            base_fiat='BTC',
-            date=tick_date,
-            price=line['Close'],
+        p = PriceTick.record_price(
+            price=line['Close'], crypto='LTC',
+            fiat='BTC', source_name='btc-e',
+            at_time=tick_date,
+            interval=datetime.timedelta(hours=1)
         )
-        print p
+
+        if p:
+            print "made:", p
+        else:
+            print "skipping", tick_date
 
 
-def load_from_CRYPTOCHART_at_quandl():
+def load_quandl_v3():
+    sources = [
+        #['MYR', 'CRYPTOCHART/MYR'],
+        #['PPC', 'CRYPTOCHART/PPC'],
+        #['LTC', 'BTCE/BTCLTC'],
+        #['VTC', 'CRYPTOCHART/VTC'],
+        #['NXT', 'CRYPTOCHART/NXT'],
+        #['FTC', 'CRYPTOCHART/FTC'],
+        ['DASH', 'BTER/DASHBTC'],
+        ['DOGE', 'BTER/DOGEBTC'],
+    ]
+    for currency, source in sources:
+        url = "https://www.quandl.com/api/v3/datasets/%s.csv?api_key=%s" % (
+            source, settings.QUANDL_APIKEY
+        )
+        source_name = source.split("/")[0]
+        response = requests.get(url).json()
+
+        for line in response['data']:
+            tick_date = arrow.get(line[0]).datetime
+            price = line[1]
+            if price:
+                price = float(price)
+
+            p = PriceTick.record_price(
+                price=price, crypto=currency,
+                fiat='BTC', source_name=source_name,
+                at_time=tick_date,
+                interval=datetime.timedelta(hours=1)
+            )
+
+            if p:
+                print "made:", p
+            else:
+                print "skipping", tick_date
+
+
+def load_quandl_v1():
     """
     Using the quandl.com API, get the historical price (by day).
     All data comes from the CRYPTOCHART source, which claims to be from
@@ -172,6 +212,7 @@ def load_from_CRYPTOCHART_at_quandl():
 
     for currency, source in sources:
         url = "https://www.quandl.com/api/v1/datasets/%s.json" % source
+
         response = requests.get(url).json()
         for line in response['data']:
             tick_date = arrow.get(line[0]).datetime

@@ -38,3 +38,6 @@ MEMO_SERVER_PUSH = [
 DEBUG = False
 LOGIN_TRIES = 5
 ALLOWED_HOSTS = []
+
+PRICE_INTERVAL_SECONDS = 500
+quandl.ApiConfig.api_key = 'bUezRVs8sXpQQCtCsKTQ'
