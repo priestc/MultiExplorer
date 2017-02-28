@@ -143,7 +143,7 @@ def load_quandl_v3():
         {'fiat': 'EUR', 'crypto': 'BTC', 'tag': 'GDAX/EUR'},
         {'fiat': "BTC", 'crypto': 'DASH', 'tag': 'BTER/DASHBTC'},
         {'fiat': 'BTC', 'crypto': 'DOGE', 'tag': 'BTER/DOGEBTC'},
-        {'fiat': 'CNY', 'crypto': 'BTC', 'tag': 'BTER/BTCCNY'}
+        {'fiat': 'CNY', 'crypto': 'BTC', 'tag': 'BTER/BTCCNY'},
         {'fiat': 'BTC', 'crypto': 'LTC', 'tag': 'BTCE/BTCLTC'}
     ]
     for data in sources:
