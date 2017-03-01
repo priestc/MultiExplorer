@@ -576,8 +576,8 @@ def serve_memo_pull(request):
     ]})
 
 def historical_price(request):
-    fiat = request.GET['fiat']
-    crypto = request.GET['currency']
+    fiat = request.GET['fiat'].upper()
+    crypto = request.GET['currency'].upper()
     try:
         time = arrow.get(request.GET['time']).datetime
     except:
