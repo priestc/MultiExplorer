@@ -2,12 +2,14 @@ import calendar
 import datetime
 import csv
 import os
+import gzip
 import StringIO
 
 import arrow
 import requests
 import pytz
 
+from clint.textui import progress
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -114,67 +116,79 @@ class PriceTick(models.Model):
         get_latest_by = 'date'
 
 
-def load_btc():
-    # $ cd ~
-    # $ wget http://api.bitcoincharts.com/v1/csv/bitstampUSD.csv.gz | unp
-    from os.path import expanduser
-    home = os.path.expanduser("~")
-    f = open(os.path.join(home, "bitstampUSD.csv"))
-    for i, line in enumerate(f):
-        timestamp, price, volume = line.split(",")
-        tick_date = datetime.datetime.fromtimestamp(int(timestamp)).replace(tzinfo=pytz.UTC)
+def load_from_bitcoincharts(tag, source_name, crypto, fiat):
+    interval = datetime.timedelta(hours=1)
+    path = os.path.join(os.path.expanduser("~"), tag + ".csv.gz")
 
-        if i % 100 == 0:
+    if not os.path.isfile(path):
+        print("Downloading ~/%s.csv.gz" % tag)
+        r = requests.get("http://api.bitcoincharts.com/v1/csv/%s.csv.gz" % tag, stream=True)
+        with open(path, 'wb') as f:
+            total_length = int(r.headers.get('content-length'))
+            for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+    else:
+        print("Skipping download of ~/%s.csv.gz" % tag)
+
+
+    with gzip.open(path) as f:
+        last_tick = None
+        for i, line in enumerate(f.readlines()):
+            timestamp, price, volume = line.split(",")
+            tick_date = datetime.datetime.fromtimestamp(int(timestamp)).replace(tzinfo=pytz.UTC)
+
+            if last_tick and (tick_date - last_tick) < interval:
+                continue
+
             p = PriceTick.record_price(
-                price=price, crypto='BTC',
-                fiat='USD', source_name='bitstampUSD',
+                price=price, crypto=crypto,
+                fiat=fiat, source_name=source_name,
                 at_time=tick_date,
-                interval=datetime.timedelta(hours=1)
+                interval=interval
             )
 
             if p:
                 print "made:", p
-            else:
-                print "skipping", tick_date
-
-
-def load_quandl_v3():
-    sources = [
-        {'fiat': 'EUR', 'crypto': 'BTC', 'tag': 'GDAX/EUR'},
-        {'fiat': "BTC", 'crypto': 'DASH', 'tag': 'BTER/DASHBTC'},
-        {'fiat': 'BTC', 'crypto': 'DOGE', 'tag': 'BTER/DOGEBTC'},
-        {'fiat': 'CNY', 'crypto': 'BTC', 'tag': 'BTER/BTCCNY'},
-        {'fiat': 'BTC', 'crypto': 'LTC', 'tag': 'BTCE/BTCLTC'}
-    ]
-    for data in sources:
-        url = "https://www.quandl.com/api/v3/datasets/%s.json?api_key=%s" % (
-            data['tag'], settings.QUANDL_APIKEY
-        )
-        source_name = data['tag'].split("/")[0]
-        response = requests.get(url).json()
-
-        for line in response['dataset']['data']:
-            tick_date = arrow.get(line[0]).datetime
-            price = line[1]
-            if price:
-                price = float(price)
-
-            p = PriceTick.record_price(
-                price=price, crypto=data['crypto'],
-                fiat=data['fiat'], source_name=source_name,
-                at_time=tick_date,
-                interval=datetime.timedelta(hours=1)
-            )
-
-            if p:
-                print "made:", p
-            else:
-                print "skipping", tick_date
+                last_tick = tick_date
 
 
 def load_all():
-    load_btc()
-    load_from_CRYPTOCHART_at_quandl()
+    load_from_bitcoincharts('bitstampUSD', "Bitstamp", 'BTC', 'USD')
+    load_from_bitcoincharts('btceRUR', "BTCe", 'BTC', 'RUR')
+    load_from_bitcoincharts('coincheckJPY', 'coincheck', 'BTC', 'JPY')
+    load_quandl_v3('BTER/BTCCNY', 'BTC', 'CNY')
+    load_quandl_v3('GDAX/EUR', 'BTC', 'EUR')
+    load_quandl_v3('BTER/VTCBTC', 'VTC', 'BTC')
+    load_quandl_v3('BTER/DOGEBTC', 'DOGE', 'BTC')
+    load_quandl_v3('BTER/LTCBTC', 'LTC', 'BTC')
+    load_quandl_v3('BTER/DASHBTC', 'DASH', 'BTC')
+
+def load_quandl_v3(tag, crypto, fiat):
+    url = "https://www.quandl.com/api/v3/datasets/%s.json?api_key=%s" % (
+        data['tag'], settings.QUANDL_APIKEY
+    )
+    source_name = data['tag'].split("/")[0]
+    response = requests.get(url).json()
+
+    for line in response['dataset']['data']:
+        tick_date = arrow.get(line[0]).datetime
+        price = line[1]
+        if price:
+            price = float(price)
+
+        p = PriceTick.record_price(
+            price=price, crypto=data['crypto'],
+            fiat=data['fiat'], source_name=source_name,
+            at_time=tick_date,
+            interval=datetime.timedelta(hours=1)
+        )
+
+        if p:
+            print "made:", p
+        else:
+            print "skipping", tick_date
 
 def get_ticks(verbose=False):
     """
