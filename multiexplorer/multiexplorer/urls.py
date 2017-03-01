@@ -4,7 +4,8 @@ from django.views.generic import TemplateView
 
 from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
-    onchain_exchange_rates, onchain_status, logout, single_tx, handle_memo, serve_memo_pull
+    onchain_exchange_rates, onchain_status, logout, single_tx, handle_memo, serve_memo_pull,
+    historical_price
 )
 
 admin.site.site_header = 'MultiExplorer Administration'
@@ -25,6 +26,7 @@ urlpatterns = [
     url(r'^api/onchain_exchange_rates', onchain_exchange_rates, name="onchain_exchange_rates"),
     url(r'^api/onchain_exchange_status', onchain_status, name="onchain_status"),
 
+    url(r'^api/historical_price', historical_price, name="historical_price"),
     url(r'^api/(?P<service_mode>\w+)/(?P<service_id>\w+)', perform_lookup, name="perform_lookup"),
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),

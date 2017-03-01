@@ -574,3 +574,15 @@ def serve_memo_pull(request):
         'c': m.crypto,
         } for m in memos
     ]})
+
+def historical_price(request):
+    fiat = request.GET['fiat']
+    crypto = request.GET['currency']
+    try:
+        time = arrow.get(request.GET['time']).datetime
+    except:
+        return http.JsonResponse({'error': "Invalid Time argument"}, status=400)
+
+    price = PriceTick.nearest(crypto, fiat, time)
+    price['currency'] = crypto
+    return http.JsonResponse(price)

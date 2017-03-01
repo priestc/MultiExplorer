@@ -63,14 +63,10 @@ class CachedTransaction(models.Model):
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
 
-    def update_confirmations(self):
-        current_block = get_block(self.crypto, latest=True)
-
     @classmethod
     def get_historical_fiat(cls, crypto, fiat, time):
         try:
-            price, source, price_time = PriceTick.nearest(crypto, fiat, time)
-            return {'fiat': fiat, 'price': price, 'source': source, 'time': price_time}
+            return PriceTick.nearest(crypto, fiat, time)
         except PriceTick.DoesNotExist:
             return None
 

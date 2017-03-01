@@ -86,6 +86,7 @@
         <ul>
             <li><a href="#service_table">Service Table</a></li>
             <li><a href="#current_price">Current Price</a></li>
+            <li><a href="#historical_price">Historical Price</a></li>
             <li><a href="#address_balance">Address Balance</a></li>
             <li><a href="#unspent_outputs">Unspent Outputs</a></li>
             <li><a href="#historical_transactions">Historical Transactions by Address</a></li>
@@ -216,6 +217,41 @@
         "service_id": 1,
         "service_name": "Bitstamp",
         "url": "https://www.bitstamp.net/api/ticker/"
+    }
+            </pre>
+            </code>
+        </div>
+
+
+    <a name="historical_price"></a>
+    <h3>Historical Price</h3>
+
+    <div class="info">
+        URL general form:<br>
+        <span class="general_url">https://{{ domain }}/api/historical_price?fiat=<i>fiat</i>&amp;currency=<i>currency</i></span>
+        <ul>
+            <li><i>service_id</i> does not apply to this endpoint, unlike other MultiExplorer API endpoints.</li>
+            <li>The <i>currency</i> argument is required. Enter three leter cryptocurrency code.</li>
+            <li>The <i>fiat</i> argument is required. Enter three leter fiat currency code.</li>
+            <li>The <i>time</i> argument is also required. It an be either an ISO date or unix timestamp.</li>
+        </ul>
+    </div>
+
+    <div class="examples">
+        <div class='title'>Examples:</div>
+        <div class="url">
+            https://{{ domain }}api/historical_price?fiat=usd&amp;currency=vtc&amp;time=2014-12-03T19:29:59Z
+        </div>
+
+        <div class="code_wrapper">
+            <code>
+            <pre>
+    {
+        "fiat": "usd",
+        "source": "BTER->bitstampUSD",
+        "price": 0.07713804,
+        "currency": "vtc",
+        "time": "2014-06-20T09:32:50Z"
     }
             </pre>
             </code>

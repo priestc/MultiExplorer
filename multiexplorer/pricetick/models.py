@@ -35,8 +35,10 @@ class PriceTick(models.Model):
             match = cls.objects.filter(
                 currency__iexact=crypto, base_fiat__iexact=fiat, date__lt=date
             ).latest()
-            print "found match", match
-            return match.price, match.exchange, match.date
+            return {
+                'price': match.price, 'source': match.exchange,
+                'time': match.date, 'fiat': fiat
+            }
         except cls.DoesNotExist:
             fiat_btc = cls.objects.filter(
                 currency__iexact=crypto, base_fiat__iexact='BTC', date__lt=date
@@ -44,11 +46,12 @@ class PriceTick(models.Model):
             crypto_btc = cls.objects.filter(
                 currency__iexact='btc', base_fiat__iexact=fiat, date__lt=date
             ).latest()
-            return (
-                fiat_btc.price * crypto_btc.price,
-                "%s->%s" % (fiat_btc.exchange, crypto_btc.exchange),
-                crypto_btc.date
-            )
+            return {
+                'price': fiat_btc.price * crypto_btc.price,
+                'source': "%s->%s" % (fiat_btc.exchange, crypto_btc.exchange),
+                'time': crypto_btc.date,
+                'fiat': fiat
+            }
 
     @classmethod
     def get_current_price(cls, crypto, fiat, verbose=False):
