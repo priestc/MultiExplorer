@@ -160,6 +160,7 @@ def load_all():
     load_from_bitcoincharts('coincheckJPY', 'coincheck', 'BTC', 'JPY')
     load_quandl_v3('BTER/BTCCNY', 'BTC', 'CNY')
     load_quandl_v3('GDAX/EUR', 'BTC', 'EUR')
+
     load_quandl_v3('BTER/VTCBTC', 'VTC', 'BTC')
     load_quandl_v3('BTER/DOGEBTC', 'DOGE', 'BTC')
     load_quandl_v3('BTER/LTCBTC', 'LTC', 'BTC')
@@ -167,9 +168,9 @@ def load_all():
 
 def load_quandl_v3(tag, crypto, fiat):
     url = "https://www.quandl.com/api/v3/datasets/%s.json?api_key=%s" % (
-        data['tag'], settings.QUANDL_APIKEY
+        tag, settings.QUANDL_APIKEY
     )
-    source_name = data['tag'].split("/")[0]
+    source_name = tag.split("/")[0]
     response = requests.get(url).json()
 
     for line in response['dataset']['data']:
@@ -179,8 +180,8 @@ def load_quandl_v3(tag, crypto, fiat):
             price = float(price)
 
         p = PriceTick.record_price(
-            price=price, crypto=data['crypto'],
-            fiat=data['fiat'], source_name=source_name,
+            price=price, crypto=crypto,
+            fiat=fiat, source_name=source_name,
             at_time=tick_date,
             interval=datetime.timedelta(hours=1)
         )
