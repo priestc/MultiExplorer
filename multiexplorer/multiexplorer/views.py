@@ -583,6 +583,13 @@ def historical_price(request):
     except:
         return http.JsonResponse({'error': "Invalid Time argument"}, status=400)
 
-    price = PriceTick.nearest(crypto, fiat, time)
+    try:
+        price = PriceTick.nearest(crypto, fiat, time)
+    except PriceTick.DoesNotExist:
+        return http.JsonResponse(
+            {'error': "Can't get historical price for %s->%s" % (fiat, crypto)},
+            status=400
+        )
+
     price['currency'] = crypto
     return http.JsonResponse(price)

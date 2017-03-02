@@ -9,7 +9,6 @@ import arrow
 import requests
 import pytz
 
-from clint.textui import progress
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -120,6 +119,8 @@ class PriceTick(models.Model):
 
 
 def load_from_bitcoincharts(tag, source_name, crypto, fiat):
+    from clint.textui import progress
+
     interval = datetime.timedelta(hours=1)
     path = os.path.join(os.path.expanduser("~"), tag + ".csv.gz")
 
