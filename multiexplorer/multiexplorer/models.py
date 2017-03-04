@@ -13,8 +13,10 @@ class CachedTransaction(models.Model):
 
     def __unicode__(self):
         txid = "?"
-        if self.content:
-            txid = json.loads(self.content)['txid']
+        if self.content == "Pending":
+            return "Pending"
+
+        txid = json.loads(self.content)['txid']
         return "%s:%s" % (self.crypto.upper(), txid)
 
     @classmethod
