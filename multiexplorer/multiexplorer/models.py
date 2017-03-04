@@ -27,6 +27,9 @@ class CachedTransaction(models.Model):
                 return None
             tx = json.loads(tx_obj.content)
 
+            if tx['confirmations'] < 0:
+                raise cls.DoesNotExist()
+
             if existing_tx_data and existing_tx_data.get('confirmations', None):
                 # update cached entry with updated confirmations if its available
                 tx['confirmations'] = existing_tx_data['confirmations']
@@ -37,6 +40,9 @@ class CachedTransaction(models.Model):
             # not cached, fetch from API service.
             tx_obj, c = cls.objects.get_or_create(txid=txid, content="Pending")
             tx = get_single_transaction(crypto, txid, random=True)
+            tx_obj.content = json.dumps(tx, default=datetime_to_iso)
+            tx_obj.crypto = crypto
+            tx_obj.save()
 
             if existing_tx_data and existing_tx_data.get('counterparty', False):
                 tx['inputs'] = []
@@ -53,10 +59,6 @@ class CachedTransaction(models.Model):
                 tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
                 tx[which][0]['address'] = existing_tx_data['address']
 
-            if tx['confirmations'] > 0:
-                tx_obj.content = json.dumps(tx, default=datetime_to_iso)
-                tx_obj.crypto = crypto
-                tx_obj.save()
 
         if fiat:
             time = arrow.get(tx['time']).datetime
