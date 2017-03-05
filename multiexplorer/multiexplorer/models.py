@@ -27,7 +27,7 @@ class CachedTransaction(models.Model):
                 return None
             tx = json.loads(tx_obj.content)
 
-            if tx['confirmations'] < 0:
+            if tx.get('confirmations', 0) < 0:
                 raise cls.DoesNotExist()
 
             if existing_tx_data and existing_tx_data.get('confirmations', None):
