@@ -20,6 +20,7 @@ from moneywagon import (
 )
 
 from moneywagon.crypto_data import crypto_data
+from moneywagon.supply_estimator import SupplyEstimator
 
 from .utils import (
     make_crypto_data_json, make_service_info_json, service_modes,
@@ -590,6 +591,12 @@ def historical_price(request):
             {'error': "Can't get historical price for %s->%s" % (fiat, crypto)},
             status=400
         )
+
+    try:
+        naive_time = time.replace(tzinfo=None)
+        price['estimated_supply'] = SupplyEstimator(crypto).calculate_supply(at_time=naive_time)
+    except NotImplementedError:
+        pass
 
     price['currency'] = crypto
     return http.JsonResponse(price)

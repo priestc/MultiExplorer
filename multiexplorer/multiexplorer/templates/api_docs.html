@@ -233,7 +233,8 @@
             <li><i>service_id</i> does not apply to this endpoint, unlike other MultiExplorer API endpoints.</li>
             <li>The <i>currency</i> argument is required. Enter three leter cryptocurrency code.</li>
             <li>The <i>fiat</i> argument is required. Enter three leter fiat currency code.</li>
-            <li>The <i>time</i> argument is also required. It an be either an ISO date or unix timestamp.</li>
+            <li>The <i>time</i> argument is also required. It an be either an ISO 8601 date or unix timestamp.</li>
+            <li>The value for "estimated_supply" can be used to determine the market cap at the passed in time.</li>
         </ul>
     </div>
 
@@ -251,11 +252,13 @@
         "source": "BTER->bitstampUSD",
         "price": 0.07713804,
         "currency": "VTC",
+        "estimated_supply": 9498550.0,
         "time": "2014-06-20T09:32:50Z"
     }
             </pre>
             </code>
         </div>
+    </div>
 
     <div class="examples">
         <div class='title'>Examples:</div>
@@ -271,12 +274,13 @@
         "source": "BTER->coincheck",
         "price": 0.0160212,
         "currency": "DOGE",
+        "estimated_supply": 102772360603,
         "time": "2015-11-25T17:58:07Z"
     }
             </pre>
             </code>
         </div>
-
+    </div>
 
     <a name="address_balance"></a>
     <h3>Address Balance</h3>
