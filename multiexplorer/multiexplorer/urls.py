@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
     onchain_exchange_rates, onchain_status, logout, single_tx, handle_memo, serve_memo_pull,
-    historical_price
+    historical_price, plot_supply
 )
 
 admin.site.site_header = 'MultiExplorer Administration'
@@ -36,6 +36,8 @@ urlpatterns = [
 
     url(r'^memo$', handle_memo),
     url(r'^memo/pull$', serve_memo_pull),
+
+    url(r'graphs/supply', plot_supply),
 
     url(r'^logout/', logout, name="logout"),
 ]

@@ -1,6 +1,7 @@
 import json
 import time
 import random
+import datetime
 
 import arrow
 from django.views.decorators.csrf import csrf_exempt
@@ -600,3 +601,47 @@ def historical_price(request):
 
     price['currency'] = crypto
     return http.JsonResponse(price)
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.dates import DateFormatter
+
+def plot_supply(request):
+    currency = request.GET['currency']
+    genesis = crypto_data[currency.lower()]['genesis_date']
+    currency_name = crypto_data[currency.lower()]['name']
+    s = SupplyEstimator(currency)
+
+    try:
+        max_block = crypto_data[currency.lower()]['supply_data']['reward_ends_at_block']
+        end = s.estimate_date_from_height(max_block)
+    except KeyError:
+        end = genesis + datetime.timedelta(days=365 * 50)
+
+    x = list(date_generator(genesis, end))
+    y = [s.calculate_supply(at_time=z)/1e6 for z in x]
+
+    fig = Figure()
+    ax = fig.add_subplot(111)
+    ax.plot_date(x, y, '-')
+
+    ax.set_title("%s Supply" % currency_name)
+    ax.grid(True)
+    ax.xaxis.set_label_text("Date")
+    ax.yaxis.set_label_text("%s Units (In millions)" % currency.upper())
+
+    ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
+    fig.autofmt_xdate()
+
+    canvas = FigureCanvas(fig)
+    response = http.HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response
+
+def date_generator(start, end, step_days=10):
+    delta = int((end - start).total_seconds() / (3600 * step_days))
+    for x in xrange(0, delta, step_days):
+        dd =  start + datetime.timedelta(days=x)
+        if dd > end:
+            return
+        yield dd
