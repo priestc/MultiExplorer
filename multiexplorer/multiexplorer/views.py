@@ -602,11 +602,10 @@ def historical_price(request):
     price['currency'] = crypto
     return http.JsonResponse(price)
 
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.dates import DateFormatter
-
 def plot_supply(request):
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+    from matplotlib.figure import Figure
+    from matplotlib.dates import DateFormatter
     currency = request.GET['currency']
     genesis = crypto_data[currency.lower()]['genesis_date']
     currency_name = crypto_data[currency.lower()]['name']
