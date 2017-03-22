@@ -88,8 +88,13 @@ body {
     background: #FFBFC2;
     color: black;
 }
+
 .colors-ftc {
     background: #ececec;
+}
+
+.colors-ric {
+    background: #76e8c0;
 }
 
 .qr {
