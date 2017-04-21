@@ -1,0 +1,20 @@
+<doctype html>
+{% load staticfiles %}
+
+<html>
+  <head>
+    <script src="{% static 'bitcore-lib.min.js' %}"></script>
+    <script src="{% static 'bitcore-mnemonic.min.js' %}"></script>
+  </head>
+  <body>
+    Test Page
+    <script>
+      var bitcore = require('bitcore-lib');
+      var Mnemonic = require('bitcore-mnemonic');
+      var mn = "seven jungle typical cushion mandate doll ride tragic myth mutual narrow captain";
+      var hd_master_seed = (new Mnemonic(mn)).toHDPrivateKey();
+      console.log(hd_master_seed);
+    </script>
+
+  </body>
+</html>
