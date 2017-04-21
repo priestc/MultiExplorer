@@ -644,3 +644,7 @@ def date_generator(start, end, step_days=10):
         if dd > end:
             return
         yield dd
+
+
+def test(request):
+    return TemplateResponse(request, "test_template.html")
