@@ -338,7 +338,6 @@ function generate_history(crypto) {
         if(hp) {
             er = hp.price;
             source = hp.price.toFixed(2) + " " + fiat_unit + "/" + crypto + " " + hp.source + " " + hp.time;
-            console.log(er, source);
         }
         var disp = Math.abs(my_amount).toFixed(8)
         //console.log(tx.time, my_amount.toFixed(8));

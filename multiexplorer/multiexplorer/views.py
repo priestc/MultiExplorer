@@ -25,7 +25,7 @@ from moneywagon.supply_estimator import SupplyEstimator
 
 from .utils import (
     make_crypto_data_json, make_service_info_json, service_modes,
-    get_block_currencies, get_balance_currencies
+    get_block_currencies, get_balance_currencies, get_paper_wallet_currencies
 )
 
 from .models import CachedTransaction, Memo
@@ -648,3 +648,9 @@ def date_generator(start, end, step_days=10):
 
 def test(request):
     return TemplateResponse(request, "test_template.html")
+
+
+def paper_wallet(request):
+    paper_wallet_currencies = sorted(get_paper_wallet_currencies(), key=lambda x: x['name'])
+    paper_wallet_currencies_json = json.dumps(paper_wallet_currencies)
+    return TemplateResponse(request, "paper_wallet.html", locals())

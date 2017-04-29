@@ -3,18 +3,61 @@
 
 <html>
   <head>
-    <script src="{% static 'bitcore-lib.min.js' %}"></script>
-    <script src="{% static 'bitcore-mnemonic.min.js' %}"></script>
+    <style>
+      @media print {
+          .wide {
+              width: 100%;
+          }
+
+          h2 {
+              display: none;
+          }
+      }
+
+      @media screen {
+          .wide {
+              width: 50%;
+              margin: 5px;
+          }
+      }
+
+      .wide {
+          border: 1px solid black;
+          padding: 3px;
+          overflow: hidden;
+          margin-top: 3px;
+      }
+
+      .wide .priv {
+          float: right;
+          border: 0px solid red;
+      }
+
+      .wide .pub {
+          float: left;
+          border: 0px solid blue;
+      }
+
+      img {
+          vertical-align:middle;
+      }
+
+    </style>
   </head>
   <body>
-    Test Page
-    <script>
-      var bitcore = require('bitcore-lib');
-      var Mnemonic = require('bitcore-mnemonic');
-      var mn = "seven jungle typical cushion mandate doll ride tragic myth mutual narrow captain";
-      var hd_master_seed = (new Mnemonic(mn)).toHDPrivateKey();
-      console.log(hd_master_seed);
-    </script>
+    <h2>Test Page</h2>
 
+    {% for i in "xxxxxxxxxxxxxxxxxxxx" %}
+    <div class="wide">
+
+        <img src="/static/logos/nvc-logo_100x100.png" class="pub">
+        <div class="pub">&larr; Address: 4ZCfUbUwu5tCFjEtoJFBFgprqEGsWZSb7N</div>
+
+        <img src="/static/logos/btc-logo_100x100.png" class="priv">
+        <div class="priv">Private Key: M7rkkx1LoubhXNoUDJgTGfsEr6KiXuss95ij6n7snaE2pa5Pfwix &rarr;</div>
+    </div>
+    {% endfor %}
   </body>
 </html>
+
+<!--  -->

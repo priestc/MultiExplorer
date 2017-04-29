@@ -139,6 +139,26 @@ def get_watch_only_currencies():
 
     return ret
 
+def get_paper_wallet_currencies():
+    ret = []
+    for currency, data in crypto_data.items():
+        if not hasattr(data, 'get'):
+            continue
+
+        address_byte = data.get('address_version_byte', None)
+        priv_byte = data.get('private_key_prefix', None)
+
+        if address_byte is not None and priv_byte is not None:
+            ret.append({
+                'code': currency,
+                'name': data['name'],
+                'private_key_prefix': priv_byte,
+                'address_byte': address_byte,
+                'logo': "logos/%s-logo_100x100.png" % currency,
+            })
+
+    return ret
+
 
 
 def needs_bip44():

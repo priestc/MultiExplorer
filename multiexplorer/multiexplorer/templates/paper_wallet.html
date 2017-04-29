@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<section id="generator">
+  <h2>Paper Wallet Generator</h2>
+  {% for currency_data in paper_wallet_currencies %}
+    <input type="checkbox" name="currency" value="{{ currency_data.code }}">{{ currency_data.name }}<br>
+  {% endfor %}
+  <br><br>
+  <button id="generate">Generate!</button>
+</section>
+
+<div id="wallets" style="display: none">
+
+</div>
+
+<style>
+    @media print {
+        .wide {
+            width: 100%;
+            font-size: small;
+        }
+
+        #generator, #header, #footer {
+            display: none;
+        }
+    }
+
+    @media screen {
+        .wide {
+            width: 80%;
+            margin: 5px auto 5px auto;
+        }
+    }
+
+    .wide {
+        border: 1px solid black;
+        padding: 3px;
+        overflow: hidden;
+        margin-top: 3px;
+    }
+
+    .wide .priv {
+        float: right;
+        border: 0px solid red;
+    }
+
+    .wide .pub {
+        float: left;
+        border: 0px solid blue;
+        clear: left;
+    }
+
+    .words {
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+
+    .title {
+        font-size: large;
+        width: 100%;
+        text-align: center;
+    }
+
+    #generate {
+        padding: 5px;
+        background-color: #45ff45;
+        font-size: large;
+    }
+</style>
+
+<script src="{% static 'bitcore-lib.min.js' %}"></script>
+<script>
+    var bitcore = require('bitcore-lib');
+    var crypto_data = {{ paper_wallet_currencies_json|safe }};
+
+    $.each(crypto_data, function(i, data) {
+        var network = {};
+        network.alias = data['code'];
+        network.name = data['name'];
+        network.pubkeyhash = data['address_byte'];
+        network.privatekey = data['private_key_prefix'];
+
+        if(data['code'] != 'btc') {
+            bitcore.Networks.add(network);
+        }
+    });
+
+    function get_currency_data(currency) {
+        ret = undefined;
+        $.each(crypto_data, function(i, data){
+            if(data['code'] == currency) {
+                ret = data
+                return false;
+            }
+        });
+        return ret
+    }
+
+    $("#generate").click(function() {
+        $("#wallets").empty();
+
+        var selected = ['btc', 'ltc', 'doge'];
+        $("input[name=currency]:checked").each(function(){
+           var currency = $(this).val();
+           selected.push(currency)
+        });
+
+        $.each(selected, function(i, currency) {
+            if(currency == 'btc') {
+              currency = 'livenet'
+            }
+            var priv = bitcore.PrivateKey(null, currency)
+            var wif = priv.toWIF();
+            var address = priv.toAddress(currency).toString();
+
+            if(currency == 'livenet') {
+              currency = 'btc'
+            }
+
+            var data = get_currency_data(currency);
+
+            currency = currency.toUpperCase();
+
+            var wallet = render_template({
+                name: data['name'],
+                logo: data['logo'],
+                wif: wif,
+                address: address,
+                code: currency
+            });
+
+            $('#wallets').append(wallet);
+            $("#" + currency + " .pub.qr").qrcode({width: 100, height: 100, text: address});
+            $("#" + currency + " .priv.qr").qrcode({width: 100, height: 100, text: wif});
+        });
+        $("#wallets").show();
+    });
+
+    function render_template(context) {
+        var contents = $("#paper_wallet_template").html();
+        {% verbatim %}
+        contents = contents.replace(/{{ name }}/g, context.name);
+        contents = contents.replace(/{{ logo }}/g, context.logo);
+        contents = contents.replace(/{{ address }}/g, context.address);
+        contents = contents.replace(/{{ wif }}/g, context.wif);
+        contents = contents.replace(/{{ code }}/g, context.code);
+        {% endverbatim %}
+        return contents
+    }
+</script>
+
+{% verbatim %}
+<script type="text/template" id="paper_wallet_template">
+    <table class="wide" id="{{ code }}">
+        <tr>
+            <td>
+                <div class="pub qr"></div>
+            </td>
+            <td>
+                <div class="title">
+                    {{ code }} - {{ name }}<br>
+                    <img src="/static/{{ logo }}" style="width: 50px; height: 50px">
+                </div>
+                <div class="pub words">&larr; Address (receive): {{ address }}</div>
+                <div class="priv words">Private Key (spend): {{ wif }} &rarr;</div>
+            </td>
+            <td>
+                <div class="priv qr"></div>
+            </td>
+        </tr>
+    </table>
+</script>
+{% endverbatim %}
+{% endblock %}

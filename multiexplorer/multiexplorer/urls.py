@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
     onchain_exchange_rates, onchain_status, logout, single_tx, handle_memo, serve_memo_pull,
-    historical_price, plot_supply, test
+    historical_price, plot_supply, test, paper_wallet
 )
 
 admin.site.site_header = 'MultiExplorer Administration'
@@ -33,6 +33,7 @@ urlpatterns = [
 
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
+    url(r'^paper_wallet/', paper_wallet),
 
     url(r'^memo$', handle_memo),
     url(r'^memo/pull$', serve_memo_pull),
