@@ -4,11 +4,17 @@
 {% block content %}
 <section id="generator">
   <h2>Paper Wallet Generator</h2>
+  Select which currencies you want included in your paper wallet:<br><br>
+  <div style="text-align: left; margin: 0 auto 0 auto; width: 10em">
   {% for currency_data in paper_wallet_currencies %}
     <input type="checkbox" name="currency" value="{{ currency_data.code }}">{{ currency_data.name }}<br>
   {% endfor %}
+
   <br><br>
   <button id="generate">Generate!</button>
+
+  </div>
+
 </section>
 
 <div id="wallets" style="display: none">
@@ -101,7 +107,7 @@
     $("#generate").click(function() {
         $("#wallets").empty();
 
-        var selected = ['btc', 'ltc', 'doge'];
+        var selected = [];
         $("input[name=currency]:checked").each(function(){
            var currency = $(this).val();
            selected.push(currency)
@@ -163,7 +169,7 @@
                     {{ code }} - {{ name }}<br>
                     <img src="/static/{{ logo }}" style="width: 50px; height: 50px">
                 </div>
-                <div class="pub words">&larr; Address (receive): {{ address }}</div>
+                <div class="pub words">&larr; Address (receive): {{ address }} </div>
                 <div class="priv words">Private Key (spend): {{ wif }} &rarr;</div>
             </td>
             <td>

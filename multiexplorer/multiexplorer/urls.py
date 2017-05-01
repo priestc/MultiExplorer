@@ -33,7 +33,7 @@ urlpatterns = [
 
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
-    url(r'^paper_wallet/', paper_wallet),
+    url(r'^paper_wallet/', paper_wallet, name="paper_wallet"),
 
     url(r'^memo$', handle_memo),
     url(r'^memo/pull$', serve_memo_pull),
