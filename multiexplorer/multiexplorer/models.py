@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.db import models
 from .utils import datetime_to_iso
 from moneywagon import get_single_transaction, get_block
+from moneywagon.supply_estimator import SupplyEstimator
 from pricetick.models import PriceTick
 
 class CachedTransaction(models.Model):
@@ -20,49 +21,52 @@ class CachedTransaction(models.Model):
         return "%s:%s" % (self.crypto.upper(), txid)
 
     @classmethod
-    def fetch_full_tx(cls, crypto, txid, existing_tx_data=None, fiat=None):
+    def fetch_full_tx(cls, crypto, txid, fiat=None):
+        freshly_fetched = False
         try:
-            tx_obj = cls.objects.get(txid=txid)
+            tx_obj = cls.objects.get(crypto=crypto, txid=txid)
             if tx_obj.content == "Pending":
                 return None
             tx = json.loads(tx_obj.content)
 
-            if tx.get('confirmations', 0) < 0:
-                raise cls.DoesNotExist()
-
-            if existing_tx_data and existing_tx_data.get('confirmations', None):
-                # update cached entry with updated confirmations if its available
-                tx['confirmations'] = existing_tx_data['confirmations']
-                tx_obj.content = json.dumps(tx)
-                tx_obj.save()
-
         except cls.DoesNotExist:
             # not cached, fetch from API service.
             tx_obj, c = cls.objects.get_or_create(txid=txid, content="Pending")
-            tx = get_single_transaction(crypto, txid, random=True)
+            try:
+                tx = get_single_transaction(crypto, txid, random=True)
+            except:
+                tx_obj.content = "Failed"
+                tx_obj.save()
+                raise
+
+            freshly_fetched = True
             tx_obj.content = json.dumps(tx, default=datetime_to_iso)
             tx_obj.crypto = crypto
             tx_obj.save()
 
-            if existing_tx_data and existing_tx_data.get('counterparty', False):
-                tx['inputs'] = []
-                tx['outputs'] = []
+            # if existing_tx_data and existing_tx_data.get('counterparty', False):
+            #     tx['inputs'] = []
+            #     tx['outputs'] = []
+            #
+            #     if existing_tx_data['amount'] > 0:
+            #         # send, add amount to outputs
+            #         which = "outputs"
+            #     else:
+            #         # receive, add amount to inputs
+            #         which = "inputs"
+            #
+            #     tx[which] = [{}]
+            #     tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
+            #     tx[which][0]['address'] = existing_tx_data['address']
 
-                if existing_tx_data['amount'] > 0:
-                    # send, add amount to outputs
-                    which = "outputs"
-                else:
-                    # receive, add amount to inputs
-                    which = "inputs"
 
-                tx[which] = [{}]
-                tx[which][0]['amount'] = existing_tx_data['amount'] / 1e8
-                tx[which][0]['address'] = existing_tx_data['address']
-
+        time = arrow.get(tx['time']).datetime
 
         if fiat:
-            time = arrow.get(tx['time']).datetime
             tx['historical_price'] = cls.get_historical_fiat(crypto, fiat, time)
+
+        if not freshly_fetched:
+            tx['confirmations'] = SupplyEstimator(crypto).estimate_confirmations(time.replace(tzinfo=None))
 
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx

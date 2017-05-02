@@ -126,6 +126,9 @@ def perform_lookup(request, service_mode, service_id):
     return http.JsonResponse(response_dict)
 
 def make_cache_key(service_mode, a):
+    """
+    'a' is a dict that contains all the data that can be used to make the key.
+    """
     if service_mode == 'optimal_fee':
         return "OF-%s-%s" % (a['service_id'], a['currency'])
 
@@ -183,14 +186,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
             'currency': [currency, currency_name]
         })
 
-        skip_cache = False
-        if service_mode == 'single_transaction':
-            confirmations = response_dict['transaction']['confirmations']
-            if confirmations < 6:
-                skip_cache = True
-                print("***** Too few confirmations! Skipping cache!!")
-
-        if not skip_cache:
+        if not service_mode == 'single_transaction':
             cache.set(cache_key, response_dict)
 
     if not include_raw:
