@@ -290,7 +290,7 @@ def _do_extended_fetch(crypto, transactions, fiat=None):
     txs = []
     for tx in transactions:
         full_tx = CachedTransaction.fetch_full_tx(
-            crypto, txid=tx['txid'], existing_tx_data=tx, fiat=fiat
+            crypto, txid=tx['txid'], fiat=fiat
         )
         if full_tx:
             # if fetch_full_tx returns None, it means another thread is in the process

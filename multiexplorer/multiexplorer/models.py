@@ -27,11 +27,19 @@ class CachedTransaction(models.Model):
             tx_obj = cls.objects.get(crypto=crypto, txid=txid)
             if tx_obj.content == "Pending":
                 return None
+            if tx_obj.content == "Failed":
+                raise cls.DoesNotExist()
+            
             tx = json.loads(tx_obj.content)
+
+            if tx.get('confirmations', 0) == 0:
+                raise cls.DoesNotExist()
 
         except cls.DoesNotExist:
             # not cached, fetch from API service.
-            tx_obj, c = cls.objects.get_or_create(txid=txid, content="Pending")
+            tx_obj, c = cls.objects.get_or_create(crypto=crypto, txid=txid)
+            tx_obj.content = "Pending"
+            tx_obj.save()
             try:
                 tx = get_single_transaction(crypto, txid, random=True)
             except:
