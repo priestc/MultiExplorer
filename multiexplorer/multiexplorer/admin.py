@@ -4,9 +4,10 @@ from .models import CachedTransaction, Memo
 from django.utils.safestring import mark_safe
 
 class CachedTransactionAdmin(admin.ModelAdmin):
-    list_display = ("txid", 'crypto', "content_length")
+    list_display = ("txid", 'crypto', "content_length", "date_fetched", "service_used")
     readonly_fields = ('pretty_print', )
     search_fields = ('txid', )
+    ordering = ("-date_fetched", )
 
     def pretty_print(self, obj):
         return mark_safe("<br><pre>%s</pre" % json.dumps(

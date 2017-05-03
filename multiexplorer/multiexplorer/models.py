@@ -12,6 +12,9 @@ class CachedTransaction(models.Model):
     content = models.TextField()
     crypto = models.CharField(max_length=8, default='btc')
 
+    date_fetched = models.DateTimeField(default=timezone.now)
+    service_used = models.TextField(default="")
+
     def __unicode__(self):
         txid = "?"
         if self.content == "Pending":
@@ -29,7 +32,7 @@ class CachedTransaction(models.Model):
                 return None
             if tx_obj.content == "Failed":
                 raise cls.DoesNotExist()
-            
+
             tx = json.loads(tx_obj.content)
 
             if tx.get('confirmations', 0) == 0:
@@ -41,14 +44,18 @@ class CachedTransaction(models.Model):
             tx_obj.content = "Pending"
             tx_obj.save()
             try:
-                tx = get_single_transaction(crypto, txid, random=True)
-            except:
+                services, tx = get_single_transaction(crypto, txid, random=True, report_services=True)
+            except Exception as exc:
                 tx_obj.content = "Failed"
+                tx_obj.service_used = str(exc)
                 tx_obj.save()
+
                 raise
 
             freshly_fetched = True
             tx_obj.content = json.dumps(tx, default=datetime_to_iso)
+            su = services[0]
+            tx_obj.service_used = "(%s) %s" % (su.service_id, su.name)
             tx_obj.crypto = crypto
             tx_obj.save()
 
