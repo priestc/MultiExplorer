@@ -1019,3 +1019,28 @@ function update_history_with_memo(crypto, txid, memo) {
     });
     set_blockchain_data(crypto, "tx_history", history);
 }
+
+function refresh_exchange_rates(cryptos) {
+    var fiat = $(".fiat_unit").first().text();
+    $.each(cryptos, function(i, crypto) {
+        update_outstanding_ajax(crypto, 1);
+        var box = $(".crypto_box[data-currency=" + crypto + "]");
+        $.ajax({
+            'url': "/api/current_price/fallback?currency=" + crypto + "&fiat=" + fiat,
+            'type': 'get',
+        }).done(function (response) {
+            exchange_rates[crypto] = {
+                provider: response.service_name,
+                rate: response.current_price
+            };
+            var outstanding = update_outstanding_ajax(crypto, -1);
+            box.find(".internal_error").text("");
+            var crypto_balance = parseFloat(box.find('.crypto_balance').text());
+            var new_fiat = crypto_balance * exchange_rates[crypto]['rate'];
+            box.find('.fiat_balance').text(new_fiat.toFixed(2));
+            if(outstanding == 0) {
+                update_total_fiat_balance();
+            }
+        });
+    });
+}
