@@ -1022,6 +1022,9 @@ function update_history_with_memo(crypto, txid, memo) {
 
 function refresh_exchange_rates(cryptos) {
     var fiat = $(".fiat_unit").first().text();
+    if(cryptos.length == 0) {
+        cryptos = show_wallet_list;
+    }
     $.each(cryptos, function(i, crypto) {
         update_outstanding_ajax(crypto, 1);
         var box = $(".crypto_box[data-currency=" + crypto + "]");
