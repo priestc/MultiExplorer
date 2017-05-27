@@ -147,8 +147,9 @@ def get_paper_wallet_currencies():
 
         address_byte = data.get('address_version_byte', None)
         priv_byte = data.get('private_key_prefix', None)
+        addr_enc = data.get('address_encoding', None)
 
-        if address_byte is not None and priv_byte is not None:
+        if address_byte is not None and priv_byte is not None and addr_enc in ['base58', None]:
             ret.append({
                 'code': currency,
                 'name': data['name'],
