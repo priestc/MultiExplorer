@@ -155,6 +155,8 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
         estimated_size = estimate_tx_size(inputs_to_add.length, recipients.length + 1); // +1 for change
         estimated_fee = parseInt(estimated_size / 1024 * fee_per_kb);
 
+        console.log("total added:", total_added, "total_outs:", total_outs, "estimated fee:",  estimated_fee);
+
         if(total_added >= total_outs + estimated_fee) {
             return false;
         }

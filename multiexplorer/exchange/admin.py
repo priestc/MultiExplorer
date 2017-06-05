@@ -17,7 +17,7 @@ class ExchangeMasterKeyAdmin(admin.ModelAdmin):
     balances.allow_tags = True
 
 class ExchangeCurrencyAdmin(admin.ModelAdmin):
-    list_display = ("get_currency_display", 'balance', 'deposit')
+    list_display = ("name", 'balance', 'deposit')
     readonly_fields = ('balance', 'deposit_qrcodes')
 
     class Media:

@@ -34,7 +34,13 @@ def make_crypto_data_json():
             services = data.get('services', {}).get(mode, [])
             if not services:
                 continue
-            ret[currency][mode] = [s.service_id for s in services]
+            if mode == 'current_price':
+                ret[currency][mode] = list(set(
+                    [item.service_id for sublist in services.values() for item in sublist]
+                ))
+            else:
+                ret[currency][mode] = [s.service_id for s in services]
+
 
         if not ret[currency]:
             # no services defined
