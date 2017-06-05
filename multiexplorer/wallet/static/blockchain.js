@@ -157,14 +157,10 @@ function make_tx(crypto, recipients, optimal_fee_multiplier) {
 
         console.log("total added:", total_added, "total_outs:", total_outs, "estimated fee:",  estimated_fee);
 
-        if(total_added >= total_outs + estimated_fee) {
+        if(total_added  >= total_outs + (estimated_fee / 1e8)) {
             return false;
         }
     });
-
-    if (crypto == 'rdd') {
-        tx.version = 2;
-    }
 
     console.log("total inputs amount:", total_added);
     console.log("using fee per kb:", fee_per_kb, "with multiplier of", optimal_fee_multiplier);
