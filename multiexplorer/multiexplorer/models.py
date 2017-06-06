@@ -81,8 +81,11 @@ class CachedTransaction(models.Model):
             tx['historical_price'] = cls.get_historical_fiat(crypto, fiat, time)
 
         if not freshly_fetched:
-            tx['confirmations'] = SupplyEstimator(crypto).estimate_confirmations(time.replace(tzinfo=None))
-
+            try:
+                tx['confirmations'] = SupplyEstimator(crypto).estimate_confirmations(time.replace(tzinfo=None))
+            except:
+                pass
+                
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
 
