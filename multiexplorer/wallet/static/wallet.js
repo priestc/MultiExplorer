@@ -27,10 +27,7 @@ function validate_address(crypto, address) {
     }
     var v = bitcore.Address.isValid(address, bitcore.Networks.get(crypto))
     console.log("is valid:", v, crypto, address);
-    if(v) {
-        return true
-    }
-    return false
+    return v
 }
 
 function update_balance(crypto) {
