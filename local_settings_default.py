@@ -22,7 +22,7 @@ DATABASES = {
 }
 
 WALLET_SUPPORTED_CRYPTOS = []
-WALLET_SUPPORTED_FIATS = ['usd', 'eur', 'cny', 'jpy']
+WALLET_SUPPORTED_FIATS = ['usd', 'eur', 'cny', 'jpy', 'idr', 'cad', 'gbp']
 
 EXCHANGE_KICK_INTERVAL_MINUTES = 10
 EXCHANGE_FEE_PERCENTAGE = 1.5
