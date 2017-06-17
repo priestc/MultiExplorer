@@ -149,8 +149,8 @@
             });
 
             $('#wallets').append(wallet);
-            $("#" + currency + " .pub.qr").qrcode({render: 'canvas', width: 150, height: 150, text: address});
-            $("#" + currency + " .priv.qr").qrcode({render: 'canvas', width: 150, height: 150, text: wif});
+            $("#" + currency + " .pub.qr").qrcode({render: 'canvas', width: 100, height: 100, text: address});
+            $("#" + currency + " .priv.qr").qrcode({render: 'canvas', width: 100, height: 100, text: wif});
         });
         $("#wallets").show();
     });
@@ -184,7 +184,7 @@
                 <div class="priv words">Private Key (spend): {{ wif }} &rarr;</div>
             </td>
             <td>
-                <div class="priv qr" style="width: 150px; height: 150px"></div>
+                <div class="priv qr" style="width: 100px; height: 100px"></div>
             </td>
         </tr>
     </table>

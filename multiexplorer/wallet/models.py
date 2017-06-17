@@ -40,6 +40,8 @@ class WalletMasterKeys(models.Model):
             symbol = '£'
         elif self.display_fiat in ['jpy', 'cny']:
             symbol = '¥'
+        elif self.display_fiat == 'idr':
+            symbol = "Rp"
         else:
             symbol = ''
 
