@@ -77,14 +77,6 @@
         background-color: #45ff45;
         font-size: large;
     }
-    canvas {
-      image-rendering: optimizeSpeed;             /* Older versions of FF          */
-      image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
-      image-rendering: -webkit-optimize-contrast; /* Safari                        */
-      image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-      image-rendering: pixelated;                 /* Awesome future-browsers       */
-      -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
-    }
 </style>
 
 <script src="{% static 'bitcore-lib.min.js' %}"></script>
@@ -149,8 +141,8 @@
             });
 
             $('#wallets').append(wallet);
-            $("#" + currency + " .pub.qr").qrcode({render: 'canvas', width: 100, height: 100, text: address});
-            $("#" + currency + " .priv.qr").qrcode({render: 'canvas', width: 100, height: 100, text: wif});
+            $("#" + currency + " .pub.qr").qrcode({render: 'canvas', width: 112, height: 112, text: address});
+            $("#" + currency + " .priv.qr").qrcode({render: 'canvas', width: 112, height: 112, text: wif});
         });
         $("#wallets").show();
     });
@@ -184,7 +176,7 @@
                 <div class="priv words">Private Key (spend): {{ wif }} &rarr;</div>
             </td>
             <td>
-                <div class="priv qr" style="width: 100px; height: 100px"></div>
+                <div class="priv qr" style="width: 112px; height: 112px"></div>
             </td>
         </tr>
     </table>
