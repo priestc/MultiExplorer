@@ -4,59 +4,41 @@
 <html>
   <head>
     <style>
-      @media print {
-          .wide {
-              width: 100%;
-          }
-
-          h2 {
-              display: none;
-          }
-      }
-
-      @media screen {
-          .wide {
-              width: 50%;
-              margin: 5px;
-          }
-      }
-
-      .wide {
-          border: 1px solid black;
-          padding: 3px;
-          overflow: hidden;
-          margin-top: 3px;
-      }
-
-      .wide .priv {
-          float: right;
-          border: 0px solid red;
-      }
-
-      .wide .pub {
-          float: left;
-          border: 0px solid blue;
-      }
-
-      img {
-          vertical-align:middle;
-      }
 
     </style>
+
+    <script src="{% static 'bitcore-lib.min.js' %}"></script>
+    <!-- <script src="{% static 'bitcore-modified.js' %}"></script> -->
+    <script src="{% static 'jquery-2.2.1.min.js' %}"></script>
+
   </head>
   <body>
     <h2>Test Page</h2>
+    <script>
+        bitcore = require('bitcore-lib');
 
-    {% for i in "xxxxxxxxxxxxxxxxxxxx" %}
-    <div class="wide">
+        var network = {};
+        network.alias = 'break';
+        network.name = 'break'
+        network.pubkeyhash = 76;
+        bitcore.Networks.add(network);
 
-        <img src="/static/logos/nvc-logo_100x100.png" class="pub">
-        <div class="pub">&larr; Address: 4ZCfUbUwu5tCFjEtoJFBFgprqEGsWZSb7N</div>
+        var one_to_50 = Array(90).fill().map(function(_, i){return i+1});
+        $.each(one_to_50, function(i, num){
+            var network = {};
+            network.alias = num;
+            network.name = num
+            network.pubkeyhash = num;
+            bitcore.Networks.add(network);
+            var n = bitcore.Networks.get(num)
 
-        <img src="/static/logos/btc-logo_100x100.png" class="priv">
-        <div class="priv">Private Key: M7rkkx1LoubhXNoUDJgTGfsEr6KiXuss95ij6n7snaE2pa5Pfwix &rarr;</div>
-    </div>
-    {% endfor %}
+            var add = (new bitcore.PrivateKey()).toAddress(n).toString();
+            var result = bitcore.Address.isValid(add, n)
+            console.log(num, result, add);
+
+        });
+
+    </script>
   </body>
 </html>
 
