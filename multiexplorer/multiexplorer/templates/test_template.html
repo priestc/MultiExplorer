@@ -6,38 +6,50 @@
     <style>
 
     </style>
-
-    <script src="{% static 'bitcore-lib.min.js' %}"></script>
-    <!-- <script src="{% static 'bitcore-modified.js' %}"></script> -->
     <script src="{% static 'jquery-2.2.1.min.js' %}"></script>
 
   </head>
   <body>
     <h2>Test Page</h2>
     <script>
-        bitcore = require('bitcore-lib');
+        var $_GET = {};
+        if(document.location.toString().indexOf('?') !== -1) {
+            var query = document.location
+                           .toString()
+                           // get the query string
+                           .replace(/^.*?\?/, '')
+                           // and remove any existing hash string (thanks, @vrijdenker)
+                           .replace(/#.*$/, '')
+                           .split('&');
 
-        var network = {};
-        network.alias = 'break';
-        network.name = 'break'
-        network.pubkeyhash = 76;
-        bitcore.Networks.add(network);
+            for(var i=0, l=query.length; i<l; i++) {
+               var aux = decodeURIComponent(query[i]).split('=');
+               $_GET[aux[0]] = aux[1];
+            }
+        }
 
-        var one_to_50 = Array(90).fill().map(function(_, i){return i+1});
-        $.each(one_to_50, function(i, num){
-            var network = {};
-            network.alias = num;
-            network.name = num
-            network.pubkeyhash = num;
-            bitcore.Networks.add(network);
-            var n = bitcore.Networks.get(num)
+        var unmodified_url = "{% static 'bitcore-lib.min.js' %}";
+        var modified_url = "{% static 'bitcore-modified.js' %}";
 
-            var add = (new bitcore.PrivateKey()).toAddress(n).toString();
-            var result = bitcore.Address.isValid(add, n)
-            console.log(num, result, add);
 
+        if($_GET['modified'] == 'true') {
+            console.log("using modified bitcore");
+            url = modified_url;
+        } else {
+            console.log("using unmodified bitcore");
+            url = unmodified_url;
+        }
+
+        $.getScript(url, function() {
+
+            bitcore = require('bitcore-lib');
+
+            //var add = bitcore.Address.isValid('37BahqRsFrAd3qLiNNwLNV3AWMRD7itxTo', 'testnet')
+            //console.log(add);
+
+            var err = bitcore.Address.getValidationError('37BahqRsFrAd3qLiNNwLNV3AWMRD7itxTo', 'testnet');
+            console.log(err);
         });
-
     </script>
   </body>
 </html>
