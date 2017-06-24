@@ -900,7 +900,11 @@ function set_ui(crypto) {
     $("#loading_screen").hide();
     update_balance(crypto);
 
-    var first_address = get_blockchain_data(crypto, 'unused_deposit_addresses')[0];
+    var addresses = get_blockchain_data(crypto, 'unused_deposit_addresses');
+    if(!addresses) {
+        return
+    }
+    var first_address = addresses[0];
     box.find(".receive_part").show();
     box.find(".switch_to_sweep").show();
     box.find(".deposit_address").text(first_address);
