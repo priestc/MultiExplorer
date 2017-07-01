@@ -26,7 +26,9 @@ function validate_address(crypto, address) {
         crypto = 'livenet'
     }
     var v = bitcore.Address.isValid(address, bitcore.Networks.get(crypto))
-    console.log("is valid:", v, crypto, address);
+    if(!v) {
+        console.log(bitcore.Address.getValidationError(address, bitcore.Networks.get(crypto)))
+    }
     return v
 }
 
