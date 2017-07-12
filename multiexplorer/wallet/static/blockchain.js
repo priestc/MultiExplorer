@@ -408,3 +408,12 @@ function my_amount_for_tx(crypto, tx) {
     //console.log("found:", my_amount, "from tx:", tx);
     return my_amount
 }
+
+function wallet_status(crypto) {
+    // the purpoe of this function is to debug problems with a wallet not making
+    // valid transactins
+
+    $.each(get_utxos2(crypto), function(i, utxo) {
+        console.log(utxo.txid, utxo.amount, utxo.address);
+    });
+}
