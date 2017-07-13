@@ -467,7 +467,7 @@ def single_tx(request, crypto, txid):
         amount = x['amount'] / 1e8
         ins.append({
             'txid': x['txid'],
-            'amount': "%.8f (%.2f USD)" % (amount, hist_price * amount)
+            'amount': "%.8f %s (%.2f USD)" % (amount, crypto.upper(), hist_price * amount)
         })
 
     full_tx['inputs'] = ins
@@ -477,7 +477,7 @@ def single_tx(request, crypto, txid):
         amount = x['amount'] / 1e8
         outs.append({
             'address': x['address'],
-            'amount': "%.8f (%.2f USD)" % (amount, hist_price * amount)
+            'amount': "%.8f %s (%.2f USD)" % (amount, crypto.upper(), hist_price * amount)
         })
 
     full_tx['outputs'] = outs
