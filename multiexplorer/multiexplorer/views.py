@@ -455,7 +455,33 @@ def onchain_status(request):
     return http.JsonResponse(response)
 
 def single_tx(request, crypto, txid):
-    full_tx = CachedTransaction.fetch_full_tx(crypto, txid=txid)
+    full_tx = CachedTransaction.fetch_full_tx(crypto, txid=txid, fiat='usd')
+    hist_price = full_tx['historical_price'] or 0
+    fee = full_tx['fee']
+    full_tx['fee'] = "%.8f %s (%.2f USD)" % (fee / 1e8, crypto.upper(), fee * hist_price)
+    s = full_tx['size']
+    full_tx['size'] = "%.2f KB" % (s / 1024.0) if s > 1024 else "%d bytes" % s
+
+    ins = []
+    for x in full_tx['inputs']:
+        amount = x['amount'] / 1e8
+        ins.append({
+            'txid': x['txid'],
+            'amount': "%.8f (%.2f USD)" % (amount, hist_price * amount)
+        })
+
+    full_tx['inputs'] = ins
+
+    outs = []
+    for x in full_tx['outputs']:
+        amount = x['amount'] / 1e8
+        outs.append({
+            'address': x['address'],
+            'amount': "%.8f (%.2f USD)" % (amount, hist_price * amount)
+        })
+
+    full_tx['outputs'] = outs
+
     return TemplateResponse(request, "single_transaction.html", {
         'tx': full_tx,
         'crypto': crypto,

@@ -3,6 +3,32 @@
 
 {% block content %}
 
-{{ tx }}
-
+<table>
+    <tr>
+        <td>TXID:</td><td>{{ tx.txid }}</td>
+    </tr>
+    <tr>
+        <td>Time:</td><td>{{ tx.time }}</td>
+    </tr>
+    <tr>
+        <td>Size:</td><td>{{ tx.size }}</td>
+    </tr>
+    <tr>
+        <td>Fee:</td><td>{{ tx.fee }}</td>
+    </tr>
+    <tr>
+        <td>Inputs:</td>
+        <td>
+        {% for input in tx.inputs %}
+            <a href="{{ input.txid }}">{{ input.txid }}</a> {{ input.amount }} {{ crypto|upper }}<br>
+        {% endfor %}
+        </td>
+    </tr>
+    <tr>
+        <td>Outputs:</td>
+        <td>{% for output in tx.outputs %}
+            <a href="/address/{{ output.address }}?currency={{ crypto }}">{{ output.address }}</a> {{ output.amount }} {{ crypto|upper }}<br>
+        {% endfor %}</td>
+    </tr>
+</table>
 {% endblock %}

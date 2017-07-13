@@ -412,8 +412,16 @@ function my_amount_for_tx(crypto, tx) {
 function wallet_status(crypto) {
     // the purpoe of this function is to debug problems with a wallet not making
     // valid transactins
-
+    console.log("===begin utxo===");
     $.each(get_utxos2(crypto), function(i, utxo) {
         console.log(utxo.txid, utxo.amount, utxo.address);
     });
+    console.log("===end===");
+
+    console.log("==begin history==");
+    var hist = get_blockchain_data(crypto, 'tx_history').sort(function(x,y){return y.time})
+    $.each(hist, function(i, tx) {
+        console.log(i, tx.time, my_amount_for_tx(crypto, tx));
+    });
+    console.log("==end_history==");
 }
