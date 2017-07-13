@@ -457,6 +457,8 @@ def onchain_status(request):
 def single_tx(request, crypto, txid):
     full_tx = CachedTransaction.fetch_full_tx(crypto, txid=txid, fiat='usd')
     hist_price = full_tx['historical_price'] or 0
+    if hist_price:
+        hist_price = hist_price['price']
     fee = full_tx['fee']
     full_tx['fee'] = "%.8f %s (%.2f USD)" % (fee / 1e8, crypto.upper(), fee * hist_price)
     s = full_tx['size']
