@@ -2,7 +2,11 @@
 {% load staticfiles %}
 
 {% block content %}
-
+<style>
+    table td {
+        vertical-align: top;
+    }
+</style>
 <table>
     <tr>
         <td>TXID:</td><td>{{ tx.txid }}</td>
@@ -19,16 +23,34 @@
     <tr>
         <td>Inputs:</td>
         <td>
+            <table>
         {% for input in tx.inputs %}
-            <a href="{{ input.txid }}">{{ input.txid }}</a> {{ input.amount }}<br>
+            <tr>
+                <td>
+                    <a href="{{ input.txid }}">{{ input.txid }}</a>
+                </td>
+                <td style="text-align: right">
+                    {{ input.amount }}
+                </td>
+            </tr>
         {% endfor %}
-        </td>
+        </table>
     </tr>
     <tr>
         <td>Outputs:</td>
-        <td>{% for output in tx.outputs %}
-            <a href="/address/{{ output.address }}?currency={{ crypto }}">{{ output.address }}</a> {{ output.amount }}<br>
-        {% endfor %}</td>
+        <td>
+        <table>
+        {% for output in tx.outputs %}
+            <tr>
+                <td>
+                    <a href="/address/{{ output.address }}?currency={{ crypto }}">{{ output.address }}</a>
+                </td>
+                <td style="text-align: right">
+                    {{ output.amount }}
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
     </tr>
 </table>
 {% endblock %}

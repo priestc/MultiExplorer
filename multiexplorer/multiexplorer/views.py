@@ -459,8 +459,8 @@ def single_tx(request, crypto, txid):
     hist_price = full_tx['historical_price'] or 0
     if hist_price:
         hist_price = hist_price['price']
-    fee = full_tx['fee']
-    full_tx['fee'] = "%.8f %s (%.2f USD)" % (fee / 1e8, crypto.upper(), fee * hist_price)
+    fee = full_tx['fee'] / 1e8
+    full_tx['fee'] = "%.8f %s (%.2f USD)" % (fee, crypto.upper(), fee * hist_price)
     s = full_tx['size']
     full_tx['size'] = "%.2f KB" % (s / 1024.0) if s > 1024 else "%d bytes" % s
 
