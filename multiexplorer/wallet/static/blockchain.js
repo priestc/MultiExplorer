@@ -354,13 +354,14 @@ function get_utxos2(crypto) {
     var history = get_blockchain_data(crypto, 'tx_history');
     var my_addresses = get_blockchain_data(crypto, 'used_addresses');
 
-    function is_unspent(txid) {
+    function is_unspent(txid, output_address) {
         // look through all history and see if this txid has been included
         // in any inputs. (is unspent)
+
         var is_spent = false;
-        $.each(history, function(i, tx){
-            $.each(tx.inputs, function(j, input){
-                if(input.txid == txid) {
+        $.each(history, function(i, tx) {
+            $.each(tx.inputs, function(j, input) {
+                if(input.txid == txid && input.address == output_address) {
                     is_spent = true;
                     return false;
                 }
@@ -372,9 +373,11 @@ function get_utxos2(crypto) {
 
     $.each(history, function(i, tx){
         $.each(tx.outputs, function(j, out){
-            $.each(my_addresses, function(k, address) {
-                if(out.address == address && is_unspent(tx.txid)){
-                    // is an incoming payment to one of my addresses
+            // going through each address in each of my outputs
+            if(is_member(my_addresses, out.address)) {
+                // this output is mine, check to see if it is unspent
+                if(is_unspent(tx.txid, out.address)){
+                    // is an unspent payment to one of my addresses
                     utxos.push({
                         address: out.address,
                         amount: out.amount / 1e8,
@@ -382,9 +385,8 @@ function get_utxos2(crypto) {
                         outputIndex: j,
                         txid: tx.txid
                     });
-                    return false; //stop iteration
                 }
-            });
+            }
         });
     });
     return utxos
@@ -397,12 +399,16 @@ function my_amount_for_tx(crypto, tx) {
         if(my_addresses.indexOf(input.address) != -1) {
             //console.log("subtracting input of", input.address, input.amount / 1e8);
             my_amount -= input.amount / 1e8;
+        } else {
+            //console.log("not my input:", input.amount / 1e8);
         }
     });
     $.each(tx.outputs, function(i, output) {
         if(my_addresses.indexOf(output.address) != -1) {
             //console.log("adding output of", output.address, output.amount / 1e8);
             my_amount += output.amount / 1e8;
+        } else {
+            //console.log("not my output:", output.amount / 1e8);
         }
     });
     //console.log("found:", my_amount, "from tx:", tx);
@@ -416,12 +422,30 @@ function wallet_status(crypto) {
     $.each(get_utxos2(crypto), function(i, utxo) {
         console.log(utxo.txid, utxo.amount, utxo.address);
     });
-    console.log("===end===");
+    console.log("===end utxo===");
 
     console.log("==begin history==");
-    var hist = get_blockchain_data(crypto, 'tx_history').sort(function(x,y){return y.time})
+    var hist = sort_history(get_blockchain_data(crypto, 'tx_history'));
+
     $.each(hist, function(i, tx) {
-        console.log(i, tx.time, my_amount_for_tx(crypto, tx));
+        console.log(i, tx.txid, tx.time, my_amount_for_tx(crypto, tx));
     });
-    console.log("==end_history==");
+    console.log("==end history==");
+}
+
+function sort_history(hist) {
+    return hist.sort(function(x, y) {
+        return new Date(x.time) - new Date(y.time);
+    });
+}
+
+function is_member(group, individual) {
+    var match = false;
+    $.each(group, function(k, test_individual) {
+        if(test_individual == individual) {
+            match = true;
+            return false
+        }
+    });
+    return match;
 }

@@ -6,6 +6,9 @@
     table td {
         vertical-align: top;
     }
+    .numbers_cell {
+        text-align: right
+    }
 </style>
 <table>
     <tr>
@@ -29,7 +32,7 @@
                 <td>
                     <a href="{{ input.txid }}">{{ input.txid }}</a>
                 </td>
-                <td style="text-align: right">
+                <td class="numbers_cell">
                     {{ input.amount }}
                 </td>
             </tr>
