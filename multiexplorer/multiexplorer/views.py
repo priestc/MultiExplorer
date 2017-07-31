@@ -20,6 +20,7 @@ from moneywagon import (
     get_single_transaction, get_current_price, push_tx
 )
 
+from moneywagon.crypto_data_extractor import extract_crypto_data
 from moneywagon.crypto_data import crypto_data
 from moneywagon.supply_estimator import SupplyEstimator
 
@@ -678,3 +679,17 @@ def paper_wallet(request):
     paper_wallet_currencies = sorted(get_paper_wallet_currencies(), key=lambda x: x['name'])
     paper_wallet_currencies_json = json.dumps(paper_wallet_currencies)
     return TemplateResponse(request, "paper_wallet.html", locals())
+
+
+def crypto_data(request, path1=None, path2=None):
+    if path1 and path2:
+        full_path = "%s/%s" % (path1, path2)
+        hit = cache.get(full_path)
+        if hit:
+            return http.JsonResponse(hit)
+
+        data = extract_crypto_data(full_path)
+        cache.set(full_path, data)
+        return http.JsonResponse(data)
+
+    return TemplateResponse(request, "crypto_data.html", locals())

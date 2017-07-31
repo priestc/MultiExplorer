@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'spinner.css' %}">
+    <section>
+        <h2>Crypto Data Extractor</h2>
+        Github Path: <input type="text" id="path"><br>
+        <span id="status" style="color: red"></span><br>
+        In the form "&lt;account&gt;/&lt;repository&gt;" such as "litecoin-project/litecoin" or "bitcoin/bitcoin" <br>
+        <br><button id="get_data">Get data</button>
+    </section>
+
+    <section id="results" style="display:none;">
+        <pre><textarea cols="80", rows="15" style="text-align: left"></textarea></pre>
+        The underlying code used to extract this data can be found
+        <a href="https://github.com/priestc/moneywagon/blob/master/moneywagon/crypto_data_extractor.py">here</a>.
+    </section>
+
+    <script>
+        $("#get_data").click(function(){
+            var proper_path = /^[\w-]+\/[\w-]+$/i;
+            var path = $("#path").val();
+
+            if(!proper_path.test(path)) {
+                $("#status").text("invalid path");
+                return
+            }
+            $("#status").html('<div class="thin-spinner spinner" style="display: inline; height: 10px; width: 10px;"></div>');
+
+            $.ajax({
+                url: "/crypto_data/" + path,
+            }).done(function(response){
+                $("#status").html("");
+                $("#results").show();
+                $("#results textarea").text(JSON.stringify(response, null, 2));
+            });
+        });
+    </script>
+{% endblock %}
