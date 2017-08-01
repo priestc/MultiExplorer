@@ -681,7 +681,7 @@ def paper_wallet(request):
     return TemplateResponse(request, "paper_wallet.html", locals())
 
 
-def crypto_data(request, path1=None, path2=None):
+def crypto_data_page(request, path1=None, path2=None):
     if path1 and path2:
         full_path = "%s/%s" % (path1, path2)
         hit = cache.get(full_path)
