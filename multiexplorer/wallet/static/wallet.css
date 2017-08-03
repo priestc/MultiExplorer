@@ -346,3 +346,7 @@ input[type=number], input[type=text] {
     color: red;
     display: inline-block;
 }
+
+.send_error_area {
+    max-width: 300px;
+}
