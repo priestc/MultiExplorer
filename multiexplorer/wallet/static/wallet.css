@@ -98,7 +98,7 @@ body {
     background: #76e8c0;
 }
 
-.colors-mrs {
+.colors-mars {
     background: orange;
 }
 
@@ -121,6 +121,11 @@ body {
 
 .colors-part {
     background: #d2f3e7
+}
+
+.colors-leo {
+    background: #82540f;
+    color: white
 }
 
 button {

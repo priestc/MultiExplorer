@@ -219,7 +219,8 @@ def _make_moneywagon_fetch(Service, service_mode, service_id, address, addresses
         report_services=True,
         services=services,
         random=random_mode,
-        timeout=10.0
+        timeout=10.0,
+        verbose=settings.DEBUG
     )
 
     if service_id.startswith("paranoid"):

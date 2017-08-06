@@ -53,7 +53,7 @@ def home(request):
         'crypto_data': crypto_data,
         'supported_fiats': settings.WALLET_SUPPORTED_FIATS,
         'autologout_choices': AUTO_LOGOUT_CHOICES,
-        'use_inverted_colors': ['vtc', 'uno', 'fjc'], # makes spinner white
+        'use_inverted_colors': ['vtc', 'uno', 'fjc', 'leo'], # makes spinner white
     })
 
 
