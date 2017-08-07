@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import time
 import random
@@ -694,3 +696,46 @@ def crypto_data_page(request, path1=None, path2=None):
         return http.JsonResponse(data)
 
     return TemplateResponse(request, "crypto_data.html", locals())
+
+@csrf_exempt
+def replay_attack(request, fork_coin=None, block_to_replay=None):
+    if request.method == 'POST':
+        parent_currency, start_block = crypto_data[fork_coin.lower()]['forked_from']
+        if block_to_replay < start_block:
+            raise Exception("Can't replay blocks mined before the fork")
+
+        print("getting block", block_to_replay)
+        #block = get_block(parent_currency, block_number=int(block_to_replay))
+        errors, response_dict = _cached_fetch(
+            "get_block", "fallback", currency=fork_coin,
+            block_args={'block_number': block_to_replay}, random_mode=True
+        )
+
+        block = response_dict['block']
+
+        print("got block, ", len(block['txids']), "transactions to replay")
+        for i, txid in enumerate(block['txids']):
+            #tx = get_single_transaction(parent_currency, txid=txid)
+
+
+            errors, response_dict = _cached_fetch(
+                "single_transaction", "fallback", currency=fork_coin,
+                txid=txid, random_mode=True
+            )
+
+            tx = response_dict['transaction']
+
+            print("got tx", i, "of", len(block['txids']))
+            continue
+            raw_txid = tx_to_raw(tx)
+            try:
+                result = push_tx(fork_coin, hex=raw_tx)
+                results.append([True, txid])
+            except Exception as exc:
+                results.append([False, str(exc)])
+
+        return http.JsonResponse(results)
+
+    first_pass = [[x, d['forked_from']] for x,d in crypto_data.items() if 'forked_from' in d]
+    attack_candidates = [["%s ⇆ %s" % (x[0], x[1][0]), x[1][1]] for x in first_pass]
+    return TemplateResponse(request, "replay_attack.html", locals())
