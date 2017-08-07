@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block content %}
+<section id="generator">
+  <h2>Repay Attack Generator</h2>
+  <span style="color: red" id="error"></span>
+  <br>
+  <select id="currency">
+      {% for currency, min_height in attack_candidates %}
+        <option value="{{ currency }},{{ min_height }}">{{ currency }}</option>
+      {% endfor %}
+  </select>
+  Block height: <input type="number" id="height">
+  <br></br>
+  <button id="submit">Submit</button>
+
+  <section id="results"></section>
+<section>
+
+<script>
+    $("#submit").click(function() {
+        var currency_and_min_height = $("#currency").val();
+        var height = parseInt($("#height").val());
+        var currency = currency_and_min_height.split(",")[0].split("⇆")[0].trim();
+        var min_height = parseInt(currency_and_min_height.split(",")[1]);
+
+        console.log(min_height, height);
+        if(height < min_height) {
+            $("#error").text("Can't replay block at hight before the fork");
+            $("#height").val("");
+            return
+        }
+
+        $("#error").text("");
+        $.ajax({
+            url: "/replay_attack/" + currency + "/" + height,
+            type: "post"
+        }).done(function(response) {
+            console.log('done', response);
+            $.each(response.results, function(i, data) {
+                var color = 'green';
+                if(data[0] == 'failure') {
+                    color = 'red';
+                }
+                $("#results").append("<span style='color: " + color + "'>" + data[0] + "</span> " + data[1] + "<hr>");
+            });
+        });
+    });
+
+</script>
+{% endblock %}
