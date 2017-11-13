@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'pricetick',
     'django_extensions',
     'corsheaders',
+    'alerts',
 )
 
 MIDDLEWARE_CLASSES = (

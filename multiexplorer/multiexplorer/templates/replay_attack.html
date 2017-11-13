@@ -20,6 +20,7 @@
 
 <script>
     $("#submit").click(function() {
+        $("#results").empty();
         var currency_and_min_height = $("#currency").val();
         var height = parseInt($("#height").val());
         var currency = currency_and_min_height.split(",")[0].split("⇆")[0].trim();

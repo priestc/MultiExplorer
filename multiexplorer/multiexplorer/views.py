@@ -25,7 +25,8 @@ from moneywagon import (
 from moneywagon.crypto_data_extractor import extract_crypto_data
 from moneywagon.crypto_data import crypto_data
 from moneywagon.supply_estimator import SupplyEstimator
-from moneywagon.core import to_rawtx
+from moneywagon.network_replay import NetworkReplay
+from moneywagon.core import ServiceDisagreement
 
 from .utils import (
     make_crypto_data_json, make_service_info_json, service_modes,
@@ -33,6 +34,7 @@ from .utils import (
 )
 
 from .models import CachedTransaction, Memo
+from alerts.models import FraudAlert
 from pricetick.models import PriceTick
 from bitcoin import ecdsa_verify, pubkey_to_address
 
@@ -178,12 +180,21 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
             # catch any error and return message to front end to show the user
             to_catch = Exception
 
+        def error_response(exc):
+            return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
+
         try:
             response_dict = _make_moneywagon_fetch(**locals())
             if extended_fetch:
                 response_dict = _do_extended_fetch(currency, response_dict['transactions'], fiat)
+        except ServiceDisagreement as exc:
+            FraudAlert.new_alert(
+                currency, address=address or addresses, txid=txid,
+                services=exc.services, results=exc.results
+            )
+            return error_response(exc)
         except to_catch as exc:
-            return True, {'error': "%s: %s" % (exc.__class__.__name__, str(exc))}
+            return error_response(exc)
 
         response_dict.update({
             'timestamp': int(time.time()),
@@ -701,10 +712,6 @@ def crypto_data_page(request, path1=None, path2=None):
 @csrf_exempt
 def replay_attack(request, fork_coin=None, block_to_replay=None):
     if request.method == 'POST':
-        parent_currency, start_block = crypto_data[fork_coin.lower()]['forked_from']
-        if block_to_replay < start_block:
-            raise Exception("Can't replay blocks mined before the fork")
-
         errors, response_dict = _cached_fetch(
             "get_block", "fallback", currency=fork_coin,
             block_args={'block_number': block_to_replay}, random_mode=True
@@ -712,26 +719,17 @@ def replay_attack(request, fork_coin=None, block_to_replay=None):
 
         block = response_dict['block']
 
-        results = []
-        print("got block, ", len(block['txids']), "transactions to replay")
-        for i, txid in enumerate(block['txids'][:5]    ):
+        def block_fetcher(currency, txid):
             errors, response_dict = _cached_fetch(
-                "single_transaction", "fallback", currency=fork_coin,
+                "single_transaction", "fallback", currency=currency,
                 txid=txid, random_mode=True
             )
+            return response_dict['transaction']
 
-            if response_dict['transaction']['inputs'][0].get('coinbase'):
-                continue # no point trying to replay coinbases.
-
-            raw_tx = to_rawtx(response_dict['transaction'])
-
-            print("got tx", i, "of", len(block['txids']))
-
-            try:
-                result = push_tx(parent_currency, raw_tx, random=True)
-                results.append(['success', txid])
-            except Exception as exc:
-                results.append(['failure', str(exc)])
+        results = []
+        for r in replay_block(fork_coin, block, verbose=False, block_fetcher=block_fetcher, limit=3):
+            print(r)
+            results.append(r)
 
         return http.JsonResponse({'results': results})
 
