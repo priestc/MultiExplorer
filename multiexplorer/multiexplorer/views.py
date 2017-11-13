@@ -190,7 +190,7 @@ def _cached_fetch(service_mode, service_id, address=None, addresses=None, xpub=N
         except ServiceDisagreement as exc:
             FraudAlert.new_alert(
                 currency, address=address or addresses, txid=txid,
-                services=exc.services, results=exc.results
+                network_results=exc.network_results
             )
             return error_response(exc)
         except to_catch as exc:
