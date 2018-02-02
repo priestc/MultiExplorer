@@ -1,4 +1,4 @@
-django
+django==1.11
 moneywagon
 scrypt
 django-extensions==1.7.7

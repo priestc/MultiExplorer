@@ -1,7 +1,10 @@
 import json
 import arrow
+import datetime
+
 from django.utils import timezone
 from django.db import models
+from django.conf import settings
 from .utils import datetime_to_iso
 from moneywagon import get_single_transaction, get_block
 from moneywagon.supply_estimator import SupplyEstimator
@@ -85,7 +88,7 @@ class CachedTransaction(models.Model):
                 tx['confirmations'] = SupplyEstimator(crypto).estimate_confirmations(time.replace(tzinfo=None))
             except:
                 pass
-                
+
         tx['memos'] = Memo.get(txid=txid, crypto=crypto)
         return tx
 
@@ -132,3 +135,31 @@ class PullHistory(models.Model):
 
 class PushHistory(models.Model):
     last_pushed = models.DateTimeField(default=timezone.now)
+
+
+class IPTracker(models.Model):
+    ip = models.CharField(max_length=64)
+    last_unbanned = models.DateTimeField(default=timezone.now)
+    hits = models.IntegerField(default=0)
+
+    class Meta:
+        get_latest_by = 'last_unbanned'
+
+    @classmethod
+    def allow(cls, ip):
+        interval = datetime.timedelta(**settings.IP_FILTER_INTERVAL)
+        if not cls.objects.filter(ip=ip).exists():
+            cls.objects.create(ip=ip, hits=1)
+            return True
+        else:
+            last = cls.objects.filter(ip=ip).latest()
+            if last.hits > settings.IP_FILTER_HITS:
+                interval_ago = timezone.now() - interval
+                if last.last_unbanned < interval_ago:
+                    cls.objects.create(ip=ip, hits=1)
+                    return True
+                return False
+            else:
+                last.hits += 1
+                last.save()
+                return True

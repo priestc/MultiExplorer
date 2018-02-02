@@ -1,6 +1,6 @@
 import json
 from django.contrib import admin
-from .models import CachedTransaction, Memo
+from .models import CachedTransaction, Memo, IPTracker
 from django.utils.safestring import mark_safe
 
 class CachedTransactionAdmin(admin.ModelAdmin):
@@ -24,5 +24,9 @@ class MemoAdmin(admin.ModelAdmin):
     def content_length(self, obj):
         return len(obj.encrypted_text)
 
+class IPTrackerAdmin(admin.ModelAdmin):
+    list_display = ('ip', 'last_unbanned', 'hits')
+
 admin.site.register(CachedTransaction, CachedTransactionAdmin)
 admin.site.register(Memo, MemoAdmin)
+admin.site.register(IPTracker, IPTrackerAdmin)
