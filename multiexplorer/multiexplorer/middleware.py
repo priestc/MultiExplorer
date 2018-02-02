@@ -8,7 +8,8 @@ class IPLimiterMiddleware(object):
 
     def __call__(self, request):
         ip = request.META['REMOTE_ADDR']
-        if IPTracker.allow(ip):
+
+        if not request.path.startswith("/api/") or IPTracker.allow(ip):
             response = self.get_response(request)
             return response
 
