@@ -147,6 +147,7 @@ class IPTracker(models.Model):
 
     @classmethod
     def allow(cls, ip):
+        return True
         interval = datetime.timedelta(**settings.IP_FILTER_INTERVAL)
         if not cls.objects.filter(ip=ip).exists():
             cls.objects.create(ip=ip, hits=1)
