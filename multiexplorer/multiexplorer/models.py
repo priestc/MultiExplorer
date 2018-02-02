@@ -153,7 +153,7 @@ class IPTracker(models.Model):
             return True
         else:
             last = cls.objects.filter(ip=ip).latest()
-            if last.hits > settings.IP_FILTER_HITS:
+            if last.hits >= settings.IP_FILTER_HITS:
                 interval_ago = timezone.now() - interval
                 if last.last_unbanned < interval_ago:
                     cls.objects.create(ip=ip, hits=1)

@@ -1,5 +1,10 @@
+import datetime
 import json
+
 from django.contrib import admin
+from django.conf import settings
+from django.utils import timezone
+
 from .models import CachedTransaction, Memo, IPTracker
 from django.utils.safestring import mark_safe
 
@@ -25,7 +30,14 @@ class MemoAdmin(admin.ModelAdmin):
         return len(obj.encrypted_text)
 
 class IPTrackerAdmin(admin.ModelAdmin):
-    list_display = ('ip', 'last_unbanned', 'hits')
+    list_display = ('ip', 'colored_last_unbanned', 'hits')
+
+    def colored_last_unbanned(self, obj):
+        interval_ago = timezone.now() - datetime.timedelta(**settings.IP_FILTER_INTERVAL)
+        if obj.last_unbanned > interval_ago:
+            return "%s <span style='color: red'>(Active)</span>" % obj.last_unbanned
+        return obj.last_unbanned
+    colored_last_unbanned.allow_tags = True
 
 admin.site.register(CachedTransaction, CachedTransactionAdmin)
 admin.site.register(Memo, MemoAdmin)
