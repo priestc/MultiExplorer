@@ -14,6 +14,7 @@ $.each(crypto_data, function(i, data) {
     network.name = data['name'];
     network.pubkeyhash = data['address_byte'];
     network.privatekey = data['private_key_prefix'];
+    network.scripthash = data['script_hash_byte'];
     bip44_coin_types[data['code']] = data['bip44'];
 
     if(data['code'] != 'btc') {
