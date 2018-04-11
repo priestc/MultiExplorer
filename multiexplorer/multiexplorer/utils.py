@@ -91,6 +91,7 @@ def get_wallet_currencies():
         bip44 = data.get('bip44_coin_type', None)
         address_byte = data.get('address_version_byte', None)
         priv_byte = data.get('private_key_prefix', None)
+        script_hash_byte = data.get('script_hash_byte', None)
 
         services = data.get('services', {})
         pushtx = services.get("push_tx", [])
@@ -109,6 +110,7 @@ def get_wallet_currencies():
                 'bip44': bip44,
                 'private_key_prefix': priv_byte,
                 'address_byte': address_byte,
+                'script_hash_byte': script_hash_byte,
                 'logo': "logos/%s-logo_100x100.png" % currency,
             })
 
