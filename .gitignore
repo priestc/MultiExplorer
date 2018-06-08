@@ -63,3 +63,6 @@ target/
 
 multiexplorer/db.sqlite3
 multiexplorer/multiexplorer/local_settings.py
+
+# PyCharm
+.idea
