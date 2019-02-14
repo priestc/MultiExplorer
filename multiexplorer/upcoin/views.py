@@ -1,18 +1,29 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import json
+import dateutil.parser
 
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 
-from .models import LegerEntry, Peer
+from .models import LedgerEntry, Peer
 from bitcoin import ecdsa_sign, ecdsa_verify, ecdsa_recover, pubtoaddr
+from .tx_util import InvalidTransaction, validate_transaction
+
 
 def accept_tx(request):
-    inputs = request.POST['inputs']
-    outputs = request.POST['outputs']
+    try:
+        tx = json.loads(request.POST['tx'])
+    except:
+        return HttpResponseBadRequest("Invalid transaction JSON")
 
-    for i, input in enumerate(inputs.split(":")):
-        address, amount, sig = input.split(",")
+    ts = dateutil.parser.parse(datetime.tx['timestamp'])
+
+    if ts - datetime.datetime.now() < datetime.timedelta(seconds=5):
+        pass
+
+    for i, input in enumerate(tx['inputs']):
+        address, amount, sig = input
 
         try:
             entry = LedgerEntry.objects.get(address=address)
@@ -25,12 +36,10 @@ def accept_tx(request):
                 "Address %s does not have enough balance" % address
             )
 
-        message = "%s%s%s" % (address, amount, outputs)
-        pubkey = ecdsa_recover(message, sig)
-        if not ecdsa_verify(message, sig, pubkey) and pubtoaddr(pubkey) == address:
-            return HttpResponseBadRequest(
-                "Input %s has invalid signature" % i
-            )
+    try:
+        validate_transaction(tx)
+    except InvalidTransaction as exc:
+        return HttpResponseBadRequest("Transaction Invalid: %s" % str(exc))
 
     for input in inputs:
         entry = LegderEntry.objects.get(address=input['address'])
@@ -48,3 +57,7 @@ def add_peer(request):
 
 def ping(request):
     pass
+
+def network_summary(request):
+    nodes = Peer.objects.all()
+    return render(request, "upcoin_summary.html", locals())

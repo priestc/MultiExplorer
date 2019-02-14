@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% for peer in peers %}
+<h2>Upcoin</h2>
+  <a href="{{ peer.domain }}">{{ peer.domain }}</a> rep {{ peer.reputation }}<br>
+{% endfor %}
+{% endblock %}

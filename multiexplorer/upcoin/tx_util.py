@@ -3,10 +3,13 @@ import random
 
 from bitcoin import ecdsa_verify, ecdsa_recover, ecdsa_sign, pubtoaddr
 
-class InvalidSignature(Exception):
+class InvalidTransaction(Exception):
     pass
 
-class InvalidAmounts(Exception):
+class InvalidSignature(InvalidTransaction):
+    pass
+
+class InvalidAmounts(InvalidTransaction):
     pass
 
 def _cut_to_8(amount):
@@ -154,7 +157,7 @@ if __name__ == '__main__':
         fail += 1
     assert fail == 1, "Invalid Amount not happening when outputs exceed inputs when validating"
 
-    ################################################################
+    # valid signatures, but negative amounts
     fail = 0
     bad_tx = {
         'inputs': [
