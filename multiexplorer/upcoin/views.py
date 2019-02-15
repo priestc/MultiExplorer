@@ -53,6 +53,9 @@ def accept_tx(request):
 
     return HttpResponse("OK")
 
+def pass_on_to_peers(obj):
+    peers = Peer.objects.all()
+
 def get_peers(request):
     pass
 
@@ -85,6 +88,10 @@ def add_peer(request):
             payout_address=reg['payout_address'],
             first_registered=ts
         )
+
+    pass_on_to_peers(reg)
+
+    return HttpResponse("OK")
 
 def ping(request):
     pass
