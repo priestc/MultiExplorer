@@ -1,7 +1,7 @@
 import datetime
 import random
 
-from bitcoin import ecdsa_verify, ecdsa_recover, ecdsa_sign, pubtoaddr
+from bitcoin import ecdsa_verify, ecdsa_recover, ecdsa_sign, pubtoaddr, privtoaddr
 
 class InvalidTransaction(Exception):
     pass
@@ -54,6 +54,10 @@ def make_transaction(inputs, outputs):
     return tx
 
 def validate_transaction(tx):
+    """
+    Validates that the passed in transaction object is valid in terms of
+    cryptography. UTXO validation does not happen here.
+    """
     out_total, out_msg = _process_outputs(tx['outputs'], tx['timestamp'])
 
     in_total = 0
@@ -78,7 +82,6 @@ def validate_transaction(tx):
         raise InvalidAmounts("Input amount does not exceed output amount")
 
     return True
-
 
 if __name__ == '__main__':
 

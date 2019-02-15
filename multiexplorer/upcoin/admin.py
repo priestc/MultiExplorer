@@ -5,10 +5,11 @@ from django.contrib import admin
 from .models import LedgerEntry, Peer
 
 class PeerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('domain', 'reputation', 'payout_address', 'first_registered')
+    ordering = ('-reputation', 'first_registered')
 
 class LedgerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('address', 'amount', 'last_updated')
 
 admin.site.register(Peer, PeerAdmin)
 admin.site.register(LedgerEntry, LedgerAdmin)

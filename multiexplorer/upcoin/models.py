@@ -5,14 +5,6 @@ import hashlib
 
 from django.db import models
 
-def grouper(n, iterable):
-    it = iter(iterable)
-    while True:
-       chunk = tuple(itertools.islice(it, n))
-       if not chunk:
-           return
-       yield chunk
-
 class LedgerEntry(models.Model):
     address = models.TextField(max_length=40)
     amount = models.IntegerField(default=0)
@@ -27,8 +19,13 @@ class Peer(models.Model):
     domain = models.TextField()
     reputation = models.FloatField(default=0)
     first_registered = models.DateTimeField()
+    payout_address = models.TextField(max_length=40)
+
+    def __unicode__(self):
+        return self.domain
 
     @classmethod
-    def shuffle(cls, hash):
+    def shuffle(cls, hash, n=0):
         peers = list(cls.objects.all().order_by('reputation'))
-        return sorted(peers, key=lambda x: hashlib.sha256(x.domain + hash).hexdigest())
+        sorter = lambda x: hashlib.sha256(x.domain + hash + n).hexdigest()
+        return sorted(peers, key=sorter)

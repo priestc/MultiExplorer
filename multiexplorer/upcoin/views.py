@@ -5,11 +5,14 @@ import dateutil.parser
 
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
+from django.db.models import Q
 
 from .models import LedgerEntry, Peer
 from bitcoin import ecdsa_sign, ecdsa_verify, ecdsa_recover, pubtoaddr
 from .tx_util import InvalidTransaction, validate_transaction
 
+def send_tx(request):
+    return render(request, "send_tx.html")
 
 def accept_tx(request):
     try:
@@ -18,6 +21,7 @@ def accept_tx(request):
         return HttpResponseBadRequest("Invalid transaction JSON")
 
     ts = dateutil.parser.parse(datetime.tx['timestamp'])
+    print ts - datetime.datetime.now()
 
     if ts - datetime.datetime.now() < datetime.timedelta(seconds=5):
         pass
@@ -53,11 +57,38 @@ def get_peers(request):
     pass
 
 def add_peer(request):
-    pass
+    try:
+        reg = json.loads(request.POST['registration'])
+    except Exception as exc:
+        return HttpResponseBadRequest("Invalid transaction JSON: %s" % str(exc))
+
+    for item in ['signature', 'timestamp', 'domain', 'payout_address']:
+        if item not in reg:
+            return HttpResponseBadRequest(
+                "%s missing" % item.replace("_", " ").title()
+            )
+
+    ts = dateutil.parser.parse(reg['timestamp'])
+    if ts - datetime.datetime.now() > datetime.timedelta(seconds=10):
+        return HttpResponseBadRequest("Timestamp too old")
+
+    try:
+        p = Peer.objects.get(
+            Q(domain=reg['domain']) | Q(payout_address=reg['payout_address'])
+        )
+        p.domain = reg['domain']
+        p.payout_address = reg['payout_address']
+        p.save()
+    except Peer.DoesNotExist:
+        Peer.objects.create(
+            domain=reg['domain'],
+            payout_address=reg['payout_address'],
+            first_registered=ts
+        )
 
 def ping(request):
     pass
 
 def network_summary(request):
-    nodes = Peer.objects.all()
+    peers = Peer.objects.all()
     return render(request, "upcoin_summary.html", locals())
