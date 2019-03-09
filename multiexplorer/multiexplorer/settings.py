@@ -41,7 +41,6 @@ INSTALLED_APPS = (
     'django_extensions',
     'corsheaders',
     'alerts',
-    'upcoin'
 )
 
 MIDDLEWARE = [
