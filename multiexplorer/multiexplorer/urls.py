@@ -31,7 +31,6 @@ urlpatterns = [
 
     url(r'^disambiguation/(?P<address>\w+)', address_disambiguation, name="address_disambiguation"),
 
-    url(r'^upcoin/', include('upcoin.urls')),
     url(r'^wallet/', include('wallet.urls')),
     url(r'^exchange/', include('exchange.urls')),
     url(r'^paper_wallet/', paper_wallet, name="paper_wallet"),
