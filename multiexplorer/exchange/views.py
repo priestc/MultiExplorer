@@ -5,7 +5,7 @@ from django import http
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 
-from models import ExchangeCurrency, ExchangeAddress
+from .models import ExchangeCurrency, ExchangeAddress
 
 from multiexplorer.utils import get_wallet_currencies
 

@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-from views import (
+from .views import (
     home, perform_lookup, single_address, block_lookup, api_docs, address_disambiguation,
     onchain_exchange_rates, onchain_status, logout, single_tx, handle_memo, serve_memo_pull,
     historical_price, plot_supply, test, paper_wallet, crypto_data_page, replay_attack
@@ -15,7 +15,7 @@ urlpatterns = [
     # url(r'^$', 'multiexplorer.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^$', home, name="home"),
 
     url(r'^address/(?P<address>\w+)/$', single_address, name="single_address"),
@@ -47,20 +47,23 @@ urlpatterns = [
     url(r'^logout/', logout, name="logout"),
 
     url(r'^test/', test, name="test"),
+
+    #url(r"^tutu", include("tutu.urls"))
 ]
 
 
 from django.conf import settings
 
 if settings.DEBUG:
-    from django.core.handlers.base import BaseHandler
-
-    handle_uncaught_exception = BaseHandler.handle_uncaught_exception
-
-    def _handle_uncaught_exception_monkey_patch(self, request, resolver, exc_info):
-        if settings.DEBUG:
-            request.is_ajax = lambda: False
-
-        return handle_uncaught_exception(self, request, resolver, exc_info)
-
-    BaseHandler.handle_uncaught_exception = _handle_uncaught_exception_monkey_patch
+    pass
+    # from django.core.handlers.base import BaseHandler
+    #
+    # handle_uncaught_exception = BaseHandler.handle_uncaught_exception
+    #
+    # def _handle_uncaught_exception_monkey_patch(self, request, resolver, exc_info):
+    #     if settings.DEBUG:
+    #         request.is_ajax = lambda: False
+    #
+    #     return handle_uncaught_exception(self, request, resolver, exc_info)
+    #
+    # BaseHandler.handle_uncaught_exception = _handle_uncaught_exception_monkey_patch

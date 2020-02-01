@@ -18,7 +18,7 @@ class WalletMasterKeys(models.Model):
     Stores the BIP32 HD master seed for the user's wallet.
     The seed is stored encrypted with the user's password.
     """
-    user = models.ForeignKey('auth.User')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     encrypted_mnemonic = models.CharField(max_length=172)
 
     auto_logout = models.IntegerField(choices=AUTO_LOGOUT_CHOICES, default=0)

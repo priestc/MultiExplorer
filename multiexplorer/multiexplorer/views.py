@@ -10,7 +10,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django import http
 from django.template.response import TemplateResponse
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth import logout as dj_logout

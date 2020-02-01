@@ -1,9 +1,10 @@
+from __future__ import print_function
+
 import calendar
 import datetime
 import csv
 import os
 import gzip
-import StringIO
 
 import arrow
 import requests
@@ -154,7 +155,7 @@ def load_from_bitcoincharts(tag, source_name, crypto, fiat):
             )
 
             if p:
-                print "made:", p
+                print("made:", p)
                 last_tick = tick_date
 
 
@@ -191,9 +192,9 @@ def load_quandl_v3(tag, crypto, fiat):
         )
 
         if p:
-            print "made:", p
+            print("made:", p)
         else:
-            print "skipping", tick_date
+            print("skipping", tick_date)
 
 def get_ticks(verbose=False):
     """

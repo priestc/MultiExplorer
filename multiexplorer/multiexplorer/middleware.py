@@ -4,8 +4,8 @@ from django.conf import settings
 
 class IPLimiterMiddleware(object):
     interval = "%s %s" % (
-        settings.IP_FILTER_INTERVAL.values()[0],
-        settings.IP_FILTER_INTERVAL.keys()[0],
+        list(settings.IP_FILTER_INTERVAL.values())[0],
+        list(settings.IP_FILTER_INTERVAL.keys())[0],
     )
 
     def __init__(self, get_response):
