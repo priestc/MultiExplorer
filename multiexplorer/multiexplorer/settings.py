@@ -105,4 +105,6 @@ STATIC_ROOT = "static/"
 IGNORE_WALLET_CRYPTOS = ['rdd', 'ppc', 'xcp', 'part', 'mgc']
 APPEND_SLASH = True
 
+ALLOWED_HOSTS = ['localhost']
+
 from .local_settings import *
